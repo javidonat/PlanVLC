@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@layer components {
+  .field-label { display: block; margin-bottom: .5rem; font-size: .875rem; font-weight: 650; color: #334155; }
+  .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid #cbd5e1; border-radius: .75rem; background: #fff; padding: .65rem .85rem; color: #0f172a; outline: none; }
+  .field-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #bfdbfe; }
+  .field-error { margin-top: .35rem; color: #b91c1c; font-size: .8rem; }
+}
+
+:root {
+  --noche: #17203a;
+  --naranja: #f26b1d;
+  --naranja-oscuro: #b8480a;
+  --fondo: #eef1f6;
+  --texto: #1b2236;
+  --texto-suave: #566079;
+  --borde: #d5dae6;
+  --fuente-titulo: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Cada categoría define su color en --cat; los componentes lo usan con var(--cat) */
+.cat-fiesta { --cat: #c2185b; }
+.cat-concierto { --cat: #3b5bdb; }
+.cat-tardeo { --cat: #b45f06; }
+.cat-festival { --cat: #2b7a3e; }
+.cat-espectaculo { --cat: #7b3fc4; }
+.cat-deporte { --cat: #0b7a75; }
+.cat-otro { --cat: #5b6478; }
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+main {
+  flex: 1;
+}
+
+.contenedor {
+  width: min(100% - 2rem, 62rem);
+  margin-inline: auto;
+}
+
+.boton {
+  display: inline-block;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  background: var(--noche);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton:hover {
+  background: #263257;
+}
+
+.boton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.boton-claro {
+  background: #fff;
+  color: var(--noche);
+  border: 1.5px solid var(--noche);
+}
+.boton-claro:hover {
+  background: #e4e8f1;
+}
+.boton-peligro {
+  background: #b3261e;
+}
+.boton-peligro:hover {
+  background: #8f1d17;
+}
+
+.alerta {
+  padding: 0.8rem 1rem;
+  background: #fdecea;
+  border: 1px solid #f0b8b3;
+  border-left: 5px solid #b3261e;
+  border-radius: 6px;
+  color: #6b1712;
+}
+
+.pie {
+  padding: 1.5rem 0;
+  font-size: 0.88rem;
+  color: var(--texto-suave);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+:focus-visible {
+  outline: 3px solid var(--naranja);
+  outline-offset: 2px;
+}

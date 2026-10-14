@@ -1,0 +1,65 @@
+<div class="contenedor detalle">
+  <a routerLink="/" class="volver">Volver a todos los eventos</a>
+
+  @if (store.cargandoDetalle()) {
+    <app-estado-carga texto="Cargando evento…" />
+  } @else if (store.errorDetalle(); as mensaje) {
+    <app-mensaje-error [mensaje]="mensaje" (reintentar)="reintentar()" />
+  } @else if (vista(); as v) {
+    <article [class]="'ficha cat-' + v.evento.categoria" [class.pasado]="v.pasado">
+      <header class="cabecera">
+        <div class="talon">
+          <span class="dia">{{ v.dia }}</span>
+          <span class="mes">{{ v.mes }}</span>
+        </div>
+        <div>
+          <p class="categoria">
+            {{ v.categoria }}
+            @if (v.pasado) {
+              <span class="finalizado">Este evento ya ha terminado</span>
+            }
+          </p>
+          <h1>{{ v.evento.nombre }}</h1>
+        </div>
+      </header>
+
+      @if (v.evento.imagen) {
+        <img class="imagen" [src]="v.evento.imagen" [alt]="v.evento.nombre" />
+      }
+
+      <p class="descripcion">{{ v.evento.descripcion }}</p>
+
+      <dl class="datos">
+        <div>
+          <dt>Fecha</dt>
+          <dd>{{ v.fecha }}</dd>
+        </div>
+        <div>
+          <dt>Hora</dt>
+          <dd>{{ v.evento.hora }} h</dd>
+        </div>
+        <div>
+          <dt>Lugar</dt>
+          <dd>{{ v.evento.lugar }}</dd>
+        </div>
+        <div>
+          <dt>Precio</dt>
+          <dd>{{ v.precio }}</dd>
+        </div>
+        <div>
+          <dt>Edad</dt>
+          <dd>{{ v.edad }}</dd>
+        </div>
+        <div>
+          <dt>Entradas</dt>
+          <dd>{{ v.entradas }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <div class="acciones">
+      <a class="boton" [routerLink]="['/admin/eventos', v.evento._id, 'editar']">Editar en administración</a>
+    </div>
+  }
+</div>
+

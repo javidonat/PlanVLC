@@ -1,0 +1,26 @@
+.carga {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 3rem 1rem;
+  color: var(--texto-suave);
+}
+.rueda {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--borde);
+  border-top-color: var(--naranja);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rueda {
+    animation-duration: 3s;
+  }
+}

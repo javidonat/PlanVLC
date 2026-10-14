@@ -1,0 +1,44 @@
+<section class="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
+  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="mb-2 text-xs font-bold uppercase tracking-[.22em] text-blue-600">Panel de administración</p>
+      <h1 class="text-3xl font-bold tracking-tight text-slate-900">Eventos</h1>
+      <p class="mt-2 text-slate-500">Gestiona los planes y eventos de Valencia.</p>
+    </div>
+    <a routerLink="nuevo" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-blue-700"><svg lucidePlus width="18" height="18"></svg> Nuevo evento</a>
+  </header>
+
+  @if (store.cargando()) {
+    <app-skeleton-loader />
+  } @else if (store.error(); as error) {
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-800" role="alert">{{ error }} <button type="button" class="ml-3 font-semibold underline" (click)="store.cargar()">Reintentar</button></div>
+  } @else if (!store.eventos().length) {
+    <div class="rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center text-slate-500">Todavía no hay eventos.</div>
+  } @else {
+    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <table class="min-w-[800px] w-full text-left text-sm">
+        <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500"><tr><th class="px-5 py-4">Evento</th><th class="px-5 py-4">Fecha y lugar</th><th class="px-5 py-4">Publicación</th><th class="px-5 py-4">Disponibilidad</th><th class="px-5 py-4 text-right">Acciones</th></tr></thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (evento of store.eventos(); track evento._id) {
+            <tr class="hover:bg-slate-50/70">
+              <td class="px-5 py-4"><p class="font-semibold text-slate-900">{{ evento.nombre }}</p><p class="mt-1 text-xs text-slate-500">{{ etiquetaCategoria(evento.categoria) }} · {{ evento.precio === 0 ? 'Gratis' : evento.precio + ' €' }}</p></td>
+              <td class="px-5 py-4 text-slate-600"><span class="flex items-center gap-1"><svg lucideCalendarDays width="15" height="15"></svg> {{ fecha(evento.fecha) }} · {{ evento.hora }}</span><span class="mt-1 flex items-center gap-1"><svg lucideMapPin width="15" height="15"></svg> {{ evento.lugar }}</span></td>
+              <td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ evento.status }}</span></td>
+              <td class="px-5 py-4">
+                @if (evento.deletedAt) {<span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">Eliminado</span>}
+                @else {<button type="button" role="switch" [attr.aria-checked]="evento.isActive" [disabled]="store.trabajando() === evento._id" (click)="toggle(evento)" [attr.aria-label]="(evento.isActive ? 'Desactivar ' : 'Activar ') + evento.nombre" [class]="evento.isActive ? 'border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'border-red-300 bg-red-100 text-red-800 hover:bg-red-200'" class="inline-flex min-w-[7rem] cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60"><span class="h-2 w-2 rounded-full" [class.bg-emerald-600]="evento.isActive" [class.bg-red-600]="!evento.isActive"></span>{{ evento.isActive ? 'Activo' : 'Inactivo' }}</button>}
+              </td>
+              <td class="px-5 py-4"><div class="flex justify-end gap-2">
+                @if (!evento.deletedAt) {
+                  @if (evento.isActive) {<a [routerLink]="[evento._id, 'editar']" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" [attr.aria-label]="'Editar ' + evento.nombre"><svg lucidePencil width="17" height="17"></svg></a>}
+                  @if (evento.isActive && evento.status === 'publicado') {<a [routerLink]="['/eventos', evento.slug]" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" [attr.aria-label]="'Ver ' + evento.nombre"><svg lucideExternalLink width="17" height="17"></svg></a>}
+                  <button type="button" [disabled]="store.trabajando() === evento._id" (click)="eliminar(evento)" class="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + evento.nombre"><svg lucideTrash2 width="17" height="17"></svg></button>
+                }
+              </div></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
