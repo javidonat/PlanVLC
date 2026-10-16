@@ -13,13 +13,13 @@ Las relaciones del plan (`categoryIds`, `venueId`, `organizerId`, `coverImageId`
 
 ## Alcance y contrato de la API
 
-El backend solo expone `/api/plans`. `sessions`, `categories`, `venues`, `organizers` e `images` tienen modelo y datos de ejemplo, pero todavía no tienen endpoints. Mientras no existan, las opciones del formulario (categorías, lugares, organizadores y portadas) se obtienen de las relaciones pobladas de los planes ya existentes.
+El backend expone la API completa de `/api/plans` y endpoints de solo lectura (`GET /api/categories/active`, `/api/venues/active`, `/api/organizers/active`, `/api/images/active`) que rellenan los desplegables del formulario. `sessions` todavía no tiene endpoints, por eso el panel no gestiona sesiones.
 
 | Vista / acción | Ruta de Angular | Petición |
 |---|---|---|
 | Listado | `/admin/planes` | `GET /api/plans` (activos, desactivados y eliminados) |
-| Crear | `/admin/planes/nuevo` | `POST /api/plans` |
-| Editar | `/admin/planes/:id/editar` | `GET /api/plans/:id` y `PATCH /api/plans/:id` |
+| Crear | `/admin/planes/nuevo` | `GET` de las 4 colecciones de opciones y `POST /api/plans` |
+| Editar | `/admin/planes/:id/editar` | `GET /api/plans/:id`, `GET` de las 4 colecciones de opciones y `PATCH /api/plans/:id` |
 | Activar / desactivar | listado | `PATCH /api/plans/:id/active`, `{ "isActive": boolean }` |
 | Eliminar | listado | `PATCH /api/plans/:id/softdelete` |
 
@@ -31,7 +31,7 @@ El backend solo expone `/api/plans`. `sessions`, `categories`, `venues`, `organi
 ## Tecnología y estructura
 
 - Angular standalone, rutas lazy, TypeScript, Signals y formularios reactivos.
-- `ApiService` central con URL y timeout configurables; los servicios (`PlansService`) solo hablan con la API.
+- `ApiService` central con URL y timeout configurables; los servicios (`PlansService`, `CategoriesService`, `VenuesService`, `OrganizersService`, `ImagesService`) solo hablan con la API.
 - Stores con señales privadas de solo lectura (`PlansStore`): las páginas llaman al servicio y actualizan el store.
 - Componentes reutilizables: `PlanTable` + `PlanRow` (listado), `PlanForm` (crear y editar), `SkeletonLoader`, `EmptyState`, `ErrorState`.
 - Interceptores de petición, carga y error; SweetAlert2 para errores y confirmaciones, `ngx-spinner` para mutaciones, `ngx-skeleton-loader` para lecturas, Lucide para iconos y TailwindCSS.

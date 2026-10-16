@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-De momento solo la colección `plans` tiene API (rutas, controlador, servicio y repositorio). Las otras siete tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+La colección `plans` tiene la API completa. `categories`, `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `sessions`, `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
 
 ## Base de datos
 
@@ -164,9 +164,22 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 | PATCH | `/api/plans/:id/active` | Activa o desactiva un plan. Body: `{ "isActive": true }`. No funciona con planes eliminados (`409`) |
 | PATCH | `/api/plans/:id/softdelete` | Borrado lógico: `isActive = false` y `deletedAt = ahora` |
 
-Las respuestas incluyen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }` y `coverImageId` trae `{ _id, url, alt }`. Al enviar datos (POST/PATCH) se envían solo los ids.
+Todas las respuestas, incluidas las de `/active` y `/softdelete`, traen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }` y `coverImageId` trae `{ _id, url, alt }`. Al enviar datos (POST/PATCH) se envían solo los ids.
 
 La API **no tiene autenticación**: cualquiera que conozca la URL puede crear, modificar o eliminar planes. Es aceptable para un proyecto de clase en local, pero habría que añadir login antes de publicarla. Las peticiones de ejemplo están en [`postman.md`](./postman.md).
+
+## Endpoints de solo lectura (opciones del formulario de planes)
+
+Devuelven solo los documentos activos y no eliminados, con los mismos campos que el `populate` de los planes.
+
+| Método | Ruta | Campos de cada elemento |
+|---|---|---|
+| GET | `/api/categories/active` | `_id`, `name`, `slug` |
+| GET | `/api/venues/active` | `_id`, `name`, `city`, `neighborhood` |
+| GET | `/api/organizers/active` | `_id`, `name`, `slug` |
+| GET | `/api/images/active` | `_id`, `url`, `alt` |
+
+Formato: `{ "ok": true, "total": 10, "data": [ ... ] }`.
 
 ### Id o slug
 

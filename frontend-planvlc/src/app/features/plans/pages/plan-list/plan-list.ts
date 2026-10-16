@@ -48,7 +48,7 @@ export class PlanList implements OnInit {
     try {
       this.store.setBusy(plan._id);
       const res = await this.service.setActive(plan._id, !plan.isActive);
-      this.store.upsert(this.keepRelations(plan, res.data));
+      this.store.upsert(res.data);
     } catch {
       // El interceptor ya muestra el error.
     } finally {
@@ -62,17 +62,11 @@ export class PlanList implements OnInit {
     try {
       this.store.setBusy(plan._id);
       const res = await this.service.softDelete(plan._id);
-      this.store.upsert(this.keepRelations(plan, res.data));
+      this.store.upsert(res.data);
     } catch {
       // El interceptor ya muestra el error.
     } finally {
       this.store.setBusy(null);
     }
-  }
-
-  // PATCH /active y /softdelete devuelven el plan sin populate (relaciones como ids).
-  // Solo cambian isActive/deletedAt, así que se conservan las relaciones ya cargadas.
-  private keepRelations(current: Plan, updated: Plan): Plan {
-    return { ...current, isActive: updated.isActive, deletedAt: updated.deletedAt, updatedAt: updated.updatedAt };
   }
 }

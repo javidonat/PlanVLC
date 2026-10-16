@@ -55,23 +55,10 @@ export function sessionDateText(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+// Opciones de los desplegables del formulario (GET /api/<colección>/active)
 export interface PlanRefs {
   categories: CategoryRef[];
   venues: VenueRef[];
   organizers: OrganizerRef[];
   images: ImageRef[];
-}
-
-// El backend todavía no tiene /api/categories, /api/venues, /api/organizers ni /api/images.
-// Mientras tanto, las opciones del formulario salen de las relaciones pobladas de los planes.
-export function extractPlanRefs(plans: Plan[]): PlanRefs {
-  const unique = <T extends { _id: string }>(list: (T | null)[]) =>
-    [...new Map(list.filter((x): x is T => !!x).map(x => [x._id, x])).values()];
-
-  return {
-    categories: unique(plans.flatMap(p => p.categoryIds.map(c => populated(c)))).sort((a, b) => a.name.localeCompare(b.name)),
-    venues: unique(plans.map(p => populated(p.venueId))).sort((a, b) => a.name.localeCompare(b.name)),
-    organizers: unique(plans.map(p => populated(p.organizerId))).sort((a, b) => a.name.localeCompare(b.name)),
-    images: unique(plans.map(p => populated(p.coverImageId))),
-  };
 }

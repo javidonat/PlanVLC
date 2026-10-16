@@ -2,12 +2,16 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { PlanPayload } from '../../../../core/models/plan.model';
 import { PlansService } from '../../../../core/services/plans.service';
+import { CategoriesService } from '../../../../core/services/categories.service';
+import { VenuesService } from '../../../../core/services/venues.service';
+import { OrganizersService } from '../../../../core/services/organizers.service';
+import { ImagesService } from '../../../../core/services/images.service';
 import { PlansStore } from '../../../../core/stores/plans.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { PlanForm } from '../../components/plan-form/plan-form';
-import { PlanRefs, extractPlanRefs } from '../../utils/plans.utils';
+import { PlanRefs } from '../../utils/plans.utils';
 
 @Component({
   selector: 'app-plan-create',
@@ -16,6 +20,10 @@ import { PlanRefs, extractPlanRefs } from '../../utils/plans.utils';
 })
 export class PlanCreate implements OnInit {
   private readonly service = inject(PlansService);
+  private readonly categoriesService = inject(CategoriesService);
+  private readonly venuesService = inject(VenuesService);
+  private readonly organizersService = inject(OrganizersService);
+  private readonly imagesService = inject(ImagesService);
   private readonly store = inject(PlansStore);
   readonly router = inject(Router);
 
@@ -35,8 +43,13 @@ export class PlanCreate implements OnInit {
     try {
       this.pageLoading.set(true);
       this.loadError.set(null);
-      if (!this.store.loaded()) this.store.setItems((await this.service.getAll()).data);
-      this.refs.set(extractPlanRefs(this.store.items()));
+      const [categories, venues, organizers, images] = await Promise.all([
+        this.categoriesService.getActive(),
+        this.venuesService.getActive(),
+        this.organizersService.getActive(),
+        this.imagesService.getActive(),
+      ]);
+      this.refs.set({ categories: categories.data, venues: venues.data, organizers: organizers.data, images: images.data });
     } catch (error) {
       this.loadError.set(apiError(error).message);
     } finally {

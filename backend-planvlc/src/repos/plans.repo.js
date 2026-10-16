@@ -55,13 +55,15 @@ const softDelete = (id) => {
     { _id: id, deletedAt: null },
     { isActive: false, deletedAt: new Date() },
     { new: true }
-  ).lean();
+  )
+    .populate(POPULATE)
+    .lean();
 };
 
 // Para activar/desactivar: no filtra por isActive (hay que poder reactivar un plan desactivado),
 // pero SÍ por deletedAt: un plan eliminado no se puede reactivar nunca
 const setActive = (id, data) => {
-  return Plan.findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true }).lean();
+  return Plan.findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true }).populate(POPULATE).lean();
 };
 
 // ¿Existe el plan, esté activo, desactivado o eliminado?
