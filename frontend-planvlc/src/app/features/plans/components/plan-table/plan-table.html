@@ -1,0 +1,24 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Plan</th>
+        <th class="px-5 py-4">Próxima sesión y lugar</th>
+        <th class="px-5 py-4">Publicación</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (plan of plans(); track plan._id) {
+        <tr app-plan-row
+          [plan]="plan"
+          [busy]="busyId() === plan._id"
+          (editClick)="editPlan.emit($event)"
+          (toggleClick)="togglePlan.emit($event)"
+          (deleteClick)="deletePlan.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

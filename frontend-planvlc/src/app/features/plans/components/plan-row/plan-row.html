@@ -1,0 +1,27 @@
+<td class="px-5 py-4">
+  <p class="font-semibold text-slate-900">{{ plan().title }}</p>
+  <p class="mt-1 text-xs text-slate-500">{{ categoriesLabel(plan()) }} · {{ planPriceText(plan()) }}</p>
+</td>
+<td class="px-5 py-4 text-slate-600">
+  <span class="flex items-center gap-1"><svg lucideCalendarDays width="15" height="15"></svg> {{ sessionDateText(plan().nextSessionAt) }}</span>
+  <span class="mt-1 flex items-center gap-1"><svg lucideMapPin width="15" height="15"></svg> {{ venueLabel(plan()) }}</span>
+</td>
+<td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ statusLabel(plan().status) }}</span></td>
+<td class="px-5 py-4">
+  @if (plan().deletedAt) {
+    <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">Eliminado</span>
+  } @else {
+    <button type="button" role="switch" [attr.aria-checked]="plan().isActive" [disabled]="busy()" (click)="toggleClick.emit(plan())" [attr.aria-label]="(plan().isActive ? 'Desactivar ' : 'Activar ') + plan().title" [class]="plan().isActive ? 'border-emerald-300 bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : 'border-red-300 bg-red-100 text-red-800 hover:bg-red-200'" class="inline-flex min-w-[7rem] cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold transition disabled:cursor-wait disabled:opacity-60"><span class="h-2 w-2 rounded-full" [class.bg-emerald-600]="plan().isActive" [class.bg-red-600]="!plan().isActive"></span>{{ plan().isActive ? 'Activo' : 'Inactivo' }}</button>
+  }
+</td>
+<td class="px-5 py-4">
+  <div class="flex justify-end gap-2">
+    @if (!plan().deletedAt) {
+      <!-- El backend solo deja editar planes activos (PATCH /:id filtra por isActive) -->
+      @if (plan().isActive) {
+        <button type="button" (click)="editClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" [attr.aria-label]="'Editar ' + plan().title"><svg lucidePencil width="17" height="17"></svg></button>
+      }
+      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + plan().title"><svg lucideTrash2 width="17" height="17"></svg></button>
+    }
+  </div>
+</td>

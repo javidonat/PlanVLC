@@ -1,0 +1,82 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+  <div>
+    <label for="title" class="field-label">Título *</label>
+    <input id="title" class="field-input" formControlName="title" maxlength="150" />
+    @if (fieldError('title'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="shortDescription" class="field-label">Descripción corta</label>
+    <input id="shortDescription" class="field-input" formControlName="shortDescription" maxlength="200" />
+    @if (fieldError('shortDescription'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="description" class="field-label">Descripción *</label>
+    <textarea id="description" class="field-input min-h-32" formControlName="description"></textarea>
+    @if (fieldError('description'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <fieldset>
+    <legend class="field-label">Categorías * <span class="font-normal text-slate-500">(de 1 a 5)</span></legend>
+    <div class="flex flex-wrap gap-2">
+      @for (category of categories(); track category._id) {
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+          <input type="checkbox" class="accent-blue-600" [checked]="isCategorySelected(category._id)" (change)="toggleCategory(category._id, $any($event.target).checked)" />
+          {{ category.name }}
+        </label>
+      } @empty {
+        <p class="text-sm text-slate-500">No hay categorías disponibles.</p>
+      }
+    </div>
+    @if (fieldError('categoryIds'); as message) {<p class="field-error">{{ message }}</p>}
+  </fieldset>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <label for="venueId" class="field-label">Lugar *</label>
+      <select id="venueId" class="field-input" formControlName="venueId">
+        <option value="">Elige un lugar</option>
+        @for (venue of venues(); track venue._id) {<option [value]="venue._id">{{ venue.name }}{{ venue.city ? ' (' + venue.city + ')' : '' }}</option>}
+      </select>
+      @if (fieldError('venueId'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="organizerId" class="field-label">Organizador</label>
+      <select id="organizerId" class="field-input" formControlName="organizerId">
+        <option value="">Sin organizador</option>
+        @for (organizer of organizers(); track organizer._id) {<option [value]="organizer._id">{{ organizer.name }}</option>}
+      </select>
+      @if (fieldError('organizerId'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-3">
+    <div class="sm:col-span-2">
+      <label for="coverImageId" class="field-label">Imagen de portada</label>
+      <select id="coverImageId" class="field-input" formControlName="coverImageId">
+        <option value="">Sin portada</option>
+        @for (image of images(); track image._id) {<option [value]="image._id">{{ image.alt || image.url }}</option>}
+      </select>
+      @if (fieldError('coverImageId'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="minAge" class="field-label">Edad mínima</label>
+      <input id="minAge" type="number" min="0" step="1" class="field-input" formControlName="minAge" />
+      @if (fieldError('minAge'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+  </div>
+
+  <div class="sm:w-1/2">
+    <label for="status" class="field-label">Estado de publicación *</label>
+    <select id="status" class="field-input" formControlName="status">
+      @for (status of statuses; track status.value) {<option [value]="status.value">{{ status.label }}</option>}
+    </select>
+    @if (fieldError('status'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear plan' }}</button>
+  </div>
+</form>
