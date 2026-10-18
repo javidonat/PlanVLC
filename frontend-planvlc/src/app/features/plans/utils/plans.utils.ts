@@ -1,4 +1,4 @@
-import { CategoryRef, ImageRef, OrganizerRef, Plan, VenueRef } from '../../../core/models/plan.model';
+import { CategoryRef, OrganizerRef, Plan, VenueRef } from '../../../core/models/plan.model';
 
 // Funciones pequeñas para mostrar los datos de un plan en español.
 
@@ -60,5 +60,4 @@ export interface PlanRefs {
   categories: CategoryRef[];
   venues: VenueRef[];
   organizers: OrganizerRef[];
-  images: ImageRef[];
 }

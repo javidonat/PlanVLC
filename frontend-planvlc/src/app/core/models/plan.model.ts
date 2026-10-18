@@ -21,8 +21,10 @@ export interface Plan {
   categoryIds: (string | CategoryRef)[]; // obligatorio, 1 a 5
   venueId: string | VenueRef; // obligatorio
   organizerId: string | OrganizerRef | null; // opcional
-  coverImageId: string | ImageRef | null; // opcional
-  galleryImageIds: string[];
+
+  // Imágenes del plan (colección images con entityType "plan"). Llegan pobladas en los GET
+  coverImage?: ImageRef | null; // opcional
+  galleryImages?: ImageRef[]; // ordenadas por posición, máximo 10
 
   // Datos derivados de sus sesiones: los calcula el servidor, el frontend solo los lee
   priceFrom: number; // precio mínimo de sus sesiones (0 = gratis)
@@ -39,6 +41,7 @@ export interface Plan {
 
 // Lo que acepta POST /api/plans y PATCH /api/plans/:id (solo ids en las relaciones).
 // slug, priceFrom, nextSessionAt, isActive y deletedAt los gestiona el servidor.
+// Las imágenes se envían como URLs: el servidor crea, reordena o elimina las de "images".
 export interface PlanPayload {
   title: string;
   shortDescription: string;
@@ -46,7 +49,8 @@ export interface PlanPayload {
   categoryIds: string[];
   venueId: string;
   organizerId: string | null;
-  coverImageId: string | null;
+  coverImageUrl: string | null; // null = sin portada
+  galleryImageUrls: string[]; // [] = galería vacía
   minAge: number;
   status: Status;
 }

@@ -5,7 +5,6 @@ import { PlansService } from '../../../../core/services/plans.service';
 import { CategoriesService } from '../../../../core/services/categories.service';
 import { VenuesService } from '../../../../core/services/venues.service';
 import { OrganizersService } from '../../../../core/services/organizers.service';
-import { ImagesService } from '../../../../core/services/images.service';
 import { PlansStore } from '../../../../core/stores/plans.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
@@ -23,11 +22,10 @@ export class PlanCreate implements OnInit {
   private readonly categoriesService = inject(CategoriesService);
   private readonly venuesService = inject(VenuesService);
   private readonly organizersService = inject(OrganizersService);
-  private readonly imagesService = inject(ImagesService);
   private readonly store = inject(PlansStore);
   readonly router = inject(Router);
 
-  readonly refs = signal<PlanRefs>({ categories: [], venues: [], organizers: [], images: [] });
+  readonly refs = signal<PlanRefs>({ categories: [], venues: [], organizers: [] });
   readonly pageLoading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly submitting = signal(false);
@@ -38,18 +36,17 @@ export class PlanCreate implements OnInit {
     void this.loadReferences();
   }
 
-  // Opciones de los desplegables (categorías, lugares, organizadores, portadas)
+  // Opciones de los desplegables (categorías, lugares, organizadores)
   async loadReferences(): Promise<void> {
     try {
       this.pageLoading.set(true);
       this.loadError.set(null);
-      const [categories, venues, organizers, images] = await Promise.all([
+      const [categories, venues, organizers] = await Promise.all([
         this.categoriesService.getActive(),
         this.venuesService.getActive(),
         this.organizersService.getActive(),
-        this.imagesService.getActive(),
       ]);
-      this.refs.set({ categories: categories.data, venues: venues.data, organizers: organizers.data, images: images.data });
+      this.refs.set({ categories: categories.data, venues: venues.data, organizers: organizers.data });
     } catch (error) {
       this.loadError.set(apiError(error).message);
     } finally {

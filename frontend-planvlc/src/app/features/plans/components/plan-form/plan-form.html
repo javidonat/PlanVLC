@@ -53,18 +53,27 @@
 
   <div class="grid gap-5 sm:grid-cols-3">
     <div class="sm:col-span-2">
-      <label for="coverImageId" class="field-label">Imagen de portada</label>
-      <select id="coverImageId" class="field-input" formControlName="coverImageId">
-        <option value="">Sin portada</option>
-        @for (image of images(); track image._id) {<option [value]="image._id">{{ image.alt || image.url }}</option>}
-      </select>
-      @if (fieldError('coverImageId'); as message) {<p class="field-error">{{ message }}</p>}
+      <label for="coverImageUrl" class="field-label">URL de portada</label>
+      <input id="coverImageUrl" type="url" class="field-input" formControlName="coverImageUrl" placeholder="https://images.unsplash.com/..." />
+      @if (fieldError('coverImageUrl'); as message) {<p class="field-error">{{ message }}</p>}
+      @if (coverPreview(); as url) {<img [src]="url" alt="Vista previa de la portada" class="mt-3 aspect-video w-full max-w-sm rounded-xl border border-slate-200 bg-slate-100 object-cover" />}
     </div>
     <div>
       <label for="minAge" class="field-label">Edad mínima</label>
       <input id="minAge" type="number" min="0" step="1" class="field-input" formControlName="minAge" />
       @if (fieldError('minAge'); as message) {<p class="field-error">{{ message }}</p>}
     </div>
+  </div>
+
+  <div>
+    <label for="galleryImageUrls" class="field-label">Galería <span class="font-normal text-slate-500">(una URL por línea, máximo 10)</span></label>
+    <textarea id="galleryImageUrls" class="field-input min-h-28 font-mono text-sm" formControlName="galleryImageUrls" placeholder="https://images.unsplash.com/...&#10;https://images.unsplash.com/..."></textarea>
+    @if (fieldError('galleryImageUrls'); as message) {<p class="field-error">{{ message }}</p>}
+    @if (galleryPreview().length) {
+      <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+        @for (url of galleryPreview(); track $index) {<img [src]="url" [alt]="'Imagen ' + ($index + 1) + ' de la galería'" loading="lazy" class="aspect-square w-full rounded-lg border border-slate-200 bg-slate-100 object-cover" />}
+      </div>
+    }
   </div>
 
   <div class="sm:w-1/2">

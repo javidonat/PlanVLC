@@ -5,7 +5,6 @@ import { PlansService } from '../../../../core/services/plans.service';
 import { CategoriesService } from '../../../../core/services/categories.service';
 import { VenuesService } from '../../../../core/services/venues.service';
 import { OrganizersService } from '../../../../core/services/organizers.service';
-import { ImagesService } from '../../../../core/services/images.service';
 import { PlansStore } from '../../../../core/stores/plans.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
@@ -23,7 +22,6 @@ export class PlanEdit implements OnInit {
   private readonly categoriesService = inject(CategoriesService);
   private readonly venuesService = inject(VenuesService);
   private readonly organizersService = inject(OrganizersService);
-  private readonly imagesService = inject(ImagesService);
   private readonly store = inject(PlansStore);
   readonly router = inject(Router);
 
@@ -31,7 +29,7 @@ export class PlanEdit implements OnInit {
   readonly id = input.required<string>();
 
   readonly plan = signal<Plan | null>(null);
-  readonly refs = signal<PlanRefs>({ categories: [], venues: [], organizers: [], images: [] });
+  readonly refs = signal<PlanRefs>({ categories: [], venues: [], organizers: [] });
   readonly pageLoading = signal(false);
   readonly loadError = signal<string | null>(null);
   readonly submitting = signal(false);
@@ -48,15 +46,14 @@ export class PlanEdit implements OnInit {
       this.loadError.set(null);
       // El plan se pide siempre al backend (datos frescos y con relaciones pobladas).
       // GET /:id solo devuelve planes activos: un plan desactivado da 404.
-      const [planResponse, categories, venues, organizers, images] = await Promise.all([
+      const [planResponse, categories, venues, organizers] = await Promise.all([
         this.service.getById(this.id()),
         this.categoriesService.getActive(),
         this.venuesService.getActive(),
         this.organizersService.getActive(),
-        this.imagesService.getActive(),
       ]);
       this.plan.set(planResponse.data);
-      this.refs.set({ categories: categories.data, venues: venues.data, organizers: organizers.data, images: images.data });
+      this.refs.set({ categories: categories.data, venues: venues.data, organizers: organizers.data });
     } catch (error) {
       this.loadError.set(apiError(error).message);
     } finally {
