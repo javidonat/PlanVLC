@@ -7,7 +7,9 @@ const POPULATE = [
   { path: "categoryIds", select: "name slug" },
   { path: "organizerId", select: "name slug" },
   { path: "venueId", select: "name city neighborhood" },
-  { path: "coverImageId", select: "url alt" },
+  // Virtuals: las imágenes se buscan en "images" por entityId (hay que seleccionarlo para poder emparejarlas)
+  { path: "coverImage", select: "url alt entityId" },
+  { path: "galleryImages", select: "url alt position entityId" },
 ];
 
 // TODOS: sin ningún filtro

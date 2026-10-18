@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { VENUE_STATUSES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -26,7 +27,13 @@ const venueSchema = new Schema(
         },
       },
     },
+    // Las fotos (portada y galería) viven en "images" (entityType "venue")
 
+    status: {
+      type: String,
+      enum: { values: VENUE_STATUSES, message: "El estado '{VALUE}' no es válido" },
+      default: "open",
+    },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },

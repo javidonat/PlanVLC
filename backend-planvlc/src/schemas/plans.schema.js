@@ -19,6 +19,13 @@ const objectId = (required, invalid) =>
 
 const number = (type) => z.number({ error: type });
 
+// URL de imagen (http o https)
+const imageUrl = (invalid) =>
+  z
+    .string({ error: invalid })
+    .trim()
+    .pipe(z.url({ protocol: /^https?$/, error: invalid }));
+
 const required = {
   title: text("El título del plan es obligatorio", "El título debe ser un texto").max(
     150,
@@ -46,12 +53,13 @@ const optional = {
   organizerId: objectId("El id del organizador no es válido", "El id del organizador no es válido")
     .nullable() // null = sin organizador
     .optional(),
-  coverImageId: objectId("El id de la portada no es válido", "El id de la portada no es válido")
-    .nullable()
+  // Imágenes: se envían URLs y el servidor las guarda en "images" (entityType "plan")
+  coverImageUrl: imageUrl("La URL de la portada no es válida")
+    .nullable() // null = sin portada
     .optional(),
-  galleryImageIds: z
-    .array(objectId("Falta el id de una imagen", "Alguna imagen de la galería no tiene un id válido"), {
-      error: "La galería debe ser una lista de ids",
+  galleryImageUrls: z
+    .array(imageUrl("Alguna URL de la galería no es válida"), {
+      error: "La galería debe ser una lista de URLs",
     })
     .max(10, "La galería no puede tener más de 10 imágenes")
     .optional(),

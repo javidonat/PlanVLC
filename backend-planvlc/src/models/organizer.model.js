@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ORGANIZER_STATUSES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -13,7 +14,7 @@ const organizerSchema = new Schema(
       default: "company",
     },
     description: { type: String, trim: true, default: "" },
-    logoImageId: { type: Schema.Types.ObjectId, ref: "Image", default: null },
+    // El logo vive en "images" (entityType "organizer", type "logo")
     // Embebido: son datos pequeños que no se reutilizan, no necesitan colección propia
     contact: {
       email: { type: String, trim: true, lowercase: true },
@@ -23,6 +24,11 @@ const organizerSchema = new Schema(
     },
     userIds: [{ type: Schema.Types.ObjectId, ref: "User" }], // usuarios que gestionan el organizador
 
+    status: {
+      type: String,
+      enum: { values: ORGANIZER_STATUSES, message: "El estado '{VALUE}' no es válido" },
+      default: "pending",
+    },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },

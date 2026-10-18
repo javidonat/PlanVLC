@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import plansRepo from "../repos/plans.repo.js";
 import refsRepo from "../repos/refs.repo.js";
+import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
 import { generateSlug } from "./utils/slug.util.js";
 
@@ -9,6 +10,7 @@ import { generateSlug } from "./utils/slug.util.js";
 
 // Campos que se pueden enviar desde fuera (el resto se ignora)
 // slug, priceFrom, nextSessionAt, isActive y deletedAt no están: los gestiona el servidor
+// Las imágenes (coverImageUrl, galleryImageUrls) no son campos del plan: ver pickImages
 const FIELDS = [
   "title",
   "shortDescription",
@@ -16,8 +18,6 @@ const FIELDS = [
   "categoryIds",
   "organizerId",
   "venueId",
-  "coverImageId",
-  "galleryImageIds",
   "minAge",
   "tags",
   "status",
@@ -43,6 +43,21 @@ const pickFields = (body = {}) => {
   return data;
 };
 
+// Imágenes del plan: se envían como URLs y se guardan en "images" (entityType "plan").
+// undefined = no se ha enviado (no se tocan); null / [] = quitar la portada / vaciar la galería
+const pickImages = (body = {}) => ({ cover: body.coverImageUrl, gallery: body.galleryImageUrls });
+
+const hasImages = (images) => images.cover !== undefined || images.gallery !== undefined;
+
+const saveImages = async (plan, images) => {
+  if (images.cover !== undefined) {
+    await imagesService.replaceImages("plan", plan._id, "cover", images.cover ? [images.cover] : [], plan.title);
+  }
+  if (images.gallery !== undefined) {
+    await imagesService.replaceImages("plan", plan._id, "gallery", images.gallery, plan.title);
+  }
+};
+
 // Comprueba que los ids de las relaciones existen de verdad (MongoDB no lo hace solo)
 const validateReferences = async (data) => {
   if (data.categoryIds && !(await refsRepo.categoriesExist(data.categoryIds))) {
@@ -53,12 +68,6 @@ const validateReferences = async (data) => {
   }
   if (data.organizerId && !(await refsRepo.organizerExists(data.organizerId))) {
     throw new AppError("El organizador indicado no existe", 400);
-  }
-  if (data.coverImageId && !(await refsRepo.imagesExist([data.coverImageId]))) {
-    throw new AppError("La imagen de portada indicada no existe", 400);
-  }
-  if (data.galleryImageIds?.length && !(await refsRepo.imagesExist(data.galleryImageIds))) {
-    throw new AppError("Alguna imagen de la galería no existe", 400);
   }
 };
 
@@ -139,14 +148,19 @@ const getPlanBySlug = async (slug) => {
 // POST: crea un plan nuevo. El slug se genera a partir del título
 const createPlan = async (body) => {
   const data = pickFields(body);
+  const images = pickImages(body);
   await validateReferences(data);
 
   // Si no hay título, no hay slug: Mongoose devolverá el error de "título obligatorio"
-  if (typeof data.title === "string" && data.title.trim() !== "") {
-    return saveWithUniqueSlug(data.title, undefined, (slug) => plansRepo.create({ ...data, slug }));
-  }
+  const plan =
+    typeof data.title === "string" && data.title.trim() !== ""
+      ? await saveWithUniqueSlug(data.title, undefined, (slug) => plansRepo.create({ ...data, slug }))
+      : await plansRepo.create(data);
 
-  return plansRepo.create(data);
+  if (!hasImages(images)) return plan;
+  // Las imágenes necesitan el _id del plan: se guardan después y se devuelve el plan ya con ellas
+  await saveImages(plan, images);
+  return plansRepo.findById(plan._id);
 };
 
 // PATCH /:id: modifica solo los campos que se envían y deja el resto igual
@@ -154,13 +168,16 @@ const updatePlan = async (id, body) => {
   validateId(id);
 
   const data = pickFields(body);
-  if (Object.keys(data).length === 0) {
+  const images = pickImages(body);
+  const hasData = Object.keys(data).length > 0;
+  if (!hasData && !hasImages(images)) {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
   await validateReferences(data);
 
   const save = async (slug) => {
-    const plan = await plansRepo.update(id, slug ? { ...data, slug } : data);
+    // Si solo cambian las imágenes no hay nada que actualizar en el plan, pero debe existir y estar activo
+    const plan = hasData ? await plansRepo.update(id, slug ? { ...data, slug } : data) : await plansRepo.findById(id);
     if (!plan) {
       throw new AppError("Plan no encontrado", 404);
     }
@@ -169,17 +186,21 @@ const updatePlan = async (id, body) => {
 
   // Si se envía un título nuevo, el slug se regenera (siempre único, sin chocar con otros planes
   // activos, desactivados o eliminados). Si el título no cambia, el slug se mantiene.
+  let plan;
   if (typeof data.title === "string" && data.title.trim() !== "") {
     const current = await plansRepo.findById(id);
     if (!current) {
       throw new AppError("Plan no encontrado", 404);
     }
     if (!slugMatchesTitle(current.slug, data.title)) {
-      return saveWithUniqueSlug(data.title, id, save);
+      plan = await saveWithUniqueSlug(data.title, id, save);
     }
   }
+  plan ??= await save();
 
-  return save();
+  if (!hasImages(images)) return plan;
+  await saveImages(plan, images);
+  return plansRepo.findById(id);
 };
 
 // PATCH /:id/active: activa o desactiva el plan

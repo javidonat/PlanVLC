@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { CATEGORY_STATUSES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -14,7 +15,13 @@ const categorySchema = new Schema(
       enum: { values: ["nightlife", "sports", "activities", "other"], message: "El grupo '{VALUE}' no es válido" },
       default: "other",
     },
+    // La imagen de portada vive en "images" (entityType "category", type "cover")
 
+    status: {
+      type: String,
+      enum: { values: CATEGORY_STATUSES, message: "El estado '{VALUE}' no es válido" },
+      default: "published",
+    },
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },

@@ -45,8 +45,8 @@ const planSchema = new Schema(
       ref: "Venue",
       required: [true, "El lugar es obligatorio"],
     },
-    coverImageId: { type: Schema.Types.ObjectId, ref: "Image", default: null },
-    galleryImageIds: [{ type: Schema.Types.ObjectId, ref: "Image" }],
+    // Las imágenes (portada y galería) no se guardan aquí: viven en "images" con
+    // entityType "plan" y entityId = _id del plan. Ver los virtuals coverImage y galleryImages.
 
     // --- Datos derivados de las sesiones (los calcula el servidor) ---
     // Se guardan aquí para que el listado no tenga que consultar "sessions" cada vez
@@ -69,9 +69,33 @@ const planSchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null }, // null = no eliminado (soft delete)
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // Incluye los virtuals poblados (coverImage, galleryImages) al devolver el plan en JSON.
+    // id: false evita el virtual "id" (duplicado de _id)
+    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 planSchema.index({ nextSessionAt: 1 });
+
+// Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las no eliminadas.
+planSchema.virtual("coverImage", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  justOne: true,
+  match: { entityType: "plan", type: "cover", deletedAt: null },
+});
+
+planSchema.virtual("galleryImages", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  match: { entityType: "plan", type: "gallery", deletedAt: null },
+  options: { sort: { position: 1 } },
+});
 
 export default mongoose.model("Plan", planSchema);
