@@ -16,6 +16,8 @@
 </td>
 <td class="px-5 py-4">
   <div class="flex justify-end gap-2">
+    <!-- Ver: disponible siempre, también en planes desactivados o eliminados -->
+    <button type="button" (click)="viewClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" [attr.aria-label]="'Ver ' + plan().title"><svg lucideEye width="17" height="17"></svg></button>
     @if (!plan().deletedAt) {
       <!-- El backend solo deja editar planes activos (PATCH /:id filtra por isActive) -->
       @if (plan().isActive) {

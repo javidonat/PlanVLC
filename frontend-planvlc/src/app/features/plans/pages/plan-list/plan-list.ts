@@ -40,6 +40,10 @@ export class PlanList implements OnInit {
     }
   }
 
+  onView(plan: Plan): void {
+    void this.router.navigate(['/admin/planes', plan._id]);
+  }
+
   onEdit(plan: Plan): void {
     void this.router.navigate(['/admin/planes', plan._id, 'editar']);
   }

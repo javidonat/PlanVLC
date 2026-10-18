@@ -11,6 +11,7 @@ import { PlanRow } from '../plan-row/plan-row';
 export class PlanTable {
   plans = input.required<Plan[]>();
   busyId = input<string | null>(null);
+  viewPlan = output<Plan>();
   editPlan = output<Plan>();
   togglePlan = output<Plan>();
   deletePlan = output<Plan>();

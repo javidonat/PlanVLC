@@ -14,6 +14,7 @@
         <tr app-plan-row
           [plan]="plan"
           [busy]="busyId() === plan._id"
+          (viewClick)="viewPlan.emit($event)"
           (editClick)="editPlan.emit($event)"
           (toggleClick)="togglePlan.emit($event)"
           (deleteClick)="deletePlan.emit($event)"

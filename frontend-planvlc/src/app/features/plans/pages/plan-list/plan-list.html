@@ -18,6 +18,7 @@
     <app-plan-table
       [plans]="store.items()"
       [busyId]="store.busyId()"
+      (viewPlan)="onView($event)"
       (editPlan)="onEdit($event)"
       (togglePlan)="onToggle($event)"
       (deletePlan)="onDelete($event)"
