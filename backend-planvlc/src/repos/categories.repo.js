@@ -11,7 +11,7 @@ const findActive = () => {
   return Category.find({ isActive: true, deletedAt: null }).select("name slug").sort({ name: 1 }).lean();
 };
 
-// TODAS: activas, desactivadas y eliminadas (para el panel)
+// TODAS: sin ningún filtro
 const findAll = () => {
   return Category.find().populate(POPULATE).sort({ name: 1 }).lean();
 };
@@ -25,6 +25,7 @@ const findById = (id) => {
   return Category.findOne({ _id: id, isActive: true }).populate(POPULATE).lean();
 };
 
+// Crea una categoría (Mongoose valida los campos según el modelo y aplica los valores por defecto)
 const create = async (data) => {
   const category = await Category.create(data);
   return category.populate(POPULATE);
@@ -39,18 +40,25 @@ const update = (id, data) => {
     .lean();
 };
 
-// SOFT DELETE: se desactiva y se marca la fecha (solo si aún no estaba eliminada)
+// SOFT DELETE: no se borra el documento, se desactiva y se marca la fecha.
+// Solo afecta a categorías aún no eliminadas (deletedAt: null), así la fecha original nunca se pisa
 const softDelete = (id) => {
-  return Category.findOneAndUpdate({ _id: id, deletedAt: null }, { isActive: false, deletedAt: new Date() }, { new: true })
+  return Category.findOneAndUpdate(
+    { _id: id, deletedAt: null },
+    { isActive: false, deletedAt: new Date() },
+    { new: true }
+  )
     .populate(POPULATE)
     .lean();
 };
 
-// Activar/desactivar: no filtra por isActive, pero sí por deletedAt (una eliminada no se reactiva)
+// Para activar/desactivar: no filtra por isActive (hay que poder reactivar una categoría desactivada),
+// pero SÍ por deletedAt: una categoría eliminada no se puede reactivar nunca
 const setActive = (id, data) => {
   return Category.findOneAndUpdate({ _id: id, deletedAt: null }, data, { new: true }).populate(POPULATE).lean();
 };
 
+// ¿Existe la categoría, esté activa, desactivada o eliminada?
 const existsById = async (id) => {
   return Boolean(await Category.exists({ _id: id }));
 };
@@ -62,4 +70,6 @@ const slugExists = async (slug, excludeId) => {
   return Boolean(await Category.exists(filter));
 };
 
-export default { findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById, slugExists };
+export default {
+  findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById, slugExists,
+};

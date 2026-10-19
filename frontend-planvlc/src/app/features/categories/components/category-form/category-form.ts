@@ -9,7 +9,9 @@ import {
   CategoryPayload,
   CategoryStatus,
 } from '../../../../core/models/category.model';
-import { IMAGE_URL_PATTERN } from '../../../../shared/utils/format.utils';
+
+// Igual que el backend: URL http(s)
+const URL_PATTERN = /^https?:\/\/\S+$/i;
 
 // Formulario reutilizable para crear y editar. No llama a la API: emite el payload listo para enviar.
 @Component({
@@ -36,14 +38,14 @@ export class CategoryForm {
     icon: ['', [Validators.maxLength(50)]],
     group: ['other' as CategoryGroup, [Validators.required]],
     status: ['published' as CategoryStatus, [Validators.required]],
-    coverImageUrl: ['', [Validators.pattern(IMAGE_URL_PATTERN)]],
+    coverImageUrl: ['', [Validators.pattern(URL_PATTERN)]],
   });
 
   // Vista previa de la portada (solo si la URL es válida)
   private readonly coverValue = toSignal(this.form.controls.coverImageUrl.valueChanges, { initialValue: '' });
   readonly coverPreview = computed(() => {
     const url = this.coverValue().trim();
-    return IMAGE_URL_PATTERN.test(url) ? url : null;
+    return URL_PATTERN.test(url) ? url : null;
   });
 
   constructor() {

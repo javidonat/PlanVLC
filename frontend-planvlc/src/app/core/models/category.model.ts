@@ -20,6 +20,14 @@ export const CATEGORY_GROUPS: { value: CategoryGroup; label: string }[] = [
   { value: 'other', label: 'Otros' },
 ];
 
+export function categoryStatusLabel(status: CategoryStatus): string {
+  return CATEGORY_STATUSES.find(s => s.value === status)?.label ?? status;
+}
+
+export function categoryGroupLabel(group: CategoryGroup): string {
+  return CATEGORY_GROUPS.find(g => g.value === group)?.label ?? group;
+}
+
 export interface Category {
   _id: string;
   name: string;

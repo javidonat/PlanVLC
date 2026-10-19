@@ -3,24 +3,35 @@ import categoriesService from "../services/categories.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// Respuesta de una lista: { ok, total, data }
-const list = (load) => async (req, res, next) => {
+// GET /api/categories
+const getCategories = async (req, res, next) => {
   try {
-    const categories = await load();
+    const categories = await categoriesService.getAllCategories();
+    res.status(200).json({ ok: true, total: categories.length, data: categories });
+  } catch (error) {
+    next(error); // Pasa el error al middleware de errores
+  }
+};
+
+// GET /api/categories/active
+const getActiveCategories = async (req, res, next) => {
+  try {
+    const categories = await categoriesService.getActiveCategories();
     res.status(200).json({ ok: true, total: categories.length, data: categories });
   } catch (error) {
     next(error);
   }
 };
 
-// GET /api/categories
-const getCategories = list(() => categoriesService.getAllCategories());
-
-// GET /api/categories/active
-const getActiveCategories = list(() => categoriesService.getActiveCategories());
-
 // GET /api/categories/deleted
-const getDeletedCategories = list(() => categoriesService.getDeletedCategories());
+const getDeletedCategories = async (req, res, next) => {
+  try {
+    const categories = await categoriesService.getDeletedCategories();
+    res.status(200).json({ ok: true, total: categories.length, data: categories });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // GET /api/categories/:id
 const getCategoryById = async (req, res, next) => {
@@ -77,12 +88,5 @@ const patchSoftDelete = async (req, res, next) => {
 };
 
 export default {
-  getCategories,
-  getActiveCategories,
-  getDeletedCategories,
-  getCategoryById,
-  postCategory,
-  patchCategory,
-  patchActive,
-  patchSoftDelete,
+  getCategories, getActiveCategories, getDeletedCategories, getCategoryById, postCategory, patchCategory, patchActive, patchSoftDelete,
 };
