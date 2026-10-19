@@ -81,6 +81,12 @@ const slugExists = async (slug, excludeId) => {
   return Boolean(await Plan.exists(filter));
 };
 
+// ¿Cuántos planes no eliminados usan esta categoría? (para no dejar planes con categorías borradas)
+const countByCategory = (categoryId) => {
+  return Plan.countDocuments({ categoryIds: categoryId, deletedAt: null });
+};
+
 export default {
+  countByCategory,
   findAll, findActive, findDeleted, findById, findBySlug, create, update, softDelete, setActive, existsById, slugExists,
 };

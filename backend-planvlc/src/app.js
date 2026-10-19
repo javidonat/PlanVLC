@@ -25,8 +25,8 @@ app.get("/health", (_req, res) => {
 
 // --- Rutas ---
 app.use("/api/plans", plansRoutes);
-// Solo lectura: opciones para el formulario de planes
 app.use("/api/categories", categoriesRoutes);
+// Solo lectura: opciones para el formulario de planes
 app.use("/api/venues", venuesRoutes);
 app.use("/api/organizers", organizersRoutes);
 app.use("/api/images", imagesRoutes);

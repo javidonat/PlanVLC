@@ -1,0 +1,25 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Categoría</th>
+        <th class="px-5 py-4">Grupo</th>
+        <th class="px-5 py-4">Estado</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (category of categories(); track category._id) {
+        <tr app-category-row
+          [category]="category"
+          [busy]="busyId() === category._id"
+          (viewClick)="viewCategory.emit($event)"
+          (editClick)="editCategory.emit($event)"
+          (toggleClick)="toggleCategory.emit($event)"
+          (deleteClick)="deleteCategory.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

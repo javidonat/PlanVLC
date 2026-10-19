@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { CATEGORY_STATUSES } from "./constants.js";
+import { CATEGORY_GROUPS, CATEGORY_STATUSES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -12,7 +12,7 @@ const categorySchema = new Schema(
     icon: { type: String, trim: true, default: "" }, // opcional, para el frontend
     group: {
       type: String,
-      enum: { values: ["nightlife", "sports", "activities", "other"], message: "El grupo '{VALUE}' no es válido" },
+      enum: { values: CATEGORY_GROUPS, message: "El grupo '{VALUE}' no es válido" },
       default: "other",
     },
     // La imagen de portada vive en "images" (entityType "category", type "cover")
@@ -25,7 +25,22 @@ const categorySchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // Incluye el virtual coverImage al devolver la categoría en JSON (id: false evita el virtual "id")
+    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
+
+// Portada de la categoría (relación inversa: images.entityId → categories._id)
+categorySchema.virtual("coverImage", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  justOne: true,
+  match: { entityType: "category", type: "cover", deletedAt: null },
+});
 
 export default mongoose.model("Category", categorySchema);

@@ -5,6 +5,9 @@ export const STATUSES = ["draft", "published", "cancelled", "finished"];
 // Estados propios de cada entidad. No sustituyen a isActive (interruptor del panel)
 // ni a deletedAt (soft delete): describen la situación real de cada documento.
 
+// Grupos de categorías (para agruparlas en el frontend)
+export const CATEGORY_GROUPS = ["nightlife", "sports", "activities", "other"];
+
 // Categoría: draft = en preparación, published = visible, archived = ya no se usa en planes nuevos
 export const CATEGORY_STATUSES = ["draft", "published", "archived"];
 

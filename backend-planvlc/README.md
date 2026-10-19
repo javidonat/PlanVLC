@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-La colección `plans` tiene la API completa. `categories`, `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `sessions`, `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+Las colecciones `plans` y `categories` tienen la API completa. `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `sessions`, `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
 
 ## Base de datos
 
@@ -185,6 +185,23 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 Todas las respuestas, incluidas las de `/active` y `/softdelete`, traen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }`, `coverImage` trae `{ _id, url, alt }` (o `null`) y `galleryImages` trae `[{ _id, url, alt, position }]`. Al enviar datos (POST/PATCH) las relaciones se envían como ids y las imágenes como URLs (`coverImageUrl`, `galleryImageUrls`).
 
 La API **no tiene autenticación**: cualquiera que conozca la URL puede crear, modificar o eliminar planes. Es aceptable para un proyecto de clase en local, pero habría que añadir login antes de publicarla. Las peticiones de ejemplo están en [`postman.md`](./postman.md).
+
+## Endpoints (`categories`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/categories` | Todas (activas, desactivadas y eliminadas), por nombre |
+| GET | `/api/categories/active` | Solo activas y no eliminadas (`_id`, `name`, `slug`) |
+| GET | `/api/categories/deleted` | Solo eliminadas |
+| GET | `/api/categories/:id` | Una categoría activa |
+| POST | `/api/categories` | Crea. Obligatorio: `name`. Opcionales: `description`, `icon`, `group`, `status`, `coverImageUrl` |
+| PATCH | `/api/categories/:id` | Modifica los campos enviados. Si cambia el nombre, se regenera el `slug` |
+| PATCH | `/api/categories/:id/active` | Activa o desactiva. Eliminada → `409` |
+| PATCH | `/api/categories/:id/softdelete` | Borrado lógico. Si la usa algún plan no eliminado → `409` |
+
+La portada se envía como `coverImageUrl` y se guarda en `images` (`entityType: "category"`); las respuestas la traen en `coverImage`.
 
 ## Endpoints de solo lectura (opciones del formulario de planes)
 
