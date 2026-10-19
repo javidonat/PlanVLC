@@ -12,6 +12,7 @@ export type PlanSessionRef = Pick<Plan, '_id' | 'title' | 'slug' | 'status' | 'i
 export interface Session {
   _id: string;
   planId: string | PlanSessionRef;
+  sku: string; // código único de la variante, ej. 'TARDEO-RUZAFA-20251012-1700'
   startDateTime: string; // ISO
   endDateTime: string | null; // ISO, posterior al inicio
   price: number; // 0 = gratis

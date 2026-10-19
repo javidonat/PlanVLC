@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import conectarDB from "./config/db.js";
 import { Plan, Session, Organizer, Category, Venue, Image, Role, User } from "./models/index.js";
-import { generateSlug } from "./services/utils/slug.util.js";
+import { generateSku, generateSlug } from "./services/utils/slug.util.js";
 
 // Seed: deja la base de datos lista con datos de ejemplo.
 // Orden: primero lo que no depende de nada (categorías, lugares...) y al final lo que
@@ -228,6 +228,7 @@ const runSeed = async () => {
     const sessionsToInsert = plansData.flatMap((p, i) =>
       p.sessions.map((s) => ({
         planId: plans[i]._id,
+        sku: generateSku(plans[i].slug, s.start),
         startDateTime: new Date(s.start),
         endDateTime: new Date(s.end),
         price: s.price,

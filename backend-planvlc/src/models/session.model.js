@@ -5,12 +5,22 @@ const { Schema } = mongoose;
 
 // Una Session es una fecha concreta de un Plan, con su precio, aforo y stock.
 // Un mismo plan puede tener muchas sesiones (tardeo cada domingo, turnos de motos de agua...)
+// Es la "variante" del plan (producto): cada sesión tiene su SKU, precio y stock.
 const sessionSchema = new Schema(
   {
     planId: {
       type: Schema.Types.ObjectId,
       ref: "Plan",
       required: [true, "El plan es obligatorio"],
+    },
+    // Código único de la variante. Se genera con generateSku (services/utils/slug.util.js):
+    // slug del plan + fecha y hora de inicio, ej. "TARDEO-RUZAFA-20251012-1700"
+    sku: {
+      type: String,
+      required: [true, "El SKU es obligatorio"],
+      unique: true,
+      uppercase: true,
+      trim: true,
     },
     startDateTime: {
       type: Date,

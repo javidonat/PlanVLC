@@ -150,9 +150,12 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 
 ### Modelo `Session`
 
+`plans` es el producto (la ficha genérica) y `sessions` son sus **variantes**: lo que realmente se compra, con su propio SKU, precio, aforo y stock. En una tienda la variante sería la talla o el color; aquí es la fecha y la hora.
+
 | Campo | Tipo | Obligatorio | Notas |
 |---|---|---|---|
 | `planId` | ObjectId → Plan | Sí | |
+| `sku` | String | Sí | Único, en mayúsculas. Slug del plan + fecha y hora de inicio (hora de Valencia), ej. `TARDEO-RUZAFA-20251012-1700`. Se genera con `generateSku()` de `services/utils/slug.util.js` |
 | `startDateTime` | Date | Sí | Siempre tipo `Date`, nunca texto |
 | `endDateTime` | Date | No | Debe ser posterior al inicio |
 | `price` | Number | No | Por defecto `0` (gratis) |
