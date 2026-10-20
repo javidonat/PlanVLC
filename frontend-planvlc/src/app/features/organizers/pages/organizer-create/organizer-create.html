@@ -6,11 +6,18 @@
     <p class="mt-2 text-slate-500">El slug se genera solo a partir del nombre.</p>
   </div>
 
-  @if (error()) {<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</div>}
-  <app-organizer-form
-    [submitting]="submitting()"
-    [serverErrors]="serverErrors()"
-    (formSubmit)="onSubmit($event)"
-    (cancelClick)="router.navigate(['/admin/organizadores'])"
-  />
+  @if (pageLoading()) {
+    <app-skeleton-loader [count]="5" label="Cargando formulario" />
+  } @else if (loadError(); as message) {
+    <app-error-state [message]="message" (retry)="loadReferences()" />
+  } @else {
+    @if (error()) {<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</div>}
+    <app-organizer-form
+      [users]="users()"
+      [submitting]="submitting()"
+      [serverErrors]="serverErrors()"
+      (formSubmit)="onSubmit($event)"
+      (cancelClick)="router.navigate(['/admin/organizadores'])"
+    />
+  }
 </section>

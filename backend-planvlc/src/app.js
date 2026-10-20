@@ -9,6 +9,8 @@ import categoriesRoutes from "./routes/categories.routes.js";
 import sessionsRoutes from "./routes/sessions.routes.js";
 import venuesRoutes from "./routes/venues.routes.js";
 import organizersRoutes from "./routes/organizers.routes.js";
+import rolesRoutes from "./routes/roles.routes.js";
+import usersRoutes from "./routes/users.routes.js";
 import imagesRoutes from "./routes/images.routes.js";
 
 const app = express();
@@ -30,6 +32,8 @@ app.use("/api/categories", categoriesRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/venues", venuesRoutes);
 app.use("/api/organizers", organizersRoutes);
+app.use("/api/roles", rolesRoutes);
+app.use("/api/users", usersRoutes);
 // Solo lectura: opciones para el formulario de planes
 app.use("/api/images", imagesRoutes);
 

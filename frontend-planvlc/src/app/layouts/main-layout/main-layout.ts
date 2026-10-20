@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTags, LucideTicket } from '@lucide/angular';
+import { LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideShieldCheck, LucideTags, LucideTicket, LucideUsers } from '@lucide/angular';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Loader } from '../../shared/components/loader/loader';
 
 // Navbar lateral: una entrada por cada sección del panel
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideTicket, LucideCalendarDays, LucideMapPin, LucideBuilding2, LucideTags, Navbar, Loader],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideTicket, LucideCalendarDays, LucideMapPin, LucideBuilding2, LucideTags, LucideUsers, LucideShieldCheck, Navbar, Loader],
   template: `
     <app-navbar /><app-loader />
     <div class="flex min-h-[calc(100vh-8rem)] flex-col md:flex-row">
@@ -18,6 +18,8 @@ import { Loader } from '../../shared/components/loader/loader';
           <a routerLink="/admin/lugares" routerLinkActive="bg-blue-50 text-blue-700" class="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"><svg lucideMapPin width="18" height="18"></svg> Lugares</a>
           <a routerLink="/admin/organizadores" routerLinkActive="bg-blue-50 text-blue-700" class="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"><svg lucideBuilding2 width="18" height="18"></svg> Organizadores</a>
           <a routerLink="/admin/categorias" routerLinkActive="bg-blue-50 text-blue-700" class="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"><svg lucideTags width="18" height="18"></svg> Categorías</a>
+          <a routerLink="/admin/usuarios" routerLinkActive="bg-blue-50 text-blue-700" class="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"><svg lucideUsers width="18" height="18"></svg> Usuarios</a>
+          <a routerLink="/admin/roles" routerLinkActive="bg-blue-50 text-blue-700" class="flex shrink-0 items-center gap-3 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100"><svg lucideShieldCheck width="18" height="18"></svg> Roles</a>
         </nav>
       </aside>
       <main class="min-w-0 flex-1"><router-outlet /></main>

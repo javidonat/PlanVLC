@@ -2,8 +2,12 @@ import { Organizer } from "../models/index.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
+// Cambia los ids de los usuarios por sus datos básicos (como un JOIN de SQL).
 // Virtual: el logo se busca en "images" por entityId (hay que seleccionarlo para poder emparejarlo)
-const POPULATE = [{ path: "logo", select: "url alt entityId" }];
+const POPULATE = [
+  { path: "userIds", select: "name email" },
+  { path: "logo", select: "url alt entityId" },
+];
 
 // SOLO ACTIVOS (y no eliminados): son los que se pueden asignar a un plan.
 // Solo los campos que necesita el formulario del plan (los mismos que el populate de plans.repo.js)

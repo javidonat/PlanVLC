@@ -1,4 +1,5 @@
 import { ImageRef } from './plan.model';
+import { UserRef } from './user.model';
 
 // Organizador: quién organiza el plan (discoteca, empresa, club, promotora). Backend: models/organizer.model.js
 
@@ -43,7 +44,7 @@ export interface Organizer {
   type: OrganizerType;
   description: string;
   contact?: OrganizerContact;
-  userIds: string[]; // usuarios que gestionan el organizador
+  userIds: (string | UserRef)[]; // usuarios que gestionan el organizador (llegan poblados)
   logo?: ImageRef | null; // colección images con entityType "organizer"
   status: OrganizerStatus;
   isActive: boolean;
@@ -58,6 +59,7 @@ export interface OrganizerPayload {
   type: OrganizerType;
   description: string;
   contact: OrganizerContact;
+  userIds: string[]; // solo ids
   status: OrganizerStatus;
   logoImageUrl: string | null; // null = sin logo
 }

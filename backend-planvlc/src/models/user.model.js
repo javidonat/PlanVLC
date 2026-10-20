@@ -29,7 +29,29 @@ const userSchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // Incluye el virtual avatar al devolver el usuario en JSON (id: false evita el virtual "id").
+    // El hash de la contraseña no sale nunca en el JSON, aunque se haya leído
+    id: false,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        delete ret.passwordHash;
+        return ret;
+      },
+    },
+    toObject: { virtuals: true },
+  }
 );
+
+// Avatar del usuario (relación inversa: images.entityId → users._id)
+userSchema.virtual("avatar", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  justOne: true,
+  match: { entityType: "user", type: "avatar", deletedAt: null },
+});
 
 export default mongoose.model("User", userSchema);

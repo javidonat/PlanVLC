@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import organizersRepo from "../repos/organizers.repo.js";
+import refsRepo from "../repos/refs.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
@@ -11,7 +12,7 @@ import { generateSlug } from "./utils/slug.util.js";
 // Campos que se pueden enviar desde fuera (el resto se ignora)
 // slug, isActive y deletedAt no están: los gestiona el servidor
 // El logo (logoImageUrl) no es un campo del organizador: ver saveLogo
-const FIELDS = ["name", "type", "description", "contact", "status"];
+const FIELDS = ["name", "type", "description", "contact", "userIds", "status"];
 
 // ---------- Funciones auxiliares ----------
 
@@ -31,6 +32,13 @@ const pickFields = (body = {}) => {
     }
   }
   return data;
+};
+
+// Comprueba que los usuarios indicados existen de verdad (MongoDB no lo hace solo)
+const validateReferences = async (data) => {
+  if (data.userIds?.length && !(await refsRepo.usersExist(data.userIds))) {
+    throw new AppError("Alguno de los usuarios indicados no existe", 400);
+  }
 };
 
 // Logo del organizador: se envía como URL y se guarda en "images" (entityType "organizer").
@@ -108,6 +116,7 @@ const getOrganizerById = async (id) => {
 // POST: crea un organizador nuevo. El slug se genera a partir del nombre
 const createOrganizer = async (body) => {
   const data = pickFields(body);
+  await validateReferences(data);
 
   const organizer = await saveWithUniqueSlug(data.name, undefined, (slug) => organizersRepo.create({ ...data, slug }));
 
@@ -126,6 +135,7 @@ const updateOrganizer = async (id, body) => {
   if (!hasData && body.logoImageUrl === undefined) {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
+  await validateReferences(data);
 
   const save = async (slug) => {
     // Si solo cambia el logo no hay nada que actualizar en el organizador, pero debe existir y estar activo

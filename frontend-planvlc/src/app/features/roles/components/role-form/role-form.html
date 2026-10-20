@@ -1,0 +1,24 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+  <div>
+    <label for="name" class="field-label">Nombre *</label>
+    <input id="name" class="field-input font-mono" formControlName="name" maxlength="30" placeholder="editor" />
+    @if (fieldError('name'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="description" class="field-label">Descripción</label>
+    <input id="description" class="field-input" formControlName="description" maxlength="200" />
+    @if (fieldError('description'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="permissions" class="field-label">Permisos <span class="font-normal text-slate-500">(uno por línea, formato recurso:acción)</span></label>
+    <textarea id="permissions" class="field-input min-h-28 font-mono text-sm" formControlName="permissions" placeholder="plans:read&#10;plans:write"></textarea>
+    @if (fieldError('permissions'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear rol' }}</button>
+  </div>
+</form>

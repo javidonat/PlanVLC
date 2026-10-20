@@ -9,6 +9,8 @@ import {
   OrganizerStatus,
   OrganizerType,
 } from '../../../../core/models/organizer.model';
+import { UserRef } from '../../../../core/models/user.model';
+import { refId } from '../../../plans/utils/plans.utils';
 
 // Igual que el backend: URL http(s)
 const URL_PATTERN = /^https?:\/\/\S+$/i;
@@ -21,6 +23,7 @@ const URL_PATTERN = /^https?:\/\/\S+$/i;
 })
 export class OrganizerForm {
   organizer = input<Organizer | null>(null);
+  users = input<UserRef[]>([]); // usuarios que pueden gestionar el organizador
   submitting = input(false);
   serverErrors = input<Record<string, string>>({}); // errores 400 por campo que devuelve el backend
   formSubmit = output<OrganizerPayload>();
@@ -40,6 +43,7 @@ export class OrganizerForm {
     phone: ['', [Validators.maxLength(20)]],
     website: ['', [Validators.pattern(URL_PATTERN)]],
     instagram: ['', [Validators.maxLength(50)]],
+    userIds: [[] as string[]],
     status: ['pending' as OrganizerStatus, [Validators.required]],
     logoImageUrl: ['', [Validators.pattern(URL_PATTERN)]],
   });
@@ -64,10 +68,22 @@ export class OrganizerForm {
         phone: organizer.contact?.phone ?? '',
         website: organizer.contact?.website ?? '',
         instagram: organizer.contact?.instagram ?? '',
+        userIds: (organizer.userIds ?? []).map(user => refId(user)),
         status: organizer.status,
         logoImageUrl: organizer.logo?.url ?? '',
       });
     });
+  }
+
+  isUserSelected(id: string): boolean {
+    return this.form.controls.userIds.value.includes(id);
+  }
+
+  toggleUser(id: string, checked: boolean): void {
+    const control = this.form.controls.userIds;
+    const current = control.value.filter(value => value !== id);
+    control.setValue(checked ? [...current, id] : current);
+    control.markAsTouched();
   }
 
   fieldError(field: string): string | null {
@@ -98,6 +114,7 @@ export class OrganizerForm {
         website: raw.website.trim(),
         instagram: raw.instagram.trim(),
       },
+      userIds: raw.userIds,
       status: raw.status,
       logoImageUrl: raw.logoImageUrl.trim() || null,
     });

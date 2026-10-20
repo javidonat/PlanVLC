@@ -1,0 +1,25 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Usuario</th>
+        <th class="px-5 py-4">Rol</th>
+        <th class="px-5 py-4">Estado</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (user of users(); track user._id) {
+        <tr app-user-row
+          [user]="user"
+          [busy]="busyId() === user._id"
+          (viewClick)="viewUser.emit($event)"
+          (editClick)="editUser.emit($event)"
+          (toggleClick)="toggleUser.emit($event)"
+          (deleteClick)="deleteUser.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

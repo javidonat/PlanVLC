@@ -1,0 +1,51 @@
+<section class="mx-auto max-w-4xl px-4 py-9 sm:px-6">
+  <a routerLink="/admin/usuarios" class="text-sm font-semibold text-blue-700 hover:underline">← Volver a usuarios</a>
+
+  @if (pageLoading()) {
+    <div class="mt-6"><app-skeleton-loader [count]="4" label="Cargando usuario" /></div>
+  } @else if (loadError(); as message) {
+    <div class="mt-6"><app-error-state [message]="message" (retry)="loadPage()" /></div>
+  } @else if (user(); as current) {
+    <header class="mb-7 mt-5 flex flex-wrap items-start justify-between gap-4">
+      <div class="flex items-center gap-4">
+        @if (current.avatar; as avatar) {
+          <img [src]="avatar.url" [alt]="avatar.alt || current.name" class="h-20 w-20 rounded-full border border-slate-200 bg-slate-100 object-cover" />
+        } @else {
+          <span class="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-2xl font-bold text-slate-500">{{ current.name.charAt(0).toUpperCase() }}</span>
+        }
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[.2em] text-blue-600">Ver usuario</p>
+          <h1 class="mt-2 text-3xl font-bold text-slate-900">{{ current.name }}</h1>
+          <div class="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-slate-700">{{ userStatusLabel(current.status) }}</span>
+            @if (current.deletedAt) {
+              <span class="rounded-full bg-red-50 px-2.5 py-1 text-red-700">Eliminado</span>
+            } @else if (current.isActive) {
+              <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-emerald-800">Activo</span>
+            } @else {
+              <span class="rounded-full bg-red-100 px-2.5 py-1 text-red-800">Inactivo</span>
+            }
+          </div>
+        </div>
+      </div>
+      <!-- Igual que en el listado: solo se pueden editar usuarios activos -->
+      @if (current.isActive && !current.deletedAt) {
+        <a [routerLink]="['/admin/usuarios', current._id, 'editar']" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"><svg lucidePencil width="17" height="17"></svg> Editar</a>
+      }
+    </header>
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+      <dl class="grid gap-x-6 gap-y-4 text-sm sm:grid-cols-2">
+        <div><dt class="font-semibold text-slate-500">Email</dt><dd class="mt-1 break-all text-slate-900">{{ current.email }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Rol</dt><dd class="mt-1 font-mono text-slate-900">{{ roleName(current) }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Último acceso</dt><dd class="mt-1 text-slate-900">{{ current.lastLoginAt ? dateText(current.lastLoginAt) : 'Nunca' }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Contraseña</dt><dd class="mt-1 text-slate-900">Guardada cifrada (no se puede ver)</dd></div>
+        <div><dt class="font-semibold text-slate-500">Creado</dt><dd class="mt-1 text-slate-900">{{ dateText(current.createdAt) }}</dd></div>
+        <div><dt class="font-semibold text-slate-500">Última modificación</dt><dd class="mt-1 text-slate-900">{{ dateText(current.updatedAt) }}</dd></div>
+        @if (current.deletedAt) {<div><dt class="font-semibold text-slate-500">Eliminado el</dt><dd class="mt-1 text-red-700">{{ dateText(current.deletedAt) }}</dd></div>}
+      </dl>
+    </div>
+  } @else {
+    <div class="mt-6"><app-error-state message="Usuario no encontrado." (retry)="loadPage()" /></div>
+  }
+</section>

@@ -47,6 +47,16 @@
           </dd>
         </div>
         <div><dt class="font-semibold text-slate-500">Instagram</dt><dd class="mt-1 text-slate-900">{{ current.contact?.instagram || '—' }}</dd></div>
+        <div class="sm:col-span-2">
+          <dt class="font-semibold text-slate-500">Usuarios que lo gestionan</dt>
+          <dd class="mt-2 flex flex-wrap gap-2">
+            @for (user of current.userIds; track $index) {
+              <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{{ userText(user) }}</span>
+            } @empty {
+              <span class="text-slate-900">Ninguno</span>
+            }
+          </dd>
+        </div>
         <div><dt class="font-semibold text-slate-500">Creado</dt><dd class="mt-1 text-slate-900">{{ dateText(current.createdAt) }}</dd></div>
         <div><dt class="font-semibold text-slate-500">Última modificación</dt><dd class="mt-1 text-slate-900">{{ dateText(current.updatedAt) }}</dd></div>
         @if (current.deletedAt) {<div><dt class="font-semibold text-slate-500">Eliminado el</dt><dd class="mt-1 text-red-700">{{ dateText(current.deletedAt) }}</dd></div>}

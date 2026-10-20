@@ -47,6 +47,21 @@
     @if (fieldError('contact'); as message) {<p class="field-error">{{ message }}</p>}
   </fieldset>
 
+  <fieldset>
+    <legend class="field-label">Usuarios que lo gestionan</legend>
+    <div class="flex flex-wrap gap-2">
+      @for (user of users(); track user._id) {
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
+          <input type="checkbox" class="accent-blue-600" [checked]="isUserSelected(user._id)" (change)="toggleUser(user._id, $any($event.target).checked)" />
+          {{ user.name }} <span class="text-slate-500">({{ user.email }})</span>
+        </label>
+      } @empty {
+        <p class="text-sm text-slate-500">No hay usuarios disponibles.</p>
+      }
+    </div>
+    @if (fieldError('userIds'); as message) {<p class="field-error">{{ message }}</p>}
+  </fieldset>
+
   <div>
     <label for="logoImageUrl" class="field-label">URL del logo</label>
     <input id="logoImageUrl" type="url" class="field-input" formControlName="logoImageUrl" placeholder="https://..." />

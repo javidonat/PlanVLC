@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, input, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { LucidePencil } from '@lucide/angular';
 import { organizerStatusLabel, organizerTypeLabel } from '../../../../core/models/organizer.model';
+import { UserRef } from '../../../../core/models/user.model';
 import { OrganizersService } from '../../../../core/services/organizers.service';
 import { OrganizersStore } from '../../../../core/stores/organizers.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
@@ -45,6 +46,11 @@ export class OrganizerDetail implements OnInit {
     } finally {
       this.pageLoading.set(false);
     }
+  }
+
+  // Cada usuario puede llegar poblado ({ _id, name, email }) o solo como id
+  userText(user: string | UserRef): string {
+    return typeof user === 'object' ? `${user.name} (${user.email})` : user;
   }
 
   // Fecha de creación, modificación o borrado

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ORGANIZER_STATUSES, ORGANIZER_TYPES } from "../models/constants.js";
 
 // Esquemas de validación de las rutas de organizadores (Zod).
-// Los campos que no aparecen aquí (slug, userIds, isActive, deletedAt...) se descartan del body.
+// Los campos que no aparecen aquí (slug, isActive, deletedAt...) se descartan del body.
 
 // Texto obligatorio: distingue "falta" de "no es texto"
 const text = (required, type) =>
@@ -10,6 +10,12 @@ const text = (required, type) =>
     .string({ error: (issue) => (issue.input === undefined ? required : type) })
     .trim()
     .min(1, required);
+
+// id de MongoDB (ObjectId: 24 caracteres hexadecimales)
+const objectId = (required, invalid) =>
+  z
+    .string({ error: (issue) => (issue.input === undefined ? required : invalid) })
+    .regex(/^[a-f\d]{24}$/i, invalid);
 
 // URL de imagen (http o https)
 const imageUrl = (invalid) =>
@@ -60,6 +66,13 @@ const optional = {
     .max(500, "La descripción no puede superar los 500 caracteres")
     .optional(),
   contact: contact.optional(),
+  // Usuarios que gestionan el organizador
+  userIds: z
+    .array(objectId("Falta el id de un usuario", "Algún usuario no tiene un id válido"), {
+      error: "Los usuarios deben ser una lista de ids",
+    })
+    .max(20, "Un organizador no puede tener más de 20 usuarios")
+    .optional(),
   status: z.enum(ORGANIZER_STATUSES, { error: (issue) => `El estado '${issue.input}' no es válido` }).optional(),
   // Logo: se envía la URL y el servidor lo guarda en "images" (entityType "organizer")
   logoImageUrl: imageUrl("La URL del logo no es válida")

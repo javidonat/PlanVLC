@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-Las colecciones `plans`, `sessions`, `categories`, `venues` y `organizers` tienen la API completa. `images` tiene una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+Las colecciones `plans`, `sessions`, `categories`, `venues`, `organizers`, `roles` y `users` tienen la API completa. `images` tiene una API de solo lectura (`GET /active`).
 
 ## Base de datos
 
@@ -230,12 +230,42 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | GET | `/api/organizers/active` | Solo activos y no eliminados (`_id`, `name`, `slug`) |
 | GET | `/api/organizers/deleted` | Solo eliminados |
 | GET | `/api/organizers/:id` | Un organizador activo |
-| POST | `/api/organizers` | Crea. Obligatorio: `name`. Opcionales: `type`, `description`, `contact` (`{ email, phone, website, instagram }`), `status`, `logoImageUrl`. El `slug` se genera a partir del nombre |
+| POST | `/api/organizers` | Crea. Obligatorio: `name`. Opcionales: `type`, `description`, `contact` (`{ email, phone, website, instagram }`), `userIds` (usuarios que lo gestionan), `status`, `logoImageUrl`. El `slug` se genera a partir del nombre |
 | PATCH | `/api/organizers/:id` | Modifica los campos enviados (`contact` se sustituye entero). Si cambia el nombre, se regenera el `slug` |
 | PATCH | `/api/organizers/:id/active` | Activa o desactiva. Eliminado → `409` |
 | PATCH | `/api/organizers/:id/softdelete` | Borrado lógico. Si tiene algún plan no eliminado → `409` |
 
-El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las respuestas lo traen en `logo`. `userIds` (usuarios que gestionan el organizador) todavía no se edita desde la API.
+El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las respuestas lo traen en `logo`. `userIds` llega poblado (`{ _id, name, email }`); al enviarlo, el servidor comprueba que los usuarios existen.
+
+## Endpoints (`users`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar). Las respuestas traen el rol poblado en `roleId` (`{ _id, name }`) y **nunca** el `passwordHash`.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/users` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/users/active` | Solo activos y no eliminados (`_id`, `name`, `email`) |
+| GET | `/api/users/deleted` | Solo eliminados |
+| GET | `/api/users/:id` | Un usuario activo |
+| POST | `/api/users` | Crea. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcionales: `status`, `avatarImageUrl` |
+| PATCH | `/api/users/:id` | Modifica los campos enviados. `password` solo si se quiere cambiar |
+| PATCH | `/api/users/:id/active` | Activa o desactiva. Eliminado → `409` |
+| PATCH | `/api/users/:id/softdelete` | Borrado lógico |
+
+La contraseña llega en claro y el servidor guarda solo su hash con bcrypt (10 rondas, igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar se guarda en `images` (`entityType: "user"`, `type: "avatar"`) y las respuestas lo traen en `avatar`.
+
+## Endpoints (`roles`)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/roles` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/roles/active` | Solo activos y no eliminados (`_id`, `name`, `description`) |
+| GET | `/api/roles/deleted` | Solo eliminados |
+| GET | `/api/roles/:id` | Un rol activo |
+| POST | `/api/roles` | Crea. Obligatorio: `name` (único, se guarda en minúsculas; solo letras, números, `-` y `_`). Opcionales: `description`, `permissions` (`["plans:read", ...]`) |
+| PATCH | `/api/roles/:id` | Modifica los campos enviados |
+| PATCH | `/api/roles/:id/active` | Activa o desactiva. Eliminado → `409` |
+| PATCH | `/api/roles/:id/softdelete` | Borrado lógico. Si hay usuarios no eliminados con ese rol → `409` |
 
 ## Endpoints (`categories`)
 

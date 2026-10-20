@@ -10,6 +10,8 @@ export const routes: Routes = [
       { path: 'admin/lugares', loadChildren: () => import('./features/venues/venues.routes').then(m => m.VENUES_ROUTES) },
       { path: 'admin/organizadores', loadChildren: () => import('./features/organizers/organizers.routes').then(m => m.ORGANIZERS_ROUTES) },
       { path: 'admin/categorias', loadChildren: () => import('./features/categories/categories.routes').then(m => m.CATEGORIES_ROUTES) },
+      { path: 'admin/usuarios', loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) },
+      { path: 'admin/roles', loadChildren: () => import('./features/roles/roles.routes').then(m => m.ROLES_ROUTES) },
       { path: '**', title: 'Página no encontrada · PlanVLC', loadComponent: () => import('./features/not-found/pages/not-found-page/not-found-page').then(m => m.NotFoundPage) },
     ],
   },
