@@ -6,6 +6,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import AppError from "./services/utils/AppError.js";
 import plansRoutes from "./routes/plans.routes.js";
 import categoriesRoutes from "./routes/categories.routes.js";
+import sessionsRoutes from "./routes/sessions.routes.js";
 import venuesRoutes from "./routes/venues.routes.js";
 import organizersRoutes from "./routes/organizers.routes.js";
 import imagesRoutes from "./routes/images.routes.js";
@@ -26,6 +27,7 @@ app.get("/health", (_req, res) => {
 // --- Rutas ---
 app.use("/api/plans", plansRoutes);
 app.use("/api/categories", categoriesRoutes);
+app.use("/api/sessions", sessionsRoutes);
 // Solo lectura: opciones para el formulario de planes
 app.use("/api/venues", venuesRoutes);
 app.use("/api/organizers", organizersRoutes);

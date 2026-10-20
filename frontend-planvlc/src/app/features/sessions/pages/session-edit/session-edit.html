@@ -1,0 +1,23 @@
+<section class="mx-auto max-w-3xl px-4 py-9 sm:px-6">
+  <a routerLink="/admin/sesiones" class="text-sm font-semibold text-blue-700 hover:underline">← Volver a sesiones</a>
+  <div class="mb-7 mt-5">
+    <p class="text-xs font-bold uppercase tracking-[.2em] text-blue-600">Administración</p>
+    <h1 class="mt-2 text-3xl font-bold text-slate-900">Editar sesión</h1>
+    <p class="mt-2 text-slate-500">{{ session()?.sku || 'Completa los datos de la sesión.' }}</p>
+  </div>
+
+  @if (pageLoading()) {
+    <app-skeleton-loader [count]="5" label="Cargando sesión" />
+  } @else if (loadError(); as message) {
+    <app-error-state [message]="message" (retry)="loadPage()" />
+  } @else if (session(); as current) {
+    @if (error()) {<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</div>}
+    <app-session-form
+      [session]="current"
+      [submitting]="submitting()"
+      [serverErrors]="serverErrors()"
+      (formSubmit)="onSubmit($event)"
+      (cancelClick)="router.navigate(['/admin/sesiones'])"
+    />
+  }
+</section>

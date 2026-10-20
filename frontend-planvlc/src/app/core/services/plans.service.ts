@@ -14,6 +14,11 @@ export class PlansService {
     return this.api.get<ApiListResponse<Plan>>(this.path);
   }
 
+  // Solo activos: opciones del formulario de sesiones
+  async getActive(): Promise<ApiListResponse<Plan>> {
+    return this.api.get<ApiListResponse<Plan>>(`${this.path}/active`);
+  }
+
   // Solo devuelve planes activos (404 si está desactivado o eliminado)
   async getById(id: string): Promise<ApiResponse<Plan>> {
     return this.api.get<ApiResponse<Plan>>(`${this.path}/${encodeURIComponent(id)}`);

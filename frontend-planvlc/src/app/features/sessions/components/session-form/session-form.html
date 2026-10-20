@@ -1,0 +1,64 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+  <div>
+    <label for="planId" class="field-label">Plan *</label>
+    @if (session(); as current) {
+      <!-- Una sesión no se cambia de plan -->
+      <p class="field-input bg-slate-50 text-slate-700">{{ planTitle(current) }}</p>
+      <p class="mt-1 font-mono text-xs text-slate-500">SKU: {{ current.sku }}</p>
+    } @else {
+      <select id="planId" class="field-input" formControlName="planId">
+        <option value="">Elige un plan</option>
+        @for (plan of plans(); track plan._id) {<option [value]="plan._id">{{ plan.title }}</option>}
+      </select>
+      <p class="mt-1 text-xs text-slate-500">El SKU se genera solo a partir del plan y la fecha de inicio.</p>
+    }
+    @if (fieldError('planId'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <label for="startDateTime" class="field-label">Inicio *</label>
+      <input id="startDateTime" type="datetime-local" class="field-input" formControlName="startDateTime" />
+      @if (fieldError('startDateTime'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="endDateTime" class="field-label">Fin</label>
+      <input id="endDateTime" type="datetime-local" class="field-input" formControlName="endDateTime" />
+      @if (fieldError('endDateTime'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-3">
+    <div>
+      <label for="price" class="field-label">Precio (€) *</label>
+      <input id="price" type="number" min="0" step="0.01" class="field-input" formControlName="price" />
+      <p class="mt-1 text-xs text-slate-500">0 = gratis</p>
+      @if (fieldError('price'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="capacity" class="field-label">Aforo</label>
+      <input id="capacity" type="number" min="0" step="1" class="field-input" formControlName="capacity" />
+      <p class="mt-1 text-xs text-slate-500">Vacío = sin límite</p>
+      @if (fieldError('capacity'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="stock" class="field-label">Stock (plazas libres)</label>
+      <input id="stock" type="number" min="0" step="1" class="field-input" formControlName="stock" />
+      <p class="mt-1 text-xs text-slate-500">{{ editMode() ? 'Vacío = sin límite' : 'Vacío = igual que el aforo' }}</p>
+      @if (fieldError('stock'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+  </div>
+
+  <div class="sm:w-1/2">
+    <label for="status" class="field-label">Estado de publicación *</label>
+    <select id="status" class="field-input" formControlName="status">
+      @for (status of statuses; track status.value) {<option [value]="status.value">{{ status.label }}</option>}
+    </select>
+    @if (fieldError('status'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear sesión' }}</button>
+  </div>
+</form>

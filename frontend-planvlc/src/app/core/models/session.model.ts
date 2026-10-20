@@ -25,3 +25,15 @@ export interface Session {
   createdAt: string;
   updatedAt: string;
 }
+
+// Lo que acepta POST /api/sessions y PATCH /api/sessions/:id.
+// sku, isActive y deletedAt los gestiona el servidor. En el PATCH no se envía planId (no se cambia de plan).
+export interface SessionPayload {
+  planId: string;
+  startDateTime: string; // ISO
+  endDateTime: string | null;
+  price: number;
+  capacity: number | null;
+  stock: number | null;
+  status: Status;
+}

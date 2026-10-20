@@ -1,0 +1,26 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[900px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Plan y SKU</th>
+        <th class="px-5 py-4">Fecha</th>
+        <th class="px-5 py-4">Precio y plazas</th>
+        <th class="px-5 py-4">Publicación</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (session of sessions(); track session._id) {
+        <tr app-session-row
+          [session]="session"
+          [busy]="busyId() === session._id"
+          (viewClick)="viewSession.emit($event)"
+          (editClick)="editSession.emit($event)"
+          (toggleClick)="toggleSession.emit($event)"
+          (deleteClick)="deleteSession.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

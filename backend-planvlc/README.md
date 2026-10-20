@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-Las colecciones `plans` y `categories` tienen la API completa. `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `sessions`, `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+Las colecciones `plans`, `sessions` y `categories` tienen la API completa. `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
 
 ## Base de datos
 
@@ -146,7 +146,7 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 
 `slug`, `priceFrom`, `nextSessionAt`, `isActive` y `deletedAt` los gestiona el servidor: si se envían en el body de un POST o PATCH, se ignoran.
 
-> Un plan puede tener muchas sesiones. Cuando exista la API de `sessions`, habrá que recalcular `priceFrom` y `nextSessionAt` al crear o modificar una sesión.
+> Un plan puede tener muchas sesiones. Cada vez que se crea, modifica, activa/desactiva o elimina una sesión, el servidor recalcula `priceFrom` y `nextSessionAt` del plan con sus próximas sesiones (activas, no eliminadas, no canceladas y que aún no han empezado). Si no le queda ninguna, `nextSessionAt` pasa a `null`.
 
 ### Modelo `Session`
 
@@ -185,6 +185,23 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 Todas las respuestas, incluidas las de `/active` y `/softdelete`, traen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }`, `coverImage` trae `{ _id, url, alt }` (o `null`) y `galleryImages` trae `[{ _id, url, alt, position }]`. Al enviar datos (POST/PATCH) las relaciones se envían como ids y las imágenes como URLs (`coverImageUrl`, `galleryImageUrls`).
 
 La API **no tiene autenticación**: cualquiera que conozca la URL puede crear, modificar o eliminar planes. Es aceptable para un proyecto de clase en local, pero habría que añadir login antes de publicarla. Las peticiones de ejemplo están en [`postman.md`](./postman.md).
+
+## Endpoints (`sessions`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar). Las respuestas traen el plan poblado en `planId` (`{ _id, title, slug, status, isActive }`).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/sessions` | Todas (activas, desactivadas y eliminadas), por `startDateTime` |
+| GET | `/api/sessions/active` | Solo activas |
+| GET | `/api/sessions/deleted` | Solo eliminadas |
+| GET | `/api/sessions/:id` | Una sesión activa |
+| POST | `/api/sessions` | Crea. Obligatorios: `planId` y `startDateTime`. Opcionales: `endDateTime`, `price`, `capacity`, `stock`, `status`. El `sku` se genera solo; si no se envía `stock`, se pone igual que `capacity` |
+| PATCH | `/api/sessions/:id` | Modifica los campos enviados. `planId` no se puede cambiar. Si cambia `startDateTime`, cambia el `sku` |
+| PATCH | `/api/sessions/:id/active` | Activa o desactiva. Eliminada → `409` |
+| PATCH | `/api/sessions/:id/softdelete` | Borrado lógico |
+
+Validaciones (Zod en `schemas/sessions.schema.js` y, en los PATCH, también en el servicio con los datos ya guardados): fechas en ISO, `endDateTime` posterior a `startDateTime`, `price`, `capacity` y `stock` no negativos (aforo y stock enteros, `null` = sin límite) y `stock` ≤ `capacity`. No puede haber dos sesiones del mismo plan a la misma hora (mismo SKU → `409`).
 
 ## Endpoints (`categories`)
 

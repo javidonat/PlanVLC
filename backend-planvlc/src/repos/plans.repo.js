@@ -86,7 +86,19 @@ const countByCategory = (categoryId) => {
   return Plan.countDocuments({ categoryIds: categoryId, deletedAt: null });
 };
 
+// Plan no eliminado (activo o desactivado), solo con su slug: lo usan las sesiones para generar el SKU
+const findSlugById = (id) => {
+  return Plan.findOne({ _id: id, deletedAt: null }).select("slug").lean();
+};
+
+// Guarda los datos derivados de las sesiones (precio mínimo y próxima fecha)
+const updateDerived = (id, data) => {
+  return Plan.updateOne({ _id: id }, data);
+};
+
 export default {
   countByCategory,
+  findSlugById,
+  updateDerived,
   findAll, findActive, findDeleted, findById, findBySlug, create, update, softDelete, setActive, existsById, slugExists,
 };
