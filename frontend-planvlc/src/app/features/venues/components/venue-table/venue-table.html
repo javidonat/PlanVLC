@@ -1,0 +1,25 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Lugar</th>
+        <th class="px-5 py-4">Dirección y aforo</th>
+        <th class="px-5 py-4">Estado</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (venue of venues(); track venue._id) {
+        <tr app-venue-row
+          [venue]="venue"
+          [busy]="busyId() === venue._id"
+          (viewClick)="viewVenue.emit($event)"
+          (editClick)="editVenue.emit($event)"
+          (toggleClick)="toggleVenue.emit($event)"
+          (deleteClick)="deleteVenue.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

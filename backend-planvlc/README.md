@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-Las colecciones `plans`, `sessions` y `categories` tienen la API completa. `venues`, `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+Las colecciones `plans`, `sessions`, `categories` y `venues` tienen la API completa. `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
 
 ## Base de datos
 
@@ -202,6 +202,23 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | PATCH | `/api/sessions/:id/softdelete` | Borrado lógico |
 
 Validaciones (Zod en `schemas/sessions.schema.js` y, en los PATCH, también en el servicio con los datos ya guardados): fechas en ISO, `endDateTime` posterior a `startDateTime`, `price`, `capacity` y `stock` no negativos (aforo y stock enteros, `null` = sin límite) y `stock` ≤ `capacity`. No puede haber dos sesiones del mismo plan a la misma hora (mismo SKU → `409`).
+
+## Endpoints (`venues`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/venues` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/venues/active` | Solo activos y no eliminados (`_id`, `name`, `city`, `neighborhood`) |
+| GET | `/api/venues/deleted` | Solo eliminados |
+| GET | `/api/venues/:id` | Un lugar activo |
+| POST | `/api/venues` | Crea. Obligatorio: `name`. Opcionales: `address`, `neighborhood`, `city`, `province`, `postalCode` (5 números), `capacity`, `latitude` + `longitude`, `status`, `coverImageUrl`, `galleryImageUrls` |
+| PATCH | `/api/venues/:id` | Modifica los campos enviados. `latitude: null` y `longitude: null` quitan la ubicación |
+| PATCH | `/api/venues/:id/active` | Activa o desactiva. Eliminado → `409` |
+| PATCH | `/api/venues/:id/softdelete` | Borrado lógico. Si hay algún plan no eliminado en el lugar → `409` |
+
+Las coordenadas se envían como `latitude` y `longitude` (las dos o ninguna) y se guardan en `location` (GeoJSON, `[longitud, latitud]`). Las fotos se guardan en `images` (`entityType: "venue"`) y las respuestas las traen en `coverImage` y `galleryImages`.
 
 ## Endpoints (`categories`)
 

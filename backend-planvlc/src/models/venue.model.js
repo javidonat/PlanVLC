@@ -37,9 +37,33 @@ const venueSchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // Incluye los virtuals poblados (coverImage, galleryImages) al devolver el lugar en JSON.
+    // id: false evita el virtual "id" (duplicado de _id)
+    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 venueSchema.index({ location: "2dsphere" });
+
+// Fotos del lugar (relación inversa: images.entityId → venues._id). Solo las no eliminadas.
+venueSchema.virtual("coverImage", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  justOne: true,
+  match: { entityType: "venue", type: "cover", deletedAt: null },
+});
+
+venueSchema.virtual("galleryImages", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  match: { entityType: "venue", type: "gallery", deletedAt: null },
+  options: { sort: { position: 1 } },
+});
 
 export default mongoose.model("Venue", venueSchema);
