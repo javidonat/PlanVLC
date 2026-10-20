@@ -45,6 +45,21 @@ const validateRules = (data) => {
   }
 };
 
+// Una sesión nueva (o a la que se le cambia la fecha) no puede empezar en el pasado
+const validateStartDate = (startDateTime) => {
+  if (startDateTime && new Date(startDateTime) < new Date()) {
+    throw new AppError("La fecha de inicio no puede estar en el pasado", 400);
+  }
+};
+
+// El aforo de la sesión no puede superar el del lugar donde se celebra el plan (si el lugar tiene aforo)
+const validateVenueCapacity = (capacity, plan) => {
+  const venueCapacity = plan?.venueId?.capacity;
+  if (capacity != null && venueCapacity != null && capacity > venueCapacity) {
+    throw new AppError(`El aforo no puede superar el del lugar (${venueCapacity} personas)`, 400);
+  }
+};
+
 // El SKU (slug del plan + fecha y hora) no se puede repetir: no puede haber dos sesiones
 // del mismo plan a la misma hora
 const buildSku = async (planSlug, startDateTime, excludeId) => {
@@ -97,11 +112,13 @@ const getSessionById = async (id) => {
 const createSession = async (body) => {
   const data = pickFields(body);
   validateRules(data);
+  validateStartDate(data.startDateTime);
 
   const plan = await plansRepo.findSlugById(data.planId);
   if (!plan) {
     throw new AppError("El plan indicado no existe", 400);
   }
+  validateVenueCapacity(data.capacity, plan);
 
   // Si no se indica el stock (o llega vacío), al crearla todas las plazas están libres (stock = aforo)
   if (data.stock == null) {
@@ -129,6 +146,12 @@ const updateSession = async (id, body) => {
     throw new AppError("Sesión no encontrada", 404);
   }
   validateRules({ ...current, ...data });
+  validateStartDate(data.startDateTime); // solo si se cambia la fecha (se pueden editar sesiones ya pasadas)
+
+  // Si cambia el aforo, se comprueba con el del lugar del plan
+  if (data.capacity != null) {
+    validateVenueCapacity(data.capacity, await plansRepo.findSlugById(planIdOf(current)));
+  }
 
   // Si cambia la fecha de inicio, cambia el SKU
   if (data.startDateTime && current.planId?.slug) {

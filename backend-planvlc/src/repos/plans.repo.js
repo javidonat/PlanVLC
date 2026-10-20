@@ -96,9 +96,13 @@ const countByOrganizer = (organizerId) => {
   return Plan.countDocuments({ organizerId, deletedAt: null });
 };
 
-// Plan no eliminado (activo o desactivado), solo con su slug: lo usan las sesiones para generar el SKU
+// Plan no eliminado (activo o desactivado), solo con su slug y el aforo de su lugar:
+// lo usan las sesiones para generar el SKU y para comprobar que el aforo no supera el del lugar
 const findSlugById = (id) => {
-  return Plan.findOne({ _id: id, deletedAt: null }).select("slug").lean();
+  return Plan.findOne({ _id: id, deletedAt: null })
+    .select("slug venueId")
+    .populate({ path: "venueId", select: "capacity" })
+    .lean();
 };
 
 // Guarda los datos derivados de las sesiones (precio mínimo y próxima fecha)

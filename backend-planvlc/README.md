@@ -201,7 +201,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | PATCH | `/api/sessions/:id/active` | Activa o desactiva. Eliminada → `409` |
 | PATCH | `/api/sessions/:id/softdelete` | Borrado lógico |
 
-Validaciones (Zod en `schemas/sessions.schema.js` y, en los PATCH, también en el servicio con los datos ya guardados): fechas en ISO, `endDateTime` posterior a `startDateTime`, `price`, `capacity` y `stock` no negativos (aforo y stock enteros, `null` = sin límite) y `stock` ≤ `capacity`. No puede haber dos sesiones del mismo plan a la misma hora (mismo SKU → `409`).
+Validaciones (Zod en `schemas/sessions.schema.js` y, en los PATCH, también en el servicio con los datos ya guardados): fechas en ISO, `endDateTime` posterior a `startDateTime`, `price`, `capacity` y `stock` no negativos (aforo y stock enteros, `null` = sin límite) y `stock` ≤ `capacity`. Además, en el servicio: la fecha de inicio no puede estar en el pasado (al crear o al cambiar la fecha) y `capacity` no puede superar el aforo del lugar del plan (si el lugar tiene aforo). No puede haber dos sesiones del mismo plan a la misma hora (mismo SKU → `409`).
 
 ## Endpoints (`venues`)
 
