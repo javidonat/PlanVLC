@@ -1,4 +1,4 @@
-import { Category, Organizer, Role, User, Venue } from "../models/index.js";
+import { Category, Organizer, Plan, Role, User, Venue } from "../models/index.js";
 
 // MongoDB NO valida que un ObjectId apunte a algo que exista (no hay claves foráneas).
 // Estas funciones sirven para comprobarlo a mano antes de guardar (un plan, un usuario, un organizador...).
@@ -24,4 +24,15 @@ const usersExist = async (ids) => {
   return (await countByIds(User, unique)) === unique.length;
 };
 
-export default { categoriesExist, organizerExists, venueExists, roleExists, usersExist };
+// Imágenes: el modelo al que apunta entityId depende de entityType
+const ENTITY_MODELS = { plan: Plan, venue: Venue, category: Category, organizer: Organizer, user: User };
+
+const entityExists = async (entityType, id) => Boolean(await ENTITY_MODELS[entityType].exists({ _id: id, deletedAt: null }));
+
+// Nombre de los documentos a los que pertenecen las imágenes (los planes tienen title en vez de name).
+// Incluye los desactivados y eliminados, como el listado del panel
+const entityNames = (entityType, ids) => {
+  return ENTITY_MODELS[entityType].find({ _id: { $in: ids } }).select("name title").lean();
+};
+
+export default { categoriesExist, organizerExists, venueExists, roleExists, usersExist, entityExists, entityNames };

@@ -47,7 +47,7 @@ organizerSchema.virtual("logo", {
   localField: "_id",
   foreignField: "entityId",
   justOne: true,
-  match: { entityType: "organizer", type: "logo", deletedAt: null },
+  match: { entityType: "organizer", type: "logo", isActive: true, deletedAt: null },
 });
 
 export default mongoose.model("Organizer", organizerSchema);

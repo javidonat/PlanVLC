@@ -24,6 +24,9 @@ export const ORGANIZER_STATUSES = ["pending", "verified", "suspended"];
 // Usuario: active = cuenta normal, suspended = suspendido temporalmente, banned = bloqueado
 export const USER_STATUSES = ["active", "suspended", "banned"];
 
+// Tipos de imagen (images.type)
+export const IMAGE_TYPES = ["cover", "gallery", "logo", "avatar"];
+
 // Imágenes: a qué entidades puede pertenecer una imagen (images.entityType)
 // y qué tipos de imagen admite cada una (images.type)
 export const IMAGE_ENTITY_TYPES = {

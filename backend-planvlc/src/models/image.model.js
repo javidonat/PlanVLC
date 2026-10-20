@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { IMAGE_ENTITY_TYPES } from "./constants.js";
+import { IMAGE_ENTITY_TYPES, IMAGE_TYPES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -24,7 +24,7 @@ const imageSchema = new Schema(
     entityId: { type: Schema.Types.ObjectId, required: [true, "El id de la entidad de la imagen es obligatorio"] },
     type: {
       type: String,
-      enum: { values: ["cover", "gallery", "logo", "avatar"], message: "El tipo '{VALUE}' no es válido" },
+      enum: { values: IMAGE_TYPES, message: "El tipo '{VALUE}' no es válido" },
       default: "gallery",
       validate: {
         // Cada entidad solo admite sus tipos (un plan no tiene avatar, un usuario no tiene galería...)

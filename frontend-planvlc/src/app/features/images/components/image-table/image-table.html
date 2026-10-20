@@ -1,0 +1,25 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[900px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Imagen</th>
+        <th class="px-5 py-4">Pertenece a</th>
+        <th class="px-5 py-4">Tipo</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (image of images(); track image._id) {
+        <tr app-image-row
+          [image]="image"
+          [busy]="busyId() === image._id"
+          (viewClick)="viewImage.emit($event)"
+          (editClick)="editImage.emit($event)"
+          (toggleClick)="toggleImage.emit($event)"
+          (deleteClick)="deleteImage.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

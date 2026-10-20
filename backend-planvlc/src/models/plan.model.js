@@ -81,20 +81,20 @@ const planSchema = new Schema(
 
 planSchema.index({ nextSessionAt: 1 });
 
-// Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las no eliminadas.
+// Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las activas y no eliminadas.
 planSchema.virtual("coverImage", {
   ref: "Image",
   localField: "_id",
   foreignField: "entityId",
   justOne: true,
-  match: { entityType: "plan", type: "cover", deletedAt: null },
+  match: { entityType: "plan", type: "cover", isActive: true, deletedAt: null },
 });
 
 planSchema.virtual("galleryImages", {
   ref: "Image",
   localField: "_id",
   foreignField: "entityId",
-  match: { entityType: "plan", type: "gallery", deletedAt: null },
+  match: { entityType: "plan", type: "gallery", isActive: true, deletedAt: null },
   options: { sort: { position: 1 } },
 });
 

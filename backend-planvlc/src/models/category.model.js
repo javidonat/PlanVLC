@@ -40,7 +40,7 @@ categorySchema.virtual("coverImage", {
   localField: "_id",
   foreignField: "entityId",
   justOne: true,
-  match: { entityType: "category", type: "cover", deletedAt: null },
+  match: { entityType: "category", type: "cover", isActive: true, deletedAt: null },
 });
 
 export default mongoose.model("Category", categorySchema);

@@ -51,7 +51,7 @@ userSchema.virtual("avatar", {
   localField: "_id",
   foreignField: "entityId",
   justOne: true,
-  match: { entityType: "user", type: "avatar", deletedAt: null },
+  match: { entityType: "user", type: "avatar", isActive: true, deletedAt: null },
 });
 
 export default mongoose.model("User", userSchema);

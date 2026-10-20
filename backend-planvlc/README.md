@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-Las colecciones `plans`, `sessions`, `categories`, `venues`, `organizers`, `roles` y `users` tienen la API completa. `images` tiene una API de solo lectura (`GET /active`).
+Todas las colecciones (`plans`, `sessions`, `categories`, `venues`, `organizers`, `roles`, `users` e `images`) tienen la API completa.
 
 ## Base de datos
 
@@ -105,7 +105,7 @@ images.entityId          → plans | venues | categories | organizers | users (s
 | `organizer` | `logo` |
 | `user` | `avatar` |
 
-Los planes devuelven sus imágenes con los virtuals `coverImage` y `galleryImages` (virtual populate sobre `images`).
+Los planes devuelven sus imágenes con los virtuals `coverImage` y `galleryImages` (virtual populate sobre `images`). Los virtuals solo traen las imágenes activas y no eliminadas.
 
 Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza: `organizers.contact` y `venues.location` (coordenadas GeoJSON).
 
@@ -283,6 +283,23 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | PATCH | `/api/categories/:id/softdelete` | Borrado lógico. Si la usa algún plan no eliminado → `409` |
 
 La portada se envía como `coverImageUrl` y se guarda en `images` (`entityType: "category"`); las respuestas la traen en `coverImage`.
+
+## Endpoints (`images`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar). Sirven para ver y gestionar desde el panel todas las imágenes; los formularios de planes, lugares, categorías, organizadores y usuarios siguen guardando las suyas con las URLs.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/images` | Todas (activas, desactivadas y eliminadas), por entidad, tipo y posición |
+| GET | `/api/images/active` | Solo activas y no eliminadas (`_id`, `url`, `alt`) |
+| GET | `/api/images/deleted` | Solo eliminadas |
+| GET | `/api/images/:id` | Una imagen activa |
+| POST | `/api/images` | Crea. Obligatorios: `url`, `entityType`, `entityId` y `type`. Opcionales: `alt`, `position` |
+| PATCH | `/api/images/:id` | Modifica `url`, `alt`, `type` o `position`. La entidad no se puede cambiar |
+| PATCH | `/api/images/:id/active` | Activa o desactiva. Eliminada → `409` |
+| PATCH | `/api/images/:id/softdelete` | Borrado lógico |
+
+Las respuestas traen `entityName`: el nombre (o el título, si es un plan) del documento al que pertenece la imagen. Validaciones en el servicio: el `type` tiene que ser uno de los permitidos para su `entityType` (tabla de arriba) y la entidad tiene que existir (`400`). Cada documento puede tener como mucho una imagen activa de tipo `cover`, `logo` o `avatar` y 10 de tipo `gallery`: si se supera al crear, al cambiar el tipo o al activar → `409`.
 
 ## Endpoints de solo lectura (opciones del formulario de planes)
 

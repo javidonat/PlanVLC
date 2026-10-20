@@ -55,14 +55,14 @@ venueSchema.virtual("coverImage", {
   localField: "_id",
   foreignField: "entityId",
   justOne: true,
-  match: { entityType: "venue", type: "cover", deletedAt: null },
+  match: { entityType: "venue", type: "cover", isActive: true, deletedAt: null },
 });
 
 venueSchema.virtual("galleryImages", {
   ref: "Image",
   localField: "_id",
   foreignField: "entityId",
-  match: { entityType: "venue", type: "gallery", deletedAt: null },
+  match: { entityType: "venue", type: "gallery", isActive: true, deletedAt: null },
   options: { sort: { position: 1 } },
 });
 
