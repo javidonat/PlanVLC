@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { ORGANIZER_STATUSES } from "./constants.js";
+import { ORGANIZER_STATUSES, ORGANIZER_TYPES } from "./constants.js";
 
 const { Schema } = mongoose;
 
@@ -10,7 +10,7 @@ const organizerSchema = new Schema(
     slug: { type: String, unique: true, lowercase: true, trim: true },
     type: {
       type: String,
-      enum: { values: ["nightclub", "company", "club", "promoter"], message: "El tipo '{VALUE}' no es válido" },
+      enum: { values: ORGANIZER_TYPES, message: "El tipo '{VALUE}' no es válido" },
       default: "company",
     },
     description: { type: String, trim: true, default: "" },
@@ -32,7 +32,22 @@ const organizerSchema = new Schema(
     isActive: { type: Boolean, default: true },
     deletedAt: { type: Date, default: null },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // Incluye el virtual logo al devolver el organizador en JSON (id: false evita el virtual "id")
+    id: false,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
+
+// Logo del organizador (relación inversa: images.entityId → organizers._id)
+organizerSchema.virtual("logo", {
+  ref: "Image",
+  localField: "_id",
+  foreignField: "entityId",
+  justOne: true,
+  match: { entityType: "organizer", type: "logo", deletedAt: null },
+});
 
 export default mongoose.model("Organizer", organizerSchema);

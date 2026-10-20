@@ -1,0 +1,25 @@
+<div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500">
+      <tr>
+        <th class="px-5 py-4">Organizador</th>
+        <th class="px-5 py-4">Tipo y contacto</th>
+        <th class="px-5 py-4">Estado</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      @for (organizer of organizers(); track organizer._id) {
+        <tr app-organizer-row
+          [organizer]="organizer"
+          [busy]="busyId() === organizer._id"
+          (viewClick)="viewOrganizer.emit($event)"
+          (editClick)="editOrganizer.emit($event)"
+          (toggleClick)="toggleOrganizer.emit($event)"
+          (deleteClick)="deleteOrganizer.emit($event)"
+        ></tr>
+      }
+    </tbody>
+  </table>
+</div>

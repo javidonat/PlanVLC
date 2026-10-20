@@ -29,8 +29,8 @@ app.use("/api/plans", plansRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/sessions", sessionsRoutes);
 app.use("/api/venues", venuesRoutes);
-// Solo lectura: opciones para el formulario de planes
 app.use("/api/organizers", organizersRoutes);
+// Solo lectura: opciones para el formulario de planes
 app.use("/api/images", imagesRoutes);
 
 // --- Ruta no encontrada (404) ---

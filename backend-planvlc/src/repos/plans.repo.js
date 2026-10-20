@@ -91,6 +91,11 @@ const countByVenue = (venueId) => {
   return Plan.countDocuments({ venueId, deletedAt: null });
 };
 
+// ¿Cuántos planes no eliminados tiene este organizador? (para no dejar planes con un organizador borrado)
+const countByOrganizer = (organizerId) => {
+  return Plan.countDocuments({ organizerId, deletedAt: null });
+};
+
 // Plan no eliminado (activo o desactivado), solo con su slug: lo usan las sesiones para generar el SKU
 const findSlugById = (id) => {
   return Plan.findOne({ _id: id, deletedAt: null }).select("slug").lean();
@@ -104,6 +109,7 @@ const updateDerived = (id, data) => {
 export default {
   countByCategory,
   countByVenue,
+  countByOrganizer,
   findSlugById,
   updateDerived,
   findAll, findActive, findDeleted, findById, findBySlug, create, update, softDelete, setActive, existsById, slugExists,

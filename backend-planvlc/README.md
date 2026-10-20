@@ -62,7 +62,7 @@ src/
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
-Las colecciones `plans`, `sessions`, `categories` y `venues` tienen la API completa. `organizers` e `images` tienen una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
+Las colecciones `plans`, `sessions`, `categories`, `venues` y `organizers` tienen la API completa. `images` tiene una API de solo lectura (`GET /active`) para rellenar los desplegables del formulario de planes. `roles` y `users` tienen modelo y datos de ejemplo, y su API se añadirá más adelante.
 
 ## Base de datos
 
@@ -219,6 +219,23 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | PATCH | `/api/venues/:id/softdelete` | Borrado lógico. Si hay algún plan no eliminado en el lugar → `409` |
 
 Las coordenadas se envían como `latitude` y `longitude` (las dos o ninguna) y se guardan en `location` (GeoJSON, `[longitud, latitud]`). Las fotos se guardan en `images` (`entityType: "venue"`) y las respuestas las traen en `coverImage` y `galleryImages`.
+
+## Endpoints (`organizers`)
+
+Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/organizers` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/organizers/active` | Solo activos y no eliminados (`_id`, `name`, `slug`) |
+| GET | `/api/organizers/deleted` | Solo eliminados |
+| GET | `/api/organizers/:id` | Un organizador activo |
+| POST | `/api/organizers` | Crea. Obligatorio: `name`. Opcionales: `type`, `description`, `contact` (`{ email, phone, website, instagram }`), `status`, `logoImageUrl`. El `slug` se genera a partir del nombre |
+| PATCH | `/api/organizers/:id` | Modifica los campos enviados (`contact` se sustituye entero). Si cambia el nombre, se regenera el `slug` |
+| PATCH | `/api/organizers/:id/active` | Activa o desactiva. Eliminado → `409` |
+| PATCH | `/api/organizers/:id/softdelete` | Borrado lógico. Si tiene algún plan no eliminado → `409` |
+
+El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las respuestas lo traen en `logo`. `userIds` (usuarios que gestionan el organizador) todavía no se edita desde la API.
 
 ## Endpoints (`categories`)
 

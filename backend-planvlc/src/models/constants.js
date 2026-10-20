@@ -15,6 +15,9 @@ export const CATEGORY_STATUSES = ["draft", "published", "archived"];
 // permanently_closed = cerrado definitivamente
 export const VENUE_STATUSES = ["open", "renovation", "temporarily_closed", "permanently_closed"];
 
+// Tipos de organizador: discoteca, empresa, club, promotora
+export const ORGANIZER_TYPES = ["nightclub", "company", "club", "promoter"];
+
 // Organizador: pending = pendiente de verificar, verified = verificado, suspended = suspendido
 export const ORGANIZER_STATUSES = ["pending", "verified", "suspended"];
 

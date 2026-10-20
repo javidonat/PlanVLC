@@ -1,0 +1,69 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+  <div class="grid gap-5 sm:grid-cols-3">
+    <div class="sm:col-span-2">
+      <label for="name" class="field-label">Nombre *</label>
+      <input id="name" class="field-input" formControlName="name" maxlength="100" />
+      @if (fieldError('name'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+    <div>
+      <label for="type" class="field-label">Tipo *</label>
+      <select id="type" class="field-input" formControlName="type">
+        @for (type of types; track type.value) {<option [value]="type.value">{{ type.label }}</option>}
+      </select>
+      @if (fieldError('type'); as message) {<p class="field-error">{{ message }}</p>}
+    </div>
+  </div>
+
+  <div>
+    <label for="description" class="field-label">Descripción</label>
+    <textarea id="description" class="field-input min-h-24" formControlName="description" maxlength="500"></textarea>
+    @if (fieldError('description'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <fieldset>
+    <legend class="field-label">Contacto <span class="font-normal text-slate-500">(todo opcional)</span></legend>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <label for="email" class="field-label">Email</label>
+        <input id="email" type="email" class="field-input" formControlName="email" />
+        @if (fieldError('email'); as message) {<p class="field-error">{{ message }}</p>}
+      </div>
+      <div>
+        <label for="phone" class="field-label">Teléfono</label>
+        <input id="phone" type="tel" class="field-input" formControlName="phone" maxlength="20" />
+        @if (fieldError('phone'); as message) {<p class="field-error">{{ message }}</p>}
+      </div>
+      <div>
+        <label for="website" class="field-label">Web</label>
+        <input id="website" type="url" class="field-input" formControlName="website" placeholder="https://..." />
+        @if (fieldError('website'); as message) {<p class="field-error">{{ message }}</p>}
+      </div>
+      <div>
+        <label for="instagram" class="field-label">Instagram</label>
+        <input id="instagram" class="field-input" formControlName="instagram" maxlength="50" placeholder="@usuario" />
+        @if (fieldError('instagram'); as message) {<p class="field-error">{{ message }}</p>}
+      </div>
+    </div>
+    @if (fieldError('contact'); as message) {<p class="field-error">{{ message }}</p>}
+  </fieldset>
+
+  <div>
+    <label for="logoImageUrl" class="field-label">URL del logo</label>
+    <input id="logoImageUrl" type="url" class="field-input" formControlName="logoImageUrl" placeholder="https://..." />
+    @if (fieldError('logoImageUrl'); as message) {<p class="field-error">{{ message }}</p>}
+    @if (logoPreview(); as url) {<img [src]="url" alt="Vista previa del logo" class="mt-3 h-24 w-24 rounded-full border border-slate-200 bg-slate-100 object-cover" />}
+  </div>
+
+  <div class="sm:w-1/2">
+    <label for="status" class="field-label">Estado *</label>
+    <select id="status" class="field-input" formControlName="status">
+      @for (status of statuses; track status.value) {<option [value]="status.value">{{ status.label }}</option>}
+    </select>
+    @if (fieldError('status'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear organizador' }}</button>
+  </div>
+</form>
