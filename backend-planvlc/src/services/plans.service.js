@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import plansRepo from "../repos/plans.repo.js";
+import sessionsRepo from "../repos/sessions.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
@@ -225,9 +226,18 @@ const setActive = async (id, body) => {
   throw new AppError("Plan no encontrado", 404);
 };
 
-// PATCH /:id/softdelete: isActive = false y deletedAt = ahora (el documento no se borra)
+// PATCH /:id/softdelete: isActive = false y deletedAt = ahora (el documento no se borra).
+// No se puede eliminar si tiene sesiones: se quedarían con un plan que ya no existe
 const softDeletePlan = async (id) => {
   validateId(id);
+
+  const sessions = await sessionsRepo.countByPlan(id);
+  if (sessions === 1) {
+    throw new AppError("No se puede eliminar: tiene 1 sesión. Elimina la sesión o desactiva el plan", 409);
+  }
+  if (sessions > 1) {
+    throw new AppError(`No se puede eliminar: tiene ${sessions} sesiones. Elimina las sesiones o desactiva el plan`, 409);
+  }
 
   const plan = await plansRepo.softDelete(id);
   if (!plan) {

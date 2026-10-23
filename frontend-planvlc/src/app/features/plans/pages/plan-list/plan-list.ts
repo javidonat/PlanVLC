@@ -68,7 +68,7 @@ export class PlanList implements OnInit {
       const res = await this.service.softDelete(plan._id);
       this.store.upsert(res.data);
     } catch {
-      // El interceptor ya muestra el error.
+      // El interceptor ya muestra el error (p. ej. 409 si tiene sesiones).
     } finally {
       this.store.setBusy(null);
     }

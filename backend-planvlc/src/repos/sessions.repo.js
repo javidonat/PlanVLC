@@ -76,6 +76,11 @@ const existsById = async (id) => {
   return Boolean(await Session.exists({ _id: id }));
 };
 
+// ¿Cuántas sesiones no eliminadas tiene este plan? (para no dejar sesiones de un plan borrado)
+const countByPlan = (planId) => {
+  return Session.countDocuments({ planId, deletedAt: null });
+};
+
 // ¿Existe ya otra sesión con ese SKU? Cuenta también las desactivadas y eliminadas,
 // porque el índice único de MongoDB las incluye
 const skuExists = async (sku, excludeId) => {
@@ -85,5 +90,5 @@ const skuExists = async (sku, excludeId) => {
 };
 
 export default {
-  findAll, findActive, findDeleted, findById, findUpcomingByPlan, create, update, softDelete, setActive, existsById, skuExists,
+  findAll, findActive, findDeleted, findById, findUpcomingByPlan, create, update, softDelete, setActive, existsById, skuExists, countByPlan,
 };

@@ -74,6 +74,12 @@ const slugExists = async (slug, excludeId) => {
   return Boolean(await Organizer.exists(filter));
 };
 
+// ¿Cuántos organizadores no eliminados gestiona este usuario? (para no dejar organizadores con un usuario borrado)
+const countByUser = (userId) => {
+  return Organizer.countDocuments({ userIds: userId, deletedAt: null });
+};
+
 export default {
+  countByUser,
   findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById, slugExists,
 };

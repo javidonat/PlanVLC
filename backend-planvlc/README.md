@@ -180,7 +180,7 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 | POST | `/api/plans` | Crea un plan |
 | PATCH | `/api/plans/:id` | Modifica solo los campos enviados (incluido `status`) |
 | PATCH | `/api/plans/:id/active` | Activa o desactiva un plan. Body: `{ "isActive": true }`. No funciona con planes eliminados (`409`) |
-| PATCH | `/api/plans/:id/softdelete` | Borrado lógico: `isActive = false` y `deletedAt = ahora` |
+| PATCH | `/api/plans/:id/softdelete` | Borrado lógico: `isActive = false` y `deletedAt = ahora`. Si tiene alguna sesión no eliminada → `409` |
 
 Todas las respuestas, incluidas las de `/active` y `/softdelete`, traen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }`, `coverImage` trae `{ _id, url, alt }` (o `null`) y `galleryImages` trae `[{ _id, url, alt, position }]`. Al enviar datos (POST/PATCH) las relaciones se envían como ids y las imágenes como URLs (`coverImageUrl`, `galleryImageUrls`).
 
@@ -250,7 +250,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | POST | `/api/users` | Crea. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcionales: `status`, `avatarImageUrl` |
 | PATCH | `/api/users/:id` | Modifica los campos enviados. `password` solo si se quiere cambiar |
 | PATCH | `/api/users/:id/active` | Activa o desactiva. Eliminado → `409` |
-| PATCH | `/api/users/:id/softdelete` | Borrado lógico |
+| PATCH | `/api/users/:id/softdelete` | Borrado lógico. Si gestiona algún organizador no eliminado → `409` |
 
 La contraseña llega en claro y el servidor guarda solo su hash con bcrypt (10 rondas, igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar se guarda en `images` (`entityType: "user"`, `type: "avatar"`) y las respuestas lo traen en `avatar`.
 
@@ -321,6 +321,25 @@ Hay dos rutas distintas: `GET /api/plans/:id` (el `:id` debe ser un ObjectId, 24
 ### Soft delete
 
 La API **no borra documentos**. `PATCH /:id/softdelete` marca el plan como inactivo (`isActive: false`) y guarda la fecha en `deletedAt`. El documento sigue en la base de datos, pero desaparece de las búsquedas por id o slug (responden `404`). Tampoco se puede modificar con `PATCH /:id`. Si se repite el borrado responde `404` y `deletedAt` conserva la fecha original.
+
+### Integridad referencial
+
+MongoDB no tiene claves foráneas, así que el servidor lo comprueba a mano en dos momentos:
+
+1. **Al crear o modificar**: los ids relacionados tienen que existir y no estar eliminados (`repos/refs.repo.js`). Si no → `400`.
+2. **Al eliminar**: no se puede eliminar un documento que otro necesita (si no, ese otro se quedaría apuntando a algo borrado). Se avisa con `409` y se puede desactivar en su lugar.
+
+| Relación | Al crear/modificar | Al eliminar el relacionado |
+|---|---|---|
+| `plans.categoryIds` → `categories` | Las categorías existen | Categoría usada por algún plan → `409` |
+| `plans.venueId` → `venues` | El lugar existe | Lugar con planes → `409` |
+| `plans.organizerId` → `organizers` | El organizador existe | Organizador con planes → `409` |
+| `sessions.planId` → `plans` | El plan existe (y no se puede cambiar) | Plan con sesiones → `409` |
+| `users.roleId` → `roles` | El rol existe | Rol con usuarios → `409` |
+| `organizers.userIds` → `users` | Los usuarios existen | Usuario que gestiona organizadores → `409` |
+| `images.entityId` → plan, lugar, categoría, organizador o usuario | La entidad existe | Las imágenes forman parte del documento: se quedan con él como historial |
+
+Solo cuentan los documentos no eliminados: un lugar que solo usan planes ya eliminados sí se puede eliminar.
 
 **Un plan eliminado no se puede recuperar por la API**: `PATCH /:id/active` (con `true` o `false`) responde `409` si el plan tiene `deletedAt`. Un plan desactivado (sin `deletedAt`) sí se puede volver a activar o eliminar. Su slug sigue reservado: ningún plan nuevo puede usarlo.
 

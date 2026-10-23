@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import usersRepo from "../repos/users.repo.js";
+import organizersRepo from "../repos/organizers.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
@@ -138,9 +139,18 @@ const setActive = async (id, body) => {
   throw new AppError("Usuario no encontrado", 404);
 };
 
-// PATCH /:id/softdelete: isActive = false y deletedAt = ahora (el documento no se borra)
+// PATCH /:id/softdelete: isActive = false y deletedAt = ahora (el documento no se borra).
+// No se puede eliminar si gestiona algún organizador: el organizador se quedaría con un usuario que ya no existe
 const softDeleteUser = async (id) => {
   validateId(id);
+
+  const organizers = await organizersRepo.countByUser(id);
+  if (organizers === 1) {
+    throw new AppError("No se puede eliminar: gestiona 1 organizador. Quítalo de ese organizador o desactiva el usuario", 409);
+  }
+  if (organizers > 1) {
+    throw new AppError(`No se puede eliminar: gestiona ${organizers} organizadores. Quítalo de esos organizadores o desactiva el usuario`, 409);
+  }
 
   const user = await usersRepo.softDelete(id);
   if (!user) {
