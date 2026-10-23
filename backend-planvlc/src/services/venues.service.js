@@ -129,6 +129,17 @@ const setActive = async (id, body) => {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
   }
 
+  // No se puede desactivar si hay planes activos en este lugar: quedarían planes activos en un lugar desactivado
+  if (!body.isActive) {
+    const plans = await plansRepo.countByVenue(id, true);
+    if (plans === 1) {
+      throw new AppError("No se puede desactivar: hay 1 plan activo en este lugar. Cámbialo de lugar o desactiva el plan primero", 409);
+    }
+    if (plans > 1) {
+      throw new AppError(`No se puede desactivar: hay ${plans} planes activos en este lugar. Cámbialos de lugar o desactívalos primero`, 409);
+    }
+  }
+
   // El repositorio solo actualiza lugares con deletedAt: null (uno eliminado no se reactiva)
   const venue = await venuesRepo.setActive(id, { isActive: body.isActive });
   if (venue) {

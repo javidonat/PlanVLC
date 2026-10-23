@@ -75,11 +75,17 @@ const emailExists = async (email, excludeId) => {
   return Boolean(await User.exists(filter));
 };
 
-// ¿Cuántos usuarios no eliminados tienen este rol? (para no dejar usuarios sin rol)
-const countByRole = (roleId) => {
-  return User.countDocuments({ roleId, deletedAt: null });
+// ¿Cuántos usuarios no eliminados tienen este rol? (para no dejar usuarios sin rol).
+// Con onlyActive solo cuenta los activos (para no dejar usuarios activos con un rol desactivado)
+const countByRole = (roleId, onlyActive = false) => {
+  return User.countDocuments({ roleId, deletedAt: null, ...(onlyActive && { isActive: true }) });
+};
+
+// Sin filtrar por isActive (como en imágenes): para comprobar sus relaciones antes de activarlo
+const findAnyById = (id) => {
+  return User.findOne({ _id: id, deletedAt: null }).lean();
 };
 
 export default {
-  findAll, findActive, findDeleted, findById, create, update, softDelete, setActive, existsById, emailExists, countByRole,
+  findAll, findActive, findDeleted, findById, create, update, softDelete, setActive, existsById, emailExists, countByRole, findAnyById,
 };

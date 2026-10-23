@@ -81,26 +81,29 @@ const slugExists = async (slug, excludeId) => {
   return Boolean(await Plan.exists(filter));
 };
 
-// ¿Cuántos planes no eliminados usan esta categoría? (para no dejar planes con categorías borradas)
-const countByCategory = (categoryId) => {
-  return Plan.countDocuments({ categoryIds: categoryId, deletedAt: null });
+// ¿Cuántos planes no eliminados usan esta categoría? (para no dejar planes con categorías borradas).
+// Con onlyActive solo cuenta los activos (para no dejar planes activos con una categoría desactivada).
+// Igual en countByVenue y countByOrganizer
+const countByCategory = (categoryId, onlyActive = false) => {
+  return Plan.countDocuments({ categoryIds: categoryId, deletedAt: null, ...(onlyActive && { isActive: true }) });
 };
 
 // ¿Cuántos planes no eliminados se celebran en este lugar? (para no dejar planes con un lugar borrado)
-const countByVenue = (venueId) => {
-  return Plan.countDocuments({ venueId, deletedAt: null });
+const countByVenue = (venueId, onlyActive = false) => {
+  return Plan.countDocuments({ venueId, deletedAt: null, ...(onlyActive && { isActive: true }) });
 };
 
 // ¿Cuántos planes no eliminados tiene este organizador? (para no dejar planes con un organizador borrado)
-const countByOrganizer = (organizerId) => {
-  return Plan.countDocuments({ organizerId, deletedAt: null });
+const countByOrganizer = (organizerId, onlyActive = false) => {
+  return Plan.countDocuments({ organizerId, deletedAt: null, ...(onlyActive && { isActive: true }) });
 };
 
-// Plan no eliminado (activo o desactivado), solo con su slug y el aforo de su lugar:
-// lo usan las sesiones para generar el SKU y para comprobar que el aforo no supera el del lugar
+// Plan no eliminado (activo o desactivado), solo con su slug, isActive y el aforo de su lugar:
+// lo usan las sesiones para generar el SKU, para comprobar que el aforo no supera el del lugar
+// y para no tener sesiones activas de un plan desactivado
 const findSlugById = (id) => {
   return Plan.findOne({ _id: id, deletedAt: null })
-    .select("slug venueId")
+    .select("slug venueId isActive")
     .populate({ path: "venueId", select: "capacity" })
     .lean();
 };
@@ -110,11 +113,17 @@ const updateDerived = (id, data) => {
   return Plan.updateOne({ _id: id }, data);
 };
 
+// Sin filtrar por isActive (como en imágenes): para comprobar sus relaciones antes de activarlo
+const findAnyById = (id) => {
+  return Plan.findOne({ _id: id, deletedAt: null }).lean();
+};
+
 export default {
   countByCategory,
   countByVenue,
   countByOrganizer,
   findSlugById,
+  findAnyById,
   updateDerived,
   findAll, findActive, findDeleted, findById, findBySlug, create, update, softDelete, setActive, existsById, slugExists,
 };

@@ -108,6 +108,9 @@ const createSession = async (body) => {
   if (!plan) {
     throw new AppError("El plan indicado no existe", 400);
   }
+  if (!plan.isActive) {
+    throw new AppError("El plan indicado está desactivado", 400);
+  }
   validateVenueCapacity(data.capacity, plan);
 
   // Si no se indica el stock (o llega vacío), al crearla todas las plazas están libres (stock = aforo)
@@ -164,6 +167,15 @@ const setActive = async (id, body) => {
 
   if (typeof body?.isActive !== "boolean") {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
+  }
+
+  // No se puede activar una sesión de un plan desactivado
+  if (body.isActive) {
+    const current = await sessionsRepo.findAnyById(id);
+    const plan = current && (await plansRepo.findSlugById(current.planId));
+    if (current && !plan?.isActive) {
+      throw new AppError("No se puede activar: su plan está desactivado. Activa el plan primero", 409);
+    }
   }
 
   // El repositorio solo actualiza sesiones con deletedAt: null (una eliminada no se reactiva)

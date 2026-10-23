@@ -35,9 +35,10 @@ const pickFields = (body = {}) => {
 };
 
 // Comprueba que los usuarios indicados existen de verdad (MongoDB no lo hace solo)
+// y están activos (un organizador activo no puede tener usuarios desactivados)
 const validateReferences = async (data) => {
   if (data.userIds?.length && !(await refsRepo.usersExist(data.userIds))) {
-    throw new AppError("Alguno de los usuarios indicados no existe", 400);
+    throw new AppError("Alguno de los usuarios indicados no existe o está desactivado", 400);
   }
 };
 
@@ -172,6 +173,25 @@ const setActive = async (id, body) => {
 
   if (typeof body?.isActive !== "boolean") {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
+  }
+
+  // No se puede desactivar si tiene planes activos: quedarían planes activos con un organizador desactivado
+  if (!body.isActive) {
+    const plans = await plansRepo.countByOrganizer(id, true);
+    if (plans === 1) {
+      throw new AppError("No se puede desactivar: tiene 1 plan activo. Cambia el organizador de ese plan o desactiva el plan primero", 409);
+    }
+    if (plans > 1) {
+      throw new AppError(`No se puede desactivar: tiene ${plans} planes activos. Cambia el organizador de esos planes o desactívalos primero`, 409);
+    }
+  }
+
+  // No se puede activar si alguno de sus usuarios está desactivado
+  if (body.isActive) {
+    const current = await organizersRepo.findAnyById(id);
+    if (current?.userIds?.length && !(await refsRepo.usersExist(current.userIds))) {
+      throw new AppError("No se puede activar: alguno de sus usuarios está desactivado. Actívalo o quítalo primero", 409);
+    }
   }
 
   // El repositorio solo actualiza organizadores con deletedAt: null (uno eliminado no se reactiva)

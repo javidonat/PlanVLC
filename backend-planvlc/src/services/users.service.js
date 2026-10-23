@@ -36,13 +36,13 @@ const pickFields = (body = {}) => {
   return data;
 };
 
-// Comprueba el email (único) y el rol (tiene que existir) antes de guardar
+// Comprueba el email (único) y el rol (tiene que existir y estar activo) antes de guardar
 const validateData = async (data, excludeId) => {
   if (data.email && (await usersRepo.emailExists(data.email, excludeId))) {
     throw new AppError("Ya existe un usuario con ese email", 409);
   }
   if (data.roleId && !(await refsRepo.roleExists(data.roleId))) {
-    throw new AppError("El rol indicado no existe", 400);
+    throw new AppError("El rol indicado no existe o está desactivado", 400);
   }
 };
 
@@ -124,6 +124,25 @@ const setActive = async (id, body) => {
 
   if (typeof body?.isActive !== "boolean") {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
+  }
+
+  // No se puede desactivar si gestiona organizadores activos: quedarían organizadores activos con un usuario desactivado
+  if (!body.isActive) {
+    const organizers = await organizersRepo.countByUser(id, true);
+    if (organizers === 1) {
+      throw new AppError("No se puede desactivar: gestiona 1 organizador activo. Quítalo de ese organizador o desactiva el organizador primero", 409);
+    }
+    if (organizers > 1) {
+      throw new AppError(`No se puede desactivar: gestiona ${organizers} organizadores activos. Quítalo de esos organizadores o desactívalos primero`, 409);
+    }
+  }
+
+  // No se puede activar si su rol está desactivado
+  if (body.isActive) {
+    const current = await usersRepo.findAnyById(id);
+    if (current && !(await refsRepo.roleExists(current.roleId))) {
+      throw new AppError("No se puede activar: su rol está desactivado. Activa el rol o cámbiaselo primero", 409);
+    }
   }
 
   // El repositorio solo actualiza usuarios con deletedAt: null (uno eliminado no se reactiva)

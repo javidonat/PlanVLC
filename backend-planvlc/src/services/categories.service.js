@@ -164,6 +164,17 @@ const setActive = async (id, body) => {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
   }
 
+  // No se puede desactivar si la usan planes activos: quedarían planes activos con una categoría desactivada
+  if (!body.isActive) {
+    const plans = await plansRepo.countByCategory(id, true);
+    if (plans === 1) {
+      throw new AppError("No se puede desactivar: la usa 1 plan activo. Quítala de ese plan o desactiva el plan primero", 409);
+    }
+    if (plans > 1) {
+      throw new AppError(`No se puede desactivar: la usan ${plans} planes activos. Quítala de esos planes o desactívalos primero`, 409);
+    }
+  }
+
   // El repositorio solo actualiza categorías con deletedAt: null (una eliminada no se reactiva)
   const category = await categoriesRepo.setActive(id, { isActive: body.isActive });
   if (category) {

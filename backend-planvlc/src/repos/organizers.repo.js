@@ -74,12 +74,19 @@ const slugExists = async (slug, excludeId) => {
   return Boolean(await Organizer.exists(filter));
 };
 
-// ¿Cuántos organizadores no eliminados gestiona este usuario? (para no dejar organizadores con un usuario borrado)
-const countByUser = (userId) => {
-  return Organizer.countDocuments({ userIds: userId, deletedAt: null });
+// ¿Cuántos organizadores no eliminados gestiona este usuario? (para no dejar organizadores con un usuario borrado).
+// Con onlyActive solo cuenta los activos (para no dejar organizadores activos con un usuario desactivado)
+const countByUser = (userId, onlyActive = false) => {
+  return Organizer.countDocuments({ userIds: userId, deletedAt: null, ...(onlyActive && { isActive: true }) });
+};
+
+// Sin filtrar por isActive (como en imágenes): para comprobar sus relaciones antes de activarlo
+const findAnyById = (id) => {
+  return Organizer.findOne({ _id: id, deletedAt: null }).lean();
 };
 
 export default {
   countByUser,
+  findAnyById,
   findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById, slugExists,
 };

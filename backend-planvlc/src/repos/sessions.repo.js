@@ -76,9 +76,10 @@ const existsById = async (id) => {
   return Boolean(await Session.exists({ _id: id }));
 };
 
-// ¿Cuántas sesiones no eliminadas tiene este plan? (para no dejar sesiones de un plan borrado)
-const countByPlan = (planId) => {
-  return Session.countDocuments({ planId, deletedAt: null });
+// ¿Cuántas sesiones no eliminadas tiene este plan? (para no dejar sesiones de un plan borrado).
+// Con onlyActive solo cuenta las activas (para no dejar sesiones activas de un plan desactivado)
+const countByPlan = (planId, onlyActive = false) => {
+  return Session.countDocuments({ planId, deletedAt: null, ...(onlyActive && { isActive: true }) });
 };
 
 // ¿Existe ya otra sesión con ese SKU? Cuenta también las desactivadas y eliminadas,
@@ -89,6 +90,11 @@ const skuExists = async (sku, excludeId) => {
   return Boolean(await Session.exists(filter));
 };
 
+// Sin filtrar por isActive (como en imágenes): para comprobar sus relaciones antes de activarla
+const findAnyById = (id) => {
+  return Session.findOne({ _id: id, deletedAt: null }).lean();
+};
+
 export default {
-  findAll, findActive, findDeleted, findById, findUpcomingByPlan, create, update, softDelete, setActive, existsById, skuExists, countByPlan,
+  findAll, findActive, findDeleted, findById, findUpcomingByPlan, create, update, softDelete, setActive, existsById, skuExists, countByPlan, findAnyById,
 };

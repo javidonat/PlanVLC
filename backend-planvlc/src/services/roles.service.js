@@ -94,6 +94,17 @@ const setActive = async (id, body) => {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
   }
 
+  // No se puede desactivar si hay usuarios activos con este rol: quedarían usuarios activos con un rol desactivado
+  if (!body.isActive) {
+    const users = await usersRepo.countByRole(id, true);
+    if (users === 1) {
+      throw new AppError("No se puede desactivar: hay 1 usuario activo con este rol. Cámbiale el rol o desactiva el usuario primero", 409);
+    }
+    if (users > 1) {
+      throw new AppError(`No se puede desactivar: hay ${users} usuarios activos con este rol. Cámbiales el rol o desactiva los usuarios primero`, 409);
+    }
+  }
+
   // El repositorio solo actualiza roles con deletedAt: null (uno eliminado no se reactiva)
   const role = await rolesRepo.setActive(id, { isActive: body.isActive });
   if (role) {

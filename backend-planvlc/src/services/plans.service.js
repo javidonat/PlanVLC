@@ -60,15 +60,29 @@ const saveImages = async (plan, images) => {
 };
 
 // Comprueba que los ids de las relaciones existen de verdad (MongoDB no lo hace solo)
+// y están activos (un plan activo no puede apuntar a una categoría, lugar u organizador desactivado)
 const validateReferences = async (data) => {
   if (data.categoryIds && !(await refsRepo.categoriesExist(data.categoryIds))) {
-    throw new AppError("Alguna de las categorías indicadas no existe", 400);
+    throw new AppError("Alguna de las categorías indicadas no existe o está desactivada", 400);
   }
   if (data.venueId && !(await refsRepo.venueExists(data.venueId))) {
-    throw new AppError("El lugar indicado no existe", 400);
+    throw new AppError("El lugar indicado no existe o está desactivado", 400);
   }
   if (data.organizerId && !(await refsRepo.organizerExists(data.organizerId))) {
-    throw new AppError("El organizador indicado no existe", 400);
+    throw new AppError("El organizador indicado no existe o está desactivado", 400);
+  }
+};
+
+// Al activar un plan desactivado se comprueba lo mismo con las relaciones que ya tiene guardadas
+const validateReferencesToActivate = async (plan) => {
+  if (!(await refsRepo.categoriesExist(plan.categoryIds))) {
+    throw new AppError("No se puede activar: alguna de sus categorías está desactivada. Actívala o quítala primero", 409);
+  }
+  if (!(await refsRepo.venueExists(plan.venueId))) {
+    throw new AppError("No se puede activar: su lugar está desactivado. Actívalo o cambia el lugar primero", 409);
+  }
+  if (plan.organizerId && !(await refsRepo.organizerExists(plan.organizerId))) {
+    throw new AppError("No se puede activar: su organizador está desactivado. Actívalo o cambia el organizador primero", 409);
   }
 };
 
@@ -210,6 +224,23 @@ const setActive = async (id, body) => {
 
   if (typeof body?.isActive !== "boolean") {
     throw new AppError("isActive es obligatorio y debe ser true o false", 400);
+  }
+
+  // No se puede desactivar si tiene sesiones activas: quedarían sesiones activas de un plan desactivado
+  if (!body.isActive) {
+    const sessions = await sessionsRepo.countByPlan(id, true);
+    if (sessions === 1) {
+      throw new AppError("No se puede desactivar: tiene 1 sesión activa. Desactiva o elimina la sesión primero", 409);
+    }
+    if (sessions > 1) {
+      throw new AppError(`No se puede desactivar: tiene ${sessions} sesiones activas. Desactiva o elimina las sesiones primero`, 409);
+    }
+  }
+
+  // No se puede activar si alguna de sus relaciones está desactivada
+  if (body.isActive) {
+    const current = await plansRepo.findAnyById(id);
+    if (current) await validateReferencesToActivate(current);
   }
 
   // Solo se toca isActive. deletedAt no se modifica nunca aquí, y el repositorio solo actualiza

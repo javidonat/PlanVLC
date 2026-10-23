@@ -324,22 +324,26 @@ La API **no borra documentos**. `PATCH /:id/softdelete` marca el plan como inact
 
 ### Integridad referencial
 
-MongoDB no tiene claves foráneas, así que el servidor lo comprueba a mano en dos momentos:
+MongoDB no tiene claves foráneas, así que el servidor lo comprueba a mano (en los services) en estos momentos:
 
-1. **Al crear o modificar**: los ids relacionados tienen que existir y no estar eliminados (`repos/refs.repo.js`). Si no → `400`.
+1. **Al crear o modificar**: los ids relacionados tienen que existir, estar activos y no estar eliminados (`repos/refs.repo.js`). Si no → `400`.
 2. **Al eliminar**: no se puede eliminar un documento que otro necesita (si no, ese otro se quedaría apuntando a algo borrado). Se avisa con `409` y se puede desactivar en su lugar.
+3. **Al desactivar** (`PATCH /:id/active` con `false`): no se puede desactivar un documento que usa otro **activo** (por ejemplo, una categoría con planes activos o un plan con sesiones activas). Se avisa con `409`: primero hay que desactivar o cambiar los que dependen de él.
+4. **Al activar** (`PATCH /:id/active` con `true`): no se puede activar un documento si alguno de los que necesita está desactivado (por ejemplo, un plan cuya categoría está desactivada o una sesión de un plan desactivado). Se avisa con `409`.
 
-| Relación | Al crear/modificar | Al eliminar el relacionado |
+Así nunca hay un documento activo apuntando a otro desactivado.
+
+| Relación | Al crear/modificar/activar | Al eliminar o desactivar el relacionado |
 |---|---|---|
-| `plans.categoryIds` → `categories` | Las categorías existen | Categoría usada por algún plan → `409` |
-| `plans.venueId` → `venues` | El lugar existe | Lugar con planes → `409` |
-| `plans.organizerId` → `organizers` | El organizador existe | Organizador con planes → `409` |
-| `sessions.planId` → `plans` | El plan existe (y no se puede cambiar) | Plan con sesiones → `409` |
-| `users.roleId` → `roles` | El rol existe | Rol con usuarios → `409` |
-| `organizers.userIds` → `users` | Los usuarios existen | Usuario que gestiona organizadores → `409` |
-| `images.entityId` → plan, lugar, categoría, organizador o usuario | La entidad existe | Las imágenes forman parte del documento: se quedan con él como historial |
+| `plans.categoryIds` → `categories` | Las categorías existen y están activas | Eliminar: categoría usada por algún plan → `409`. Desactivar: usada por algún plan activo → `409` |
+| `plans.venueId` → `venues` | El lugar existe y está activo | Lugar con planes (activos, al desactivar) → `409` |
+| `plans.organizerId` → `organizers` | El organizador existe y está activo | Organizador con planes (activos, al desactivar) → `409` |
+| `sessions.planId` → `plans` | El plan existe y está activo (y no se puede cambiar) | Plan con sesiones (activas, al desactivar) → `409` |
+| `users.roleId` → `roles` | El rol existe y está activo | Rol con usuarios (activos, al desactivar) → `409` |
+| `organizers.userIds` → `users` | Los usuarios existen y están activos | Usuario que gestiona organizadores (activos, al desactivar) → `409` |
+| `images.entityId` → plan, lugar, categoría, organizador o usuario | La entidad existe (aunque esté desactivada) | Las imágenes forman parte del documento: se quedan con él como historial |
 
-Solo cuentan los documentos no eliminados: un lugar que solo usan planes ya eliminados sí se puede eliminar.
+Solo cuentan los documentos no eliminados: un lugar que solo usan planes ya eliminados sí se puede eliminar. Y al desactivar solo cuentan los activos: un lugar que solo usan planes desactivados sí se puede desactivar.
 
 **Un plan eliminado no se puede recuperar por la API**: `PATCH /:id/active` (con `true` o `false`) responde `409` si el plan tiene `deletedAt`. Un plan desactivado (sin `deletedAt`) sí se puede volver a activar o eliminar. Su slug sigue reservado: ningún plan nuevo puede usarlo.
 
