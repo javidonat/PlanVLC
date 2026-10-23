@@ -1,9 +1,9 @@
 <section class="mx-auto max-w-3xl px-4 py-9 sm:px-6">
-  <a routerLink="/admin/categorias" class="text-sm font-semibold text-blue-700 hover:underline">← Volver a categorías</a>
+  <a routerLink="/admin/categorias" class="text-sm font-semibold text-marca-700 hover:underline">← Volver a categorías</a>
   <div class="mb-7 mt-5">
-    <p class="text-xs font-bold uppercase tracking-[.2em] text-blue-600">Administración</p>
-    <h1 class="mt-2 text-3xl font-bold text-slate-900">Editar categoría</h1>
-    <p class="mt-2 text-slate-500">{{ category()?.name || 'Completa los datos de la categoría.' }}</p>
+    <p class="text-sm font-semibold text-marca-600">Administración</p>
+    <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar categoría</h1>
+    <p class="mt-2 text-gris-500">{{ category()?.name || 'Completa los datos de la categoría.' }}</p>
   </div>
 
   @if (pageLoading()) {

@@ -1,21 +1,21 @@
 <td class="px-5 py-4">
   <div class="flex items-center gap-3">
     @if (venue().coverImage; as cover) {
-      <img [src]="cover.url" alt="" class="h-10 w-10 shrink-0 rounded-lg border border-slate-200 bg-slate-100 object-cover" />
+      <img [src]="cover.url" alt="" class="h-10 w-10 shrink-0 rounded-lg border border-gris-200 bg-gris-100 object-cover" />
     } @else {
-      <span class="h-10 w-10 shrink-0 rounded-lg border border-dashed border-slate-300 bg-slate-50"></span>
+      <span class="h-10 w-10 shrink-0 rounded-lg border border-dashed border-gris-300 bg-gris-50"></span>
     }
     <div>
-      <p class="font-semibold text-slate-900">{{ venue().name }}</p>
-      <p class="mt-1 text-xs text-slate-500">{{ venue().neighborhood ? venue().neighborhood + ' · ' : '' }}{{ venue().city }}</p>
+      <p class="font-semibold text-gris-900">{{ venue().name }}</p>
+      <p class="mt-1 text-xs text-gris-500">{{ venue().neighborhood ? venue().neighborhood + ' · ' : '' }}{{ venue().city }}</p>
     </div>
   </div>
 </td>
-<td class="px-5 py-4 text-slate-600">
+<td class="px-5 py-4 text-gris-600">
   <span class="flex items-center gap-1"><svg lucideMapPin width="15" height="15"></svg> {{ venue().address || 'Sin dirección' }}</span>
-  <span class="mt-1 block text-xs text-slate-500">Aforo: {{ venue().capacity ?? '—' }}</span>
+  <span class="mt-1 block text-xs text-gris-500">Aforo: {{ venue().capacity ?? '—' }}</span>
 </td>
-<td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ venueStatusLabel(venue().status) }}</span></td>
+<td class="px-5 py-4"><span class="rounded-full bg-gris-100 px-2.5 py-1 text-xs font-semibold text-gris-700">{{ venueStatusLabel(venue().status) }}</span></td>
 <td class="px-5 py-4">
   @if (venue().deletedAt) {
     <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">Eliminado</span>
@@ -26,13 +26,13 @@
 <td class="px-5 py-4">
   <div class="flex justify-end gap-2">
     <!-- Ver: disponible siempre, también en lugares desactivados o eliminados -->
-    <button type="button" (click)="viewClick.emit(venue())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" [attr.aria-label]="'Ver ' + venue().name"><svg lucideEye width="17" height="17"></svg></button>
+    <button type="button" (click)="viewClick.emit(venue())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-gris-100 hover:text-gris-900" [attr.aria-label]="'Ver ' + venue().name"><svg lucideEye width="17" height="17"></svg></button>
     @if (!venue().deletedAt) {
       <!-- El backend solo deja editar lugares activos (PATCH /:id filtra por isActive) -->
       @if (venue().isActive) {
-        <button type="button" (click)="editClick.emit(venue())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" [attr.aria-label]="'Editar ' + venue().name"><svg lucidePencil width="17" height="17"></svg></button>
+        <button type="button" (click)="editClick.emit(venue())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-marca-50 hover:text-marca-700" [attr.aria-label]="'Editar ' + venue().name"><svg lucidePencil width="17" height="17"></svg></button>
       }
-      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(venue())" class="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + venue().name"><svg lucideTrash2 width="17" height="17"></svg></button>
+      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(venue())" class="rounded-lg border border-gris-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + venue().name"><svg lucideTrash2 width="17" height="17"></svg></button>
     }
   </div>
 </td>

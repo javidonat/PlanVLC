@@ -8,7 +8,7 @@ import { Category, categoryGroupLabel, categoryStatusLabel } from '../../../../c
   selector: 'tr[app-category-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './category-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class CategoryRow {
   category = input.required<Category>();

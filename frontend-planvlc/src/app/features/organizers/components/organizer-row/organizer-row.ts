@@ -8,7 +8,7 @@ import { Organizer, organizerStatusLabel, organizerTypeLabel } from '../../../..
   selector: 'tr[app-organizer-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './organizer-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class OrganizerRow {
   organizer = input.required<Organizer>();

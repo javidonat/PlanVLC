@@ -8,7 +8,7 @@ import { Image, imageEntityTypeLabel, imageTypeLabel } from '../../../../core/mo
   selector: 'tr[app-image-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './image-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class ImageRow {
   image = input.required<Image>();

@@ -8,7 +8,7 @@ import { Venue, venueStatusLabel } from '../../../../core/models/venue.model';
   selector: 'tr[app-venue-row]',
   imports: [LucideEye, LucideMapPin, LucidePencil, LucideTrash2],
   templateUrl: './venue-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class VenueRow {
   venue = input.required<Venue>();

@@ -1,4 +1,4 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-gris-200 bg-white p-5 shadow-sm sm:p-8">
   <div class="grid gap-5 sm:grid-cols-3">
     <div class="sm:col-span-2">
       <label for="name" class="field-label">Nombre *</label>
@@ -21,7 +21,7 @@
   </div>
 
   <fieldset>
-    <legend class="field-label">Contacto <span class="font-normal text-slate-500">(todo opcional)</span></legend>
+    <legend class="field-label">Contacto <span class="font-normal text-gris-500">(todo opcional)</span></legend>
     <div class="grid gap-5 sm:grid-cols-2">
       <div>
         <label for="email" class="field-label">Email</label>
@@ -51,12 +51,12 @@
     <legend class="field-label">Usuarios que lo gestionan</legend>
     <div class="flex flex-wrap gap-2">
       @for (user of users(); track user._id) {
-        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50">
-          <input type="checkbox" class="accent-blue-600" [checked]="isUserSelected(user._id)" (change)="toggleUser(user._id, $any($event.target).checked)" />
-          {{ user.name }} <span class="text-slate-500">({{ user.email }})</span>
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-gris-300 px-3 py-2 text-sm text-gris-700 has-[:checked]:border-marca-500 has-[:checked]:bg-marca-50">
+          <input type="checkbox" class="accent-marca-600" [checked]="isUserSelected(user._id)" (change)="toggleUser(user._id, $any($event.target).checked)" />
+          {{ user.name }} <span class="text-gris-500">({{ user.email }})</span>
         </label>
       } @empty {
-        <p class="text-sm text-slate-500">No hay usuarios disponibles.</p>
+        <p class="text-sm text-gris-500">No hay usuarios disponibles.</p>
       }
     </div>
     @if (fieldError('userIds'); as message) {<p class="field-error">{{ message }}</p>}
@@ -66,7 +66,7 @@
     <label for="logoImageUrl" class="field-label">URL del logo</label>
     <input id="logoImageUrl" type="url" class="field-input" formControlName="logoImageUrl" placeholder="https://..." />
     @if (fieldError('logoImageUrl'); as message) {<p class="field-error">{{ message }}</p>}
-    @if (logoPreview(); as url) {<img [src]="url" alt="Vista previa del logo" class="mt-3 h-24 w-24 rounded-full border border-slate-200 bg-slate-100 object-cover" />}
+    @if (logoPreview(); as url) {<img [src]="url" alt="Vista previa del logo" class="mt-3 h-24 w-24 rounded-full border border-gris-200 bg-gris-100 object-cover" />}
   </div>
 
   <div class="sm:w-1/2">
@@ -77,8 +77,8 @@
     @if (fieldError('status'); as message) {<p class="field-error">{{ message }}</p>}
   </div>
 
-  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
-    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
-    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear organizador' }}</button>
+  <div class="flex justify-end gap-3 border-t border-gris-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-gris-200 bg-white px-5 py-3 font-semibold text-gris-700 shadow-xs hover:bg-gris-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white hover:bg-marca-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear organizador' }}</button>
   </div>
 </form>

@@ -1,4 +1,4 @@
-<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-6 rounded-2xl border border-gris-200 bg-white p-5 shadow-sm sm:p-8">
   <div>
     <label for="name" class="field-label">Nombre *</label>
     <input id="name" class="field-input" formControlName="name" maxlength="100" />
@@ -56,16 +56,16 @@
     <label for="coverImageUrl" class="field-label">URL de portada</label>
     <input id="coverImageUrl" type="url" class="field-input" formControlName="coverImageUrl" placeholder="https://images.unsplash.com/..." />
     @if (fieldError('coverImageUrl'); as message) {<p class="field-error">{{ message }}</p>}
-    @if (coverPreview(); as url) {<img [src]="url" alt="Vista previa de la portada" class="mt-3 aspect-video w-full max-w-sm rounded-xl border border-slate-200 bg-slate-100 object-cover" />}
+    @if (coverPreview(); as url) {<img [src]="url" alt="Vista previa de la portada" class="mt-3 aspect-video w-full max-w-sm rounded-xl border border-gris-200 bg-gris-100 object-cover" />}
   </div>
 
   <div>
-    <label for="galleryImageUrls" class="field-label">Galería <span class="font-normal text-slate-500">(una URL por línea, máximo 10)</span></label>
+    <label for="galleryImageUrls" class="field-label">Galería <span class="font-normal text-gris-500">(una URL por línea, máximo 10)</span></label>
     <textarea id="galleryImageUrls" class="field-input min-h-28 font-mono text-sm" formControlName="galleryImageUrls" placeholder="https://images.unsplash.com/...&#10;https://images.unsplash.com/..."></textarea>
     @if (fieldError('galleryImageUrls'); as message) {<p class="field-error">{{ message }}</p>}
     @if (galleryPreview().length) {
       <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-        @for (url of galleryPreview(); track $index) {<img [src]="url" [alt]="'Imagen ' + ($index + 1) + ' de la galería'" loading="lazy" class="aspect-square w-full rounded-lg border border-slate-200 bg-slate-100 object-cover" />}
+        @for (url of galleryPreview(); track $index) {<img [src]="url" [alt]="'Imagen ' + ($index + 1) + ' de la galería'" loading="lazy" class="aspect-square w-full rounded-lg border border-gris-200 bg-gris-100 object-cover" />}
       </div>
     }
   </div>
@@ -78,8 +78,8 @@
     @if (fieldError('status'); as message) {<p class="field-error">{{ message }}</p>}
   </div>
 
-  <div class="flex justify-end gap-3 border-t border-slate-100 pt-6">
-    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-slate-200 px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50">Cancelar</button>
-    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear lugar' }}</button>
+  <div class="flex justify-end gap-3 border-t border-gris-100 pt-6">
+    <button type="button" (click)="cancelClick.emit()" class="rounded-xl border border-gris-200 bg-white px-5 py-3 font-semibold text-gris-700 shadow-xs hover:bg-gris-50">Cancelar</button>
+    <button type="submit" [disabled]="submitting()" class="rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white hover:bg-marca-700 disabled:opacity-60">{{ submitting() ? 'Guardando…' : editMode() ? 'Guardar cambios' : 'Crear lugar' }}</button>
   </div>
 </form>

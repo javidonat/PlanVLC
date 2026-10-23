@@ -8,7 +8,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
   template: `
     <div class="space-y-3" role="status" [attr.aria-label]="label()">
       @for (item of items(); track $index) {
-        <div class="rounded-2xl border border-slate-200 bg-white px-5 pb-3 pt-5">
+        <div class="rounded-2xl border border-gris-200 bg-white px-5 pb-3 pt-5">
           <ngx-skeleton-loader [theme]="{ height: '18px', width: '45%', 'border-radius': '8px', 'margin-bottom': '10px' }" />
           <ngx-skeleton-loader [theme]="{ height: '12px', width: '70%', 'border-radius': '8px' }" />
         </div>

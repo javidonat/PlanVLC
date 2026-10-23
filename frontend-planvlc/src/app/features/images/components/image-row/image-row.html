@@ -1,16 +1,16 @@
 <td class="px-5 py-4">
   <div class="flex items-center gap-3">
-    <img [src]="image().url" [alt]="image().alt || 'Imagen'" class="h-14 w-20 shrink-0 rounded-lg border border-slate-200 bg-slate-100 object-cover" loading="lazy" />
-    <p class="line-clamp-2 max-w-56 text-xs text-slate-500">{{ image().alt || 'Sin texto alternativo' }}</p>
+    <img [src]="image().url" [alt]="image().alt || 'Imagen'" class="h-14 w-20 shrink-0 rounded-lg border border-gris-200 bg-gris-100 object-cover" loading="lazy" />
+    <p class="line-clamp-2 max-w-56 text-xs text-gris-500">{{ image().alt || 'Sin texto alternativo' }}</p>
   </div>
 </td>
 <td class="px-5 py-4">
-  <p class="font-semibold text-slate-900">{{ image().entityName || 'No encontrado' }}</p>
-  <p class="mt-1 text-xs text-slate-500">{{ imageEntityTypeLabel(image().entityType) }}</p>
+  <p class="font-semibold text-gris-900">{{ image().entityName || 'No encontrado' }}</p>
+  <p class="mt-1 text-xs text-gris-500">{{ imageEntityTypeLabel(image().entityType) }}</p>
 </td>
 <td class="px-5 py-4">
-  <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ imageTypeLabel(image().type) }}</span>
-  @if (image().type === 'gallery') {<p class="mt-1.5 text-xs text-slate-500">Posición {{ image().position }}</p>}
+  <span class="rounded-full bg-gris-100 px-2.5 py-1 text-xs font-semibold text-gris-700">{{ imageTypeLabel(image().type) }}</span>
+  @if (image().type === 'gallery') {<p class="mt-1.5 text-xs text-gris-500">Posición {{ image().position }}</p>}
 </td>
 <td class="px-5 py-4">
   @if (image().deletedAt) {
@@ -22,13 +22,13 @@
 <td class="px-5 py-4">
   <div class="flex justify-end gap-2">
     <!-- Ver: disponible siempre, también en imágenes desactivadas o eliminadas -->
-    <button type="button" (click)="viewClick.emit(image())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" aria-label="Ver imagen"><svg lucideEye width="17" height="17"></svg></button>
+    <button type="button" (click)="viewClick.emit(image())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-gris-100 hover:text-gris-900" aria-label="Ver imagen"><svg lucideEye width="17" height="17"></svg></button>
     @if (!image().deletedAt) {
       <!-- El backend solo deja editar imágenes activas (PATCH /:id filtra por isActive) -->
       @if (image().isActive) {
-        <button type="button" (click)="editClick.emit(image())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" aria-label="Editar imagen"><svg lucidePencil width="17" height="17"></svg></button>
+        <button type="button" (click)="editClick.emit(image())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-marca-50 hover:text-marca-700" aria-label="Editar imagen"><svg lucidePencil width="17" height="17"></svg></button>
       }
-      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(image())" class="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50" aria-label="Eliminar imagen"><svg lucideTrash2 width="17" height="17"></svg></button>
+      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(image())" class="rounded-lg border border-gris-200 p-2 text-red-600 hover:bg-red-50" aria-label="Eliminar imagen"><svg lucideTrash2 width="17" height="17"></svg></button>
     }
   </div>
 </td>

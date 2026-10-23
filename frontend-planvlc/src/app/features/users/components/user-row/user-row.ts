@@ -8,7 +8,7 @@ import { User, userStatusLabel } from '../../../../core/models/user.model';
   selector: 'tr[app-user-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './user-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class UserRow {
   user = input.required<User>();

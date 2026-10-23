@@ -10,7 +10,7 @@ import { dateTimeText, limitText, planTitle, priceText } from '../../utils/sessi
   selector: 'tr[app-session-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './session-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class SessionRow {
   session = input.required<Session>();

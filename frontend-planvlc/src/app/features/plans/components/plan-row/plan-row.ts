@@ -10,7 +10,7 @@ import { categoriesLabel, planPriceText, sessionDateText, venueLabel } from '../
   selector: 'tr[app-plan-row]',
   imports: [LucideCalendarDays, LucideEye, LucideMapPin, LucidePencil, LucideTrash2],
   templateUrl: './plan-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class PlanRow {
   plan = input.required<Plan>();

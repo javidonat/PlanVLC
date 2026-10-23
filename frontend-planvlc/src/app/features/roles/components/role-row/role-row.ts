@@ -8,7 +8,7 @@ import { Role } from '../../../../core/models/role.model';
   selector: 'tr[app-role-row]',
   imports: [LucideEye, LucidePencil, LucideTrash2],
   templateUrl: './role-row.html',
-  host: { class: 'hover:bg-slate-50/70' },
+  host: { class: 'hover:bg-gris-50/70' },
 })
 export class RoleRow {
   role = input.required<Role>();

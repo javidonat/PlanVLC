@@ -1,21 +1,68 @@
 @import "tailwindcss";
 
+/* Paleta propia de PlanVLC.
+   marca = violeta (botones, enlaces, sección activa del menú: lo que se puede pulsar)
+   gris  = grises neutros con un toque frío (textos, bordes y fondos)
+   Para cambiar el color de la web basta con cambiar la escala "marca". */
+@theme {
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-marca-50: #f4f2ff;
+  --color-marca-100: #ebe7ff;
+  --color-marca-200: #d9d1ff;
+  --color-marca-300: #bcadff;
+  --color-marca-400: #9b80ff;
+  --color-marca-500: #7c56f5;
+  --color-marca-600: #6a3de8;
+  --color-marca-700: #5a2fcc;
+  --color-marca-800: #4a28a5;
+  --color-marca-900: #3e2585;
+
+  --color-gris-50: #f7f7fa;
+  --color-gris-100: #efeff4;
+  --color-gris-200: #e3e3ea;
+  --color-gris-300: #cdcdd7;
+  --color-gris-400: #9d9dab;
+  --color-gris-500: #6b6b7b;
+  --color-gris-600: #545463;
+  --color-gris-700: #3f3f4c;
+  --color-gris-800: #2a2a35;
+  --color-gris-900: #18181f;
+}
+
+@layer base {
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; }
+}
+
 @layer components {
-  .field-label { display: block; margin-bottom: .5rem; font-size: .875rem; font-weight: 650; color: #334155; }
-  .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid #cbd5e1; border-radius: .75rem; background: #fff; padding: .65rem .85rem; color: #0f172a; outline: none; }
-  .field-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px #bfdbfe; }
+  .field-label { display: block; margin-bottom: .5rem; font-size: .875rem; font-weight: 600; color: var(--color-gris-700); }
+  .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--color-gris-300); border-radius: .75rem; background: #fff; padding: .65rem .85rem; color: var(--color-gris-900); outline: none; transition: border-color .15s, box-shadow .15s; }
+  .field-input:focus { border-color: var(--color-marca-500); box-shadow: 0 0 0 4px var(--color-marca-100); }
   .field-error { margin-top: .35rem; color: #b91c1c; font-size: .8rem; }
+
+  /* Menú lateral: cada enlace es .menu-link y routerLinkActive le añade .activo */
+  .menu-link { position: relative; display: flex; flex-shrink: 0; align-items: center; gap: .75rem; white-space: nowrap; border-radius: .75rem; padding: .6rem .85rem; font-size: .875rem; font-weight: 500; color: var(--color-gris-600); transition: background-color .15s, color .15s; }
+  .menu-link svg { color: var(--color-gris-400); transition: color .15s; }
+  .menu-link:hover { background: var(--color-gris-100); color: var(--color-gris-900); }
+  .menu-link:hover svg { color: var(--color-gris-600); }
+  .menu-link.activo { background: var(--color-marca-50); color: var(--color-marca-700); font-weight: 600; }
+  .menu-link.activo svg { color: var(--color-marca-600); }
+  /* En escritorio, la sección activa lleva además una barrita a la izquierda */
+  @media (min-width: 48rem) {
+    .menu-link.activo::before { content: ""; position: absolute; left: -1rem; top: .5rem; bottom: .5rem; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-marca-600); }
+  }
+  .menu-titulo { margin: 1.25rem 0 .4rem; padding-inline: .85rem; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--color-gris-400); }
 }
 
 :root {
   --noche: #17203a;
-  --naranja: #f26b1d;
-  --naranja-oscuro: #b8480a;
-  --fondo: #eef1f6;
-  --texto: #1b2236;
+  --marca: #7c56f5;
+  --fondo: #f7f7fa;
+  --texto: #18181f;
   --texto-suave: #566079;
   --borde: #d5dae6;
-  --fuente-titulo: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  --fuente-titulo: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
 }
 
 /* Cada categoría define su color en --cat; los componentes lo usan con var(--cat) */
@@ -37,7 +84,7 @@ body {
   margin: 0;
   background: var(--fondo);
   color: var(--texto);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -111,6 +158,6 @@ main {
 }
 
 :focus-visible {
-  outline: 3px solid var(--naranja);
+  outline: 3px solid var(--marca);
   outline-offset: 2px;
 }

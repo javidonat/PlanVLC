@@ -1,12 +1,12 @@
 <td class="px-5 py-4">
-  <p class="font-semibold text-slate-900">{{ plan().title }}</p>
-  <p class="mt-1 text-xs text-slate-500">{{ categoriesLabel(plan()) }} · {{ planPriceText(plan()) }}</p>
+  <p class="font-semibold text-gris-900">{{ plan().title }}</p>
+  <p class="mt-1 text-xs text-gris-500">{{ categoriesLabel(plan()) }} · {{ planPriceText(plan()) }}</p>
 </td>
-<td class="px-5 py-4 text-slate-600">
+<td class="px-5 py-4 text-gris-600">
   <span class="flex items-center gap-1"><svg lucideCalendarDays width="15" height="15"></svg> {{ sessionDateText(plan().nextSessionAt) }}</span>
   <span class="mt-1 flex items-center gap-1"><svg lucideMapPin width="15" height="15"></svg> {{ venueLabel(plan()) }}</span>
 </td>
-<td class="px-5 py-4"><span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ statusLabel(plan().status) }}</span></td>
+<td class="px-5 py-4"><span class="rounded-full bg-gris-100 px-2.5 py-1 text-xs font-semibold text-gris-700">{{ statusLabel(plan().status) }}</span></td>
 <td class="px-5 py-4">
   @if (plan().deletedAt) {
     <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">Eliminado</span>
@@ -17,13 +17,13 @@
 <td class="px-5 py-4">
   <div class="flex justify-end gap-2">
     <!-- Ver: disponible siempre, también en planes desactivados o eliminados -->
-    <button type="button" (click)="viewClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900" [attr.aria-label]="'Ver ' + plan().title"><svg lucideEye width="17" height="17"></svg></button>
+    <button type="button" (click)="viewClick.emit(plan())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-gris-100 hover:text-gris-900" [attr.aria-label]="'Ver ' + plan().title"><svg lucideEye width="17" height="17"></svg></button>
     @if (!plan().deletedAt) {
       <!-- El backend solo deja editar planes activos (PATCH /:id filtra por isActive) -->
       @if (plan().isActive) {
-        <button type="button" (click)="editClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-blue-50 hover:text-blue-700" [attr.aria-label]="'Editar ' + plan().title"><svg lucidePencil width="17" height="17"></svg></button>
+        <button type="button" (click)="editClick.emit(plan())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-marca-50 hover:text-marca-700" [attr.aria-label]="'Editar ' + plan().title"><svg lucidePencil width="17" height="17"></svg></button>
       }
-      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(plan())" class="rounded-lg border border-slate-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + plan().title"><svg lucideTrash2 width="17" height="17"></svg></button>
+      <button type="button" [disabled]="busy()" (click)="deleteClick.emit(plan())" class="rounded-lg border border-gris-200 p-2 text-red-600 hover:bg-red-50" [attr.aria-label]="'Eliminar ' + plan().title"><svg lucideTrash2 width="17" height="17"></svg></button>
     }
   </div>
 </td>
