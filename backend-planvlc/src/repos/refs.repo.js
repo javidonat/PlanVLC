@@ -30,6 +30,11 @@ const usersExist = async (ids) => {
 // Aquí basta con que la entidad no esté eliminada: las imágenes forman parte del documento
 const ENTITY_MODELS = { plan: Plan, venue: Venue, category: Category, organizer: Organizer, user: User };
 
+// Reglas de negocio con status: ¿alguno de esos documentos tiene uno de estos estados?
+const anyWithStatus = async (entityType, ids, statuses) => {
+  return Boolean(await ENTITY_MODELS[entityType].exists({ _id: { $in: ids }, status: { $in: statuses } }));
+};
+
 const entityExists = async (entityType, id) => Boolean(await ENTITY_MODELS[entityType].exists({ _id: id, deletedAt: null }));
 
 // Nombre de los documentos a los que pertenecen las imágenes (los planes tienen title en vez de name).
@@ -38,4 +43,4 @@ const entityNames = (entityType, ids) => {
   return ENTITY_MODELS[entityType].find({ _id: { $in: ids } }).select("name title").lean();
 };
 
-export default { categoriesExist, organizerExists, venueExists, roleExists, usersExist, entityExists, entityNames };
+export default { categoriesExist, organizerExists, venueExists, roleExists, usersExist, anyWithStatus, entityExists, entityNames };

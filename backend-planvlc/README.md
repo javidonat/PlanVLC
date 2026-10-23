@@ -345,6 +345,21 @@ Así nunca hay un documento activo apuntando a otro desactivado.
 
 Solo cuentan los documentos no eliminados: un lugar que solo usan planes ya eliminados sí se puede eliminar. Y al desactivar solo cuentan los activos: un lugar que solo usan planes desactivados sí se puede desactivar.
 
+### Reglas de negocio con `status`
+
+Además de la integridad referencial, el `status` de un documento limita con qué se puede relacionar algo **nuevo**. Lo que ya estaba relacionado se queda aunque luego cambie de estado (sirve de historial). Si no se cumple → `400`.
+
+| Al crear o modificar | No se permite |
+|---|---|
+| Plan: `categoryIds` | Añadir una categoría `archived` |
+| Plan: `venueId` | Elegir un lugar `permanently_closed` |
+| Plan: `organizerId` | Elegir un organizador `suspended` |
+| Sesión: crear | Crear sesiones en un plan `cancelled` o `finished` |
+| Sesión: `status` | Poner en `draft` o `published` una sesión de un plan `cancelled` o `finished` |
+| Organizador: `userIds` | Añadir un usuario `suspended` o `banned` |
+
+Cambiar el `status` de un documento nunca se bloquea por los que dependen de él: se puede cancelar un plan con sesiones o archivar una categoría que usan planes.
+
 **Un plan eliminado no se puede recuperar por la API**: `PATCH /:id/active` (con `true` o `false`) responde `409` si el plan tiene `deletedAt`. Un plan desactivado (sin `deletedAt`) sí se puede volver a activar o eliminar. Su slug sigue reservado: ningún plan nuevo puede usarlo.
 
 ### Modificar datos

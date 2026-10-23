@@ -5,6 +5,7 @@ import refsRepo from "../repos/refs.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
 import { generateSlug } from "./utils/slug.util.js";
+import { addedIds } from "./utils/ids.util.js";
 
 // El servicio contiene la lógica de negocio
 // No sabe nada de HTTP (req, res), solo trabaja con datos
@@ -70,6 +71,27 @@ const validateReferences = async (data) => {
   }
   if (data.organizerId && !(await refsRepo.organizerExists(data.organizerId))) {
     throw new AppError("El organizador indicado no existe o está desactivado", 400);
+  }
+};
+
+// Reglas de negocio con status: solo para las relaciones que se añaden ahora (current = el plan antes de editarlo).
+// Un plan que ya tenía una categoría archivada o un lugar cerrado la conserva, pero no se puede elegir uno así
+const validateStatuses = async (data, current) => {
+  if (data.categoryIds) {
+    const added = addedIds(data.categoryIds, current?.categoryIds);
+    if (added.length && (await refsRepo.anyWithStatus("category", added, ["archived"]))) {
+      throw new AppError("Alguna de las categorías indicadas está archivada y no se puede usar en planes", 400);
+    }
+  }
+  if (data.venueId && addedIds([data.venueId], current?.venueId ? [current.venueId] : []).length) {
+    if (await refsRepo.anyWithStatus("venue", [data.venueId], ["permanently_closed"])) {
+      throw new AppError("El lugar indicado está cerrado definitivamente", 400);
+    }
+  }
+  if (data.organizerId && addedIds([data.organizerId], current?.organizerId ? [current.organizerId] : []).length) {
+    if (await refsRepo.anyWithStatus("organizer", [data.organizerId], ["suspended"])) {
+      throw new AppError("El organizador indicado está suspendido", 400);
+    }
   }
 };
 
@@ -165,6 +187,7 @@ const createPlan = async (body) => {
   const data = pickFields(body);
   const images = pickImages(body);
   await validateReferences(data);
+  await validateStatuses(data);
 
   // Si no hay título, no hay slug: Mongoose devolverá el error de "título obligatorio"
   const plan =
@@ -189,6 +212,9 @@ const updatePlan = async (id, body) => {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
   await validateReferences(data);
+  if (data.categoryIds || data.venueId || data.organizerId) {
+    await validateStatuses(data, await plansRepo.findAnyById(id));
+  }
 
   const save = async (slug) => {
     // Si solo cambian las imágenes no hay nada que actualizar en el plan, pero debe existir y estar activo

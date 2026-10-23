@@ -60,6 +60,18 @@ const validateVenueCapacity = (capacity, plan) => {
   }
 };
 
+// Reglas de negocio con status: un plan cancelado o finalizado no tiene sesiones nuevas ni sesiones
+// en borrador o publicadas (las que ya tenía se pueden cancelar, finalizar o editar)
+const CLOSED_PLAN_STATUSES = ["cancelled", "finished"];
+const OPEN_SESSION_STATUSES = ["draft", "published"];
+
+const validatePlanStatus = (plan, message) => {
+  if (CLOSED_PLAN_STATUSES.includes(plan?.status)) {
+    const state = plan.status === "cancelled" ? "cancelado" : "finalizado";
+    throw new AppError(`${message}: el plan está ${state}`, 400);
+  }
+};
+
 // Recalcula los datos derivados del plan (priceFrom y nextSessionAt) a partir de sus próximas sesiones.
 // Se llama cada vez que se crea, modifica, activa/desactiva o elimina una sesión
 const updatePlanFromSessions = async (planId) => {
@@ -111,6 +123,7 @@ const createSession = async (body) => {
   if (!plan.isActive) {
     throw new AppError("El plan indicado está desactivado", 400);
   }
+  validatePlanStatus(plan, "No se pueden crear sesiones");
   validateVenueCapacity(data.capacity, plan);
 
   // Si no se indica el stock (o llega vacío), al crearla todas las plazas están libres (stock = aforo)
@@ -140,6 +153,9 @@ const updateSession = async (id, body) => {
   }
   validateRules({ ...current, ...data });
   validateStartDate(data.startDateTime); // solo si se cambia la fecha (se pueden editar sesiones ya pasadas)
+  if (OPEN_SESSION_STATUSES.includes(data.status)) {
+    validatePlanStatus(current.planId, "No se puede poner la sesión en borrador ni publicarla");
+  }
 
   // Si cambia el aforo, se comprueba con el del lugar del plan
   if (data.capacity != null) {

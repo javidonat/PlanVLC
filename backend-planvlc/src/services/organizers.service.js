@@ -5,6 +5,7 @@ import plansRepo from "../repos/plans.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
 import { generateSlug } from "./utils/slug.util.js";
+import { addedIds } from "./utils/ids.util.js";
 
 // El servicio contiene la lógica de negocio
 // No sabe nada de HTTP (req, res), solo trabaja con datos
@@ -39,6 +40,15 @@ const pickFields = (body = {}) => {
 const validateReferences = async (data) => {
   if (data.userIds?.length && !(await refsRepo.usersExist(data.userIds))) {
     throw new AppError("Alguno de los usuarios indicados no existe o está desactivado", 400);
+  }
+};
+
+// Reglas de negocio con status: no se puede añadir un usuario suspendido o bloqueado
+// (current = el organizador antes de editarlo; los usuarios que ya tenía se quedan)
+const validateStatuses = async (data, current) => {
+  const added = addedIds(data.userIds ?? [], current?.userIds);
+  if (added.length && (await refsRepo.anyWithStatus("user", added, ["suspended", "banned"]))) {
+    throw new AppError("Alguno de los usuarios indicados está suspendido o bloqueado", 400);
   }
 };
 
@@ -118,6 +128,7 @@ const getOrganizerById = async (id) => {
 const createOrganizer = async (body) => {
   const data = pickFields(body);
   await validateReferences(data);
+  await validateStatuses(data);
 
   const organizer = await saveWithUniqueSlug(data.name, undefined, (slug) => organizersRepo.create({ ...data, slug }));
 
@@ -137,6 +148,9 @@ const updateOrganizer = async (id, body) => {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
   await validateReferences(data);
+  if (data.userIds?.length) {
+    await validateStatuses(data, await organizersRepo.findAnyById(id));
+  }
 
   const save = async (slug) => {
     // Si solo cambia el logo no hay nada que actualizar en el organizador, pero debe existir y estar activo
