@@ -13,8 +13,8 @@ const sessionSchema = new Schema(
       ref: "Plan",
       required: [true, "El plan es obligatorio"],
     },
-    // Código único de la variante. Se genera con generateSku (services/utils/slug.util.js):
-    // slug del plan + fecha y hora de inicio, ej. "TARDEO-RUZAFA-20251012-1700"
+    // Código único de la variante. Se genera con generateUniqueSku (services/utils/sku.js):
+    // slug del plan + fecha y hora de inicio + sufijo aleatorio, ej. "TARDEO-RUZAFA-20251012-1700-3F9A1C2B"
     sku: {
       type: String,
       required: [true, "El SKU es obligatorio"],

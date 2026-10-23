@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import conectarDB from "./config/db.js";
 import { Plan, Session, Organizer, Category, Venue, Image, Role, User } from "./models/index.js";
-import { generateSku, generateSlug } from "./services/utils/slug.util.js";
+import { generateSlug } from "./services/utils/slug.util.js";
+import { generateSku } from "./services/utils/sku.js";
 
 // Seed: deja la base de datos lista con datos de ejemplo.
 // Orden: primero lo que no depende de nada (categorías, lugares...) y al final lo que

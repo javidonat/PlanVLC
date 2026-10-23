@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import sessionsRepo from "../repos/sessions.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import AppError from "./utils/AppError.js";
-import { generateSku } from "./utils/slug.util.js";
+import { generateUniqueSku } from "./utils/sku.js";
 
 // El servicio contiene la lógica de negocio
 // No sabe nada de HTTP (req, res), solo trabaja con datos
@@ -60,16 +60,6 @@ const validateVenueCapacity = (capacity, plan) => {
   }
 };
 
-// El SKU (slug del plan + fecha y hora) no se puede repetir: no puede haber dos sesiones
-// del mismo plan a la misma hora
-const buildSku = async (planSlug, startDateTime, excludeId) => {
-  const sku = generateSku(planSlug, startDateTime);
-  if (await sessionsRepo.skuExists(sku, excludeId)) {
-    throw new AppError("Ya existe una sesión de este plan con esa fecha y hora", 409);
-  }
-  return sku;
-};
-
 // Recalcula los datos derivados del plan (priceFrom y nextSessionAt) a partir de sus próximas sesiones.
 // Se llama cada vez que se crea, modifica, activa/desactiva o elimina una sesión
 const updatePlanFromSessions = async (planId) => {
@@ -125,7 +115,7 @@ const createSession = async (body) => {
     data.stock = data.capacity ?? null;
   }
 
-  const sku = await buildSku(plan.slug, data.startDateTime);
+  const sku = await generateUniqueSku(plan.slug, data.startDateTime);
   const session = await sessionsRepo.create({ ...data, sku });
   await updatePlanFromSessions(data.planId);
   return session;
@@ -154,11 +144,10 @@ const updateSession = async (id, body) => {
   }
 
   // Si cambia la fecha de inicio, cambia el SKU
-  if (data.startDateTime && current.planId?.slug) {
-    const sku = generateSku(current.planId.slug, data.startDateTime);
-    if (sku !== current.sku) {
-      data.sku = await buildSku(current.planId.slug, data.startDateTime, id);
-    }
+  const startChanged =
+    data.startDateTime && new Date(data.startDateTime).getTime() !== new Date(current.startDateTime).getTime();
+  if (startChanged && current.planId?.slug) {
+    data.sku = await generateUniqueSku(current.planId.slug, data.startDateTime);
   }
 
   const session = await sessionsRepo.update(id, data);

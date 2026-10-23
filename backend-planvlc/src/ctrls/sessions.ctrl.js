@@ -59,6 +59,10 @@ const patchSession = async (req, res, next) => {
     const session = await sessionsService.updateSession(req.params.id, req.body);
     res.status(200).json({ ok: true, message: "Sesión modificada correctamente", data: session });
   } catch (error) {
+    // E11000: el índice único de sku rechaza un SKU duplicado → 409 Conflict
+    if (error.code === 11000) {
+      return res.status(409).json({ ok: false, message: "Ya existe una salida con ese SKU." });
+    }
     next(error);
   }
 };
