@@ -12,7 +12,7 @@ API REST de PlanVLC, una web de planes de ocio y actividades en Valencia (discot
 ```bash
 npm install
 cp .env.example .env     # y ajusta los valores si hace falta
-npm run seed             # carga datos de ejemplo en las 8 colecciones
+npm run seed             # carga datos de ejemplo en las 9 colecciones
 npm run dev              # desarrollo, con recarga automática (nodemon)
 # o bien
 npm start                # producción
@@ -26,6 +26,8 @@ El servidor arranca en `http://localhost:3000` (o el `PORT` que pongas en `.env`
 |---|---|---|
 | `PORT` | Puerto del servidor | `3000` |
 | `MONGODB_URI` | Cadena de conexión a MongoDB. `planvlc` es el nombre de la base de datos | `mongodb://localhost:27017/planvlc` |
+| `SECRET` | **Obligatoria.** Clave para firmar y verificar los JWT. Larga y aleatoria; nunca se sube a git | *(vacía)* |
+| `JWT_EXPIRES_IN` | Caducidad de los tokens (`1h`, `7d`...) | `1h` |
 | `NODE_ENV` | (Opcional) Con `production`, Morgan usa el formato `combined` en vez de `dev` | *(no definida)* |
 
 ### Scripts
@@ -34,7 +36,7 @@ El servidor arranca en `http://localhost:3000` (o el `PORT` que pongas en `.env`
 |---|---|
 | `npm start` | Arranca el servidor con Node |
 | `npm run dev` | Arranca con nodemon |
-| `npm run seed` | **Borra** el contenido de las 8 colecciones (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
+| `npm run seed` | **Borra** el contenido de las 9 colecciones (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
 
 ## Arquitectura
 
@@ -48,17 +50,20 @@ routes → ctrls → services → repos → models → MongoDB
 src/
 ├── server.js        Carga .env, conecta a MongoDB y arranca Express
 ├── app.js           Configura Express: helmet, morgan, cors, json, rutas, 404 y errores
-├── seed.js          Datos iniciales de las 8 colecciones
+├── seed.js          Datos iniciales de las 9 colecciones
 ├── config/db.js     Conexión a MongoDB
 ├── routes/          Define las URLs, valida la petición (Zod) y la manda al controlador
 ├── schemas/         Esquemas de validación de Zod (params y body)
 ├── ctrls/           Recibe req/res, llama al servicio, responde JSON
 ├── services/        Lógica de negocio (slugs, reglas del soft delete, comprobar relaciones)
-│   └── utils/       AppError.js (error con código HTTP) y slug.util.js (generateSlug)
+│   └── utils/       AppError.js (error con código HTTP), slug.util.js (generateSlug),
+│                    jwt.js (createToken / verifyToken) y password.js (hash con Argon2)
 ├── repos/           Único punto de acceso a MongoDB
 ├── models/          Esquemas de Mongoose (uno por colección)
 └── middleware/
     ├── validate.js       Valida req.params / req.body con un esquema de Zod (400 si falla)
+    ├── authentication.js Comprueba el JWT y deja el usuario en req.user (401 si falla)
+    ├── authorization.js  isAdmin, authorizeRoles(...) y isOwnerOrAdmin (403 si no tiene permiso)
     └── errorHandler.js   Convierte cualquier error en JSON (se registra al final de app.js)
 ```
 
@@ -80,6 +85,7 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `images` | `Image` | Imágenes de cualquier entidad (portadas, galerías, logos, avatares) |
 | `roles` | `Role` | admin, editor, organizer, user |
 | `users` | `User` | Usuarios del sistema |
+| `profiles` | `Profile` | Datos extendidos del usuario (1 a 1) |
 
 ### Relaciones
 
@@ -184,7 +190,7 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 
 Todas las respuestas, incluidas las de `/active` y `/softdelete`, traen las relaciones ya cargadas (`populate`): `categoryIds` trae `{ _id, name, slug }`, `venueId` trae `{ _id, name, city, neighborhood }`, `organizerId` trae `{ _id, name, slug }`, `coverImage` trae `{ _id, url, alt }` (o `null`) y `galleryImages` trae `[{ _id, url, alt, position }]`. Al enviar datos (POST/PATCH) las relaciones se envían como ids y las imágenes como URLs (`coverImageUrl`, `galleryImageUrls`).
 
-La API **no tiene autenticación**: cualquiera que conozca la URL puede crear, modificar o eliminar planes. Es aceptable para un proyecto de clase en local, pero habría que añadir login antes de publicarla. Las peticiones de ejemplo están en [`postman.md`](./postman.md).
+Las rutas de `plans` aún **no piden token**: de momento solo están protegidas `users`, `roles` y `profiles` (ver [Autenticación](#autenticación-jwt)). Las peticiones de ejemplo están en [`postman.md`](./postman.md).
 
 ## Endpoints (`sessions`)
 
@@ -237,6 +243,40 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las respuestas lo traen en `logo`. `userIds` llega poblado (`{ _id, name, email }`); al enviarlo, el servidor comprueba que los usuarios existen.
 
+## Autenticación (JWT)
+
+Solo hay **login** y **logout**: no existe registro, los usuarios los crea un admin desde `/api/users`.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role } }` |
+| POST | `/api/auth/logout` | Con token. Invalida todos los tokens del usuario |
+
+Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
+
+- **Token** (`services/utils/jwt.js`): `createToken` firma con `SECRET` (HS256) el id del usuario (`sub`), `email`, `role` y `tokenVersion`, y caduca según `JWT_EXPIRES_IN`. `verifyToken` comprueba la firma, la caducidad y que lleve `email` y `role`.
+- **Contraseñas** (`services/utils/password.js`): hash con Argon2id; nunca se guardan en claro.
+- **`authenticate`** (`middleware/authentication.js`): además del token, comprueba en la base de datos que el usuario sigue activo, con `status: "active"`, con su rol activo, y que su email, su rol y su `tokenVersion` coinciden con los del token. Si no → `401 Autenticación requerida`.
+- **Logout**: el JWT no se puede borrar, así que el logout incrementa `users.tokenVersion` y los tokens anteriores dejan de valer.
+- **`isAdmin` / `authorizeRoles(...)`** (`middleware/authorization.js`): RBAC por rol. Si el rol no está permitido → `403 No tienes permiso para acceder a este recurso`.
+- **`isOwnerOrAdmin(param)`**: ABAC. El usuario solo accede a lo suyo (`req.user.id === :userId`); un admin, a todo.
+- Login con email o contraseña incorrectos → `401` (mismo mensaje en los dos casos). Usuario desactivado, suspendido, bloqueado o con el rol desactivado → `403`.
+
+| Rutas | Quién puede |
+|---|---|
+| `/api/users/*`, `/api/roles/*` | Solo `admin` |
+| `/api/profiles/:userId` | El propio usuario o un `admin` |
+| Resto | Abiertas (sin cambios por ahora) |
+
+## Endpoints (`profiles`)
+
+Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio`. El perfil apunta al usuario (`profiles.userId`), no al revés.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/profiles/:userId` | El perfil del usuario (vacío si aún no tiene) |
+| PATCH | `/api/profiles/:userId` | Modifica los campos enviados (`null` = vaciar). Si no tenía perfil, se crea |
+
 ## Endpoints (`users`)
 
 Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reglas de activar/desactivar). Las respuestas traen el rol poblado en `roleId` (`{ _id, name }`) y **nunca** el `passwordHash`.
@@ -252,7 +292,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | PATCH | `/api/users/:id/active` | Activa o desactiva. Eliminado → `409` |
 | PATCH | `/api/users/:id/softdelete` | Borrado lógico. Si gestiona algún organizador no eliminado → `409` |
 
-La contraseña llega en claro y el servidor guarda solo su hash con bcrypt (10 rondas, igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar se guarda en `images` (`entityType: "user"`, `type: "avatar"`) y las respuestas lo traen en `avatar`.
+**Solo para admin** (token de un usuario con rol `admin`; sin token → `401`, otro rol → `403`). La contraseña llega en claro y el servidor guarda solo su hash con Argon2id (igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar se guarda en `images` (`entityType: "user"`, `type: "avatar"`) y las respuestas lo traen en `avatar`.
 
 ## Endpoints (`roles`)
 

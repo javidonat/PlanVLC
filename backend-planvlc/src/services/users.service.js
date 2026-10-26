@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import usersRepo from "../repos/users.repo.js";
 import organizersRepo from "../repos/organizers.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
+import { hashPassword } from "./utils/password.js";
 
 // El servicio contiene la lógica de negocio
 // No sabe nada de HTTP (req, res), solo trabaja con datos
@@ -13,8 +13,6 @@ import AppError from "./utils/AppError.js";
 // passwordHash, lastLoginAt, isActive y deletedAt no están: los gestiona el servidor.
 // La contraseña (password) se guarda como hash y el avatar (avatarImageUrl) en "images"
 const FIELDS = ["name", "email", "roleId", "status"];
-
-const SALT_ROUNDS = 10; // igual que en el seed
 
 // ---------- Funciones auxiliares ----------
 
@@ -82,7 +80,7 @@ const getUserById = async (id) => {
 const createUser = async (body) => {
   const data = pickFields(body);
   await validateData(data);
-  data.passwordHash = await bcrypt.hash(body.password, SALT_ROUNDS);
+  data.passwordHash = await hashPassword(body.password);
 
   const user = await usersRepo.create(data);
 
@@ -99,7 +97,7 @@ const updateUser = async (id, body) => {
 
   const data = pickFields(body);
   if (body.password) {
-    data.passwordHash = await bcrypt.hash(body.password, SALT_ROUNDS);
+    data.passwordHash = await hashPassword(body.password);
   }
   const hasData = Object.keys(data).length > 0;
   if (!hasData && body.avatarImageUrl === undefined) {

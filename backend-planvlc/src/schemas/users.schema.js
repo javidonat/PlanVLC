@@ -28,7 +28,7 @@ const imageUrl = (invalid) =>
 const password = z
   .string({ error: (issue) => (issue.input === undefined ? "La contraseña es obligatoria" : "La contraseña debe ser un texto") })
   .min(8, "La contraseña debe tener al menos 8 caracteres")
-  .max(72, "La contraseña no puede superar los 72 caracteres"); // límite de bcrypt
+  .max(72, "La contraseña no puede superar los 72 caracteres");
 
 const required = {
   name: text("El nombre es obligatorio", "El nombre debe ser un texto").max(

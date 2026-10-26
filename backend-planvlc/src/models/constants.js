@@ -36,3 +36,6 @@ export const IMAGE_ENTITY_TYPES = {
   organizer: ["logo"],
   user: ["avatar"],
 };
+
+// Rol de administrador (roles.name). Es el que puede entrar al panel y gestionar usuarios y roles
+export const ADMIN_ROLE = "admin";

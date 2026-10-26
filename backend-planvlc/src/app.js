@@ -12,6 +12,8 @@ import organizersRoutes from "./routes/organizers.routes.js";
 import rolesRoutes from "./routes/roles.routes.js";
 import usersRoutes from "./routes/users.routes.js";
 import imagesRoutes from "./routes/images.routes.js";
+import authRoutes from "./routes/auth.routes.js";
+import profilesRoutes from "./routes/profiles.routes.js";
 
 const app = express();
 
@@ -27,6 +29,8 @@ app.get("/health", (_req, res) => {
 });
 
 // --- Rutas ---
+app.use("/api/auth", authRoutes);
+app.use("/api/profiles", profilesRoutes);
 app.use("/api/plans", plansRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/sessions", sessionsRoutes);

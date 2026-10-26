@@ -1,9 +1,14 @@
 import { Router } from "express";
 import usersCtrl from "../ctrls/users.ctrl.js";
 import validate from "../middleware/validate.js";
+import authenticate from "../middleware/authentication.js";
+import { isAdmin } from "../middleware/authorization.js";
 import { activeSchema, createUserSchema, idParamsSchema, updateUserSchema } from "../schemas/users.schema.js";
 
 const router = Router();
+
+// Todas las rutas: token válido (authenticate) y rol admin (isAdmin). Sin token → 401, otro rol → 403
+router.use(authenticate, isAdmin);
 
 // GET    /api/users                  → todos (activos, desactivados y eliminados)
 // GET    /api/users/active           → solo activos y no eliminados (formulario de organizadores)

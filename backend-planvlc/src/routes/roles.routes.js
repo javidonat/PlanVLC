@@ -1,9 +1,14 @@
 import { Router } from "express";
 import rolesCtrl from "../ctrls/roles.ctrl.js";
 import validate from "../middleware/validate.js";
+import authenticate from "../middleware/authentication.js";
+import { isAdmin } from "../middleware/authorization.js";
 import { activeSchema, createRoleSchema, idParamsSchema, updateRoleSchema } from "../schemas/roles.schema.js";
 
 const router = Router();
+
+// Todas las rutas: token válido (authenticate) y rol admin (isAdmin). Sin token → 401, otro rol → 403
+router.use(authenticate, isAdmin);
 
 // GET    /api/roles                  → todos (activos, desactivados y eliminados)
 // GET    /api/roles/active           → solo activos y no eliminados (desplegable del formulario de usuarios)

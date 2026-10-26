@@ -1,10 +1,10 @@
 import "dotenv/config";
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import conectarDB from "./config/db.js";
-import { Plan, Session, Organizer, Category, Venue, Image, Role, User } from "./models/index.js";
+import { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile } from "./models/index.js";
 import { generateSlug } from "./services/utils/slug.util.js";
 import { generateSku } from "./services/utils/sku.js";
+import { hashPassword } from "./services/utils/password.js";
 
 // Seed: deja la base de datos lista con datos de ejemplo.
 // Orden: primero lo que no depende de nada (categorías, lugares...) y al final lo que
@@ -154,7 +154,7 @@ const runSeed = async () => {
 
     // Borramos lo que hubiera antes para empezar desde cero (borrado real)
     await Promise.all(
-      [Session, Plan, User, Role, Image, Organizer, Venue, Category].map((Model) => Model.deleteMany({}))
+      [Session, Plan, Profile, User, Role, Image, Organizer, Venue, Category].map((Model) => Model.deleteMany({}))
     );
     // La colección antigua "eventos" (versión anterior del proyecto) ya no se usa
     try {
@@ -180,7 +180,7 @@ const runSeed = async () => {
     const admin = await User.create({
       name: "Admin PlanVLC",
       email: "admin@planvlc.com",
-      passwordHash: await bcrypt.hash("Admin1234", 10),
+      passwordHash: await hashPassword("Admin1234"),
       roleId: adminRole._id,
       status: "active",
     });
