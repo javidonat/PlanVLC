@@ -10,3 +10,11 @@ export interface Profile {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Lo que acepta PATCH /api/profiles/:userId (null = vaciar el campo)
+export interface ProfilePayload {
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  bio: string | null;
+}

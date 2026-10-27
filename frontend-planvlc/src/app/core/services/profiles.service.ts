@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { ApiResponse } from '../models/api.model';
-import { Profile } from '../models/profile.model';
+import { Profile, ProfilePayload } from '../models/profile.model';
 
 // Solo habla con la API. El backend solo deja ver el perfil propio (o cualquiera si eres admin)
 @Injectable({ providedIn: 'root' })
@@ -11,5 +11,9 @@ export class ProfilesService {
 
   async getByUserId(userId: string): Promise<ApiResponse<Profile>> {
     return this.api.get<ApiResponse<Profile>>(`${this.path}/${encodeURIComponent(userId)}`);
+  }
+
+  async update(userId: string, payload: ProfilePayload): Promise<ApiResponse<Profile>> {
+    return this.api.patch<ApiResponse<Profile>>(`${this.path}/${encodeURIComponent(userId)}`, payload);
   }
 }

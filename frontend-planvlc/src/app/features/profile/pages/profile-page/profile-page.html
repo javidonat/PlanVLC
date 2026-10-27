@@ -1,14 +1,29 @@
 <section class="mx-auto max-w-4xl px-4 py-9 sm:px-6">
-  <div class="mb-7">
-    <p class="text-sm font-semibold text-marca-600">Mi cuenta</p>
-    <h1 class="mt-2 text-3xl font-bold text-gris-900">Perfil</h1>
-  </div>
+  <header class="mb-7 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-marca-600">Mi cuenta</p>
+      <h1 class="mt-2 text-3xl font-bold text-gris-900">{{ editing() ? 'Editar perfil' : 'Perfil' }}</h1>
+    </div>
+    @if (!editing() && !pageLoading() && !loadError()) {
+      <button type="button" (click)="startEdit()" class="inline-flex items-center gap-2 rounded-xl border border-gris-200 bg-white px-4 py-2.5 shadow-xs font-semibold text-gris-700 hover:bg-marca-50 hover:text-marca-700"><svg lucidePencil width="17" height="17"></svg> Editar</button>
+    }
+  </header>
 
   @if (pageLoading()) {
     <app-skeleton-loader [count]="2" label="Cargando perfil" />
   } @else if (loadError(); as message) {
     <app-error-state [message]="message" (retry)="loadPage()" />
+  } @else if (editing()) {
+    @if (error()) {<div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" role="alert">{{ error() }}</div>}
+    <app-profile-form
+      [profile]="profile()"
+      [submitting]="submitting()"
+      [serverErrors]="serverErrors()"
+      (formSubmit)="onSubmit($event)"
+      (cancelClick)="editing.set(false)"
+    />
   } @else if (auth.user(); as user) {
+    @if (saved()) {<div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800" role="status">Perfil guardado correctamente.</div>}
     <app-profile-card [user]="user" [profile]="profile()" [initials]="auth.initials()" />
   }
 </section>
