@@ -249,7 +249,7 @@ Solo hay **login** y **logout**: no existe registro, los usuarios los crea un ad
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role } }` |
+| POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role, avatar } }` (`avatar` es el del perfil) |
 | POST | `/api/auth/logout` | Con token. Invalida todos los tokens del usuario |
 
 Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
@@ -270,12 +270,12 @@ Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
 
 ## Endpoints (`profiles`)
 
-Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio`. El perfil apunta al usuario (`profiles.userId`), no al revés. Cada usuario tiene su perfil: se crea vacío al crear el usuario (`POST /api/users` y el seed).
+Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio` y `avatar` (URL de la imagen; por defecto un robot de [DiceBear](https://www.dicebear.com/styles/bottts/) distinto para cada usuario). El perfil apunta al usuario (`profiles.userId`), no al revés. Cada usuario tiene su perfil: se crea vacío al crear el usuario (`POST /api/users` y el seed).
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/profiles/:userId` | El perfil del usuario (vacío si aún no tiene) |
-| PATCH | `/api/profiles/:userId` | Modifica los campos enviados (`null` = vaciar). Si no tenía perfil, se crea |
+| PATCH | `/api/profiles/:userId` | Modifica los campos enviados (`null` = vaciar; en `avatar`, volver al robot). Si no tenía perfil, se crea |
 
 ## Endpoints (`users`)
 

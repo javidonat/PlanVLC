@@ -34,6 +34,13 @@ export class AuthService {
     }
   }
 
+  // Al cambiar el avatar en el perfil: actualiza el navbar y la sesión guardada
+  updateAvatar(avatar: string | null): void {
+    this.store.updateUser({ avatar });
+    const user = this.store.user();
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  }
+
   // Borra el token y el usuario (logout o 401 del backend)
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);

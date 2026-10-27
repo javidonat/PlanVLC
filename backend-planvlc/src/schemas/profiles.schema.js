@@ -9,12 +9,21 @@ const optionalText = (label, max) =>
     .nullable()
     .optional();
 
+// URL de imagen (http o https). null = volver al avatar por defecto (robot)
+const imageUrl = z
+  .string({ error: "La URL del avatar no es válida" })
+  .trim()
+  .pipe(z.url({ protocol: /^https?$/, error: "La URL del avatar no es válida" }))
+  .nullable()
+  .optional();
+
 // PATCH: todos opcionales
 export const updateProfileSchema = z.object({
   firstName: optionalText("El nombre", 100),
   lastName: optionalText("Los apellidos", 100),
   phone: optionalText("El teléfono", 30),
   bio: optionalText("La biografía", 2000),
+  avatar: imageUrl,
 });
 
 // :userId de MongoDB

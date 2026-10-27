@@ -33,6 +33,11 @@ export class AuthStore {
     this._user.set(user);
   }
 
+  // Cambia datos del usuario sin tocar el token (ej. el avatar al editar el perfil)
+  updateUser(changes: Partial<AuthUser>): void {
+    this._user.update(user => (user ? { ...user, ...changes } : user));
+  }
+
   clear(): void {
     this._token.set(null);
     this._user.set(null);

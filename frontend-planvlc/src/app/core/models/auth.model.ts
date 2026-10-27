@@ -9,6 +9,7 @@ export interface AuthUser {
   name: string;
   email: string;
   role: string;
+  avatar?: string | null; // avatar del perfil (URL). Si no llega, el navbar muestra las iniciales
 }
 
 // Lo que acepta POST /api/auth/login

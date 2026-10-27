@@ -3,6 +3,7 @@ import { LucidePencil } from '@lucide/angular';
 import { Profile, ProfilePayload } from '../../../../core/models/profile.model';
 import { ProfilesService } from '../../../../core/services/profiles.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { AuthService } from '../../../../core/services/auth.service';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
@@ -18,6 +19,7 @@ import { ProfileForm } from '../../components/profile-form/profile-form';
 })
 export class ProfilePage implements OnInit {
   private readonly service = inject(ProfilesService);
+  private readonly authService = inject(AuthService);
   readonly auth = inject(AuthStore);
 
   readonly profile = signal<Profile | null>(null);
@@ -65,6 +67,7 @@ export class ProfilePage implements OnInit {
       this.serverErrors.set({});
       const res = await this.service.update(user._id, payload);
       this.profile.set(res.data);
+      this.authService.updateAvatar(res.data.avatar); // el navbar muestra el avatar nuevo
       this.editing.set(false);
       this.saved.set(true);
     } catch (error) {

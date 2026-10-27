@@ -7,14 +7,16 @@ export interface Profile {
   lastName: string | null;
   phone: string | null;
   bio: string | null;
+  avatar: string | null; // URL de la imagen. Por defecto, un robot de DiceBear
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Lo que acepta PATCH /api/profiles/:userId (null = vaciar el campo)
+// Lo que acepta PATCH /api/profiles/:userId (null = vaciar el campo; en avatar, volver al robot)
 export interface ProfilePayload {
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
   bio: string | null;
+  avatar: string | null;
 }

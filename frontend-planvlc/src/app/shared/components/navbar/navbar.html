@@ -10,7 +10,11 @@
     @if (store.user(); as user) {
       <nav class="flex items-center gap-1 text-sm font-semibold" aria-label="Navegación principal">
         <a routerLink="/perfil" class="flex items-center gap-2.5 rounded-xl py-1.5 pl-1.5 pr-3 text-gris-700 hover:bg-gris-100">
-          <span class="flex h-8 w-8 items-center justify-center rounded-full bg-marca-100 text-xs font-bold text-marca-700" aria-hidden="true">{{ store.initials() }}</span>
+          @if (user.avatar) {
+            <img [src]="user.avatar" alt="" class="h-8 w-8 rounded-full bg-marca-100 object-cover" />
+          } @else {
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-marca-100 text-xs font-bold text-marca-700" aria-hidden="true">{{ store.initials() }}</span>
+          }
           <span class="hidden sm:inline">{{ user.name }}</span>
         </a>
         <button type="button" (click)="logout()" class="flex items-center gap-2 rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100 hover:text-gris-900">

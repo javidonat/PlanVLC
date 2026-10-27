@@ -5,6 +5,7 @@ import { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile }
 import { generateSlug } from "./services/utils/slug.util.js";
 import { generateSku } from "./services/utils/sku.js";
 import { hashPassword } from "./services/utils/password.js";
+import { defaultAvatar } from "./services/utils/avatar.js";
 
 // Seed: deja la base de datos lista con datos de ejemplo.
 // Orden: primero lo que no depende de nada (categorías, lugares...) y al final lo que
@@ -185,7 +186,7 @@ const runSeed = async () => {
       status: "active",
     });
     // Su perfil (User 1 → 1 Profile), igual que al crear un usuario desde la API
-    await Profile.create({ userId: admin._id });
+    await Profile.create({ userId: admin._id, avatar: defaultAvatar(admin._id) });
 
     // 3) Planes (referencian a categorías, lugares y organizadores)
     const categoryId = mapBy(categories, (c) => c.name);

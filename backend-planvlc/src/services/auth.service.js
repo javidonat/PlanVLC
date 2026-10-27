@@ -1,7 +1,9 @@
 import authRepo from "../repos/auth.repo.js";
+import profilesRepo from "../repos/profiles.repo.js";
 import AppError from "./utils/AppError.js";
 import { hashPassword, verifyPassword } from "./utils/password.js";
 import { createToken, getExpires } from "./utils/jwt.js";
+import { defaultAvatar } from "./utils/avatar.js";
 
 // Solo login y logout: no hay registro, los usuarios se crean desde el panel (admin)
 
@@ -39,12 +41,14 @@ const login = async ({ email, password }) => {
   const role = user.roleId.name;
   const token = createToken({ id: user._id, email: user.email, role, tokenVersion: user.tokenVersion ?? 0 });
   await authRepo.updateLastLogin(user._id);
+  // Avatar del perfil (o el robot si aún no tiene perfil) para mostrarlo en el navbar
+  const profile = await profilesRepo.findByUserId(user._id);
 
   return {
     token,
     tokenType: "Bearer",
     expiresIn: getExpires(),
-    user: { _id: user._id, name: user.name, email: user.email, role },
+    user: { _id: user._id, name: user.name, email: user.email, role, avatar: profile?.avatar || defaultAvatar(user._id) },
   };
 };
 

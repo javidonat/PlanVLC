@@ -1,4 +1,5 @@
 import { Component, effect, inject, input, output } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Profile, ProfilePayload } from '../../../../core/models/profile.model';
 
@@ -26,7 +27,11 @@ export class ProfileForm {
     lastName: ['', [Validators.maxLength(100)]],
     phone: ['', [Validators.maxLength(30)]],
     bio: ['', [Validators.maxLength(2000)]],
+    avatar: ['', [Validators.pattern(/^https?:\/\/\S+$/)]],
   });
+
+  // Vista previa del avatar mientras se escribe la URL
+  readonly avatarPreview = toSignal(this.form.controls.avatar.valueChanges, { initialValue: '' });
 
   constructor() {
     // Rellena el formulario con el perfil actual
@@ -38,6 +43,7 @@ export class ProfileForm {
         lastName: profile.lastName ?? '',
         phone: profile.phone ?? '',
         bio: profile.bio ?? '',
+        avatar: profile.avatar ?? '',
       });
     });
   }
@@ -48,6 +54,7 @@ export class ProfileForm {
     const control = this.form.get(field);
     if (!control || !(control.touched || control.dirty) || !control.invalid) return null;
     if (control.hasError('maxlength')) return `Máximo ${control.getError('maxlength').requiredLength} caracteres.`;
+    if (control.hasError('pattern')) return 'Escribe una URL que empiece por http:// o https://';
     return 'Valor no válido.';
   }
 
@@ -61,6 +68,7 @@ export class ProfileForm {
       lastName: orNull(raw.lastName),
       phone: orNull(raw.phone),
       bio: orNull(raw.bio),
+      avatar: orNull(raw.avatar), // vacío → null → el backend vuelve a poner el robot
     });
   }
 }

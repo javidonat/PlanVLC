@@ -13,6 +13,17 @@
   </div>
 
   <div>
+    <label for="avatar" class="field-label">Avatar <span class="font-normal text-gris-500">(URL de una imagen; vacío = robot por defecto)</span></label>
+    <div class="flex items-center gap-4">
+      @if (avatarPreview(); as url) {
+        <img [src]="url" alt="Vista previa del avatar" class="h-14 w-14 shrink-0 rounded-full border border-gris-200 bg-marca-100 object-cover" />
+      }
+      <input id="avatar" type="url" class="field-input" formControlName="avatar" placeholder="https://…" />
+    </div>
+    @if (fieldError('avatar'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
     <label for="phone" class="field-label">Teléfono</label>
     <input id="phone" type="tel" class="field-input" formControlName="phone" maxlength="30" />
     @if (fieldError('phone'); as message) {<p class="field-error">{{ message }}</p>}
