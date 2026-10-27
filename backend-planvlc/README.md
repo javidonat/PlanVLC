@@ -270,7 +270,7 @@ Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
 
 ## Endpoints (`profiles`)
 
-Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio`. El perfil apunta al usuario (`profiles.userId`), no al revés.
+Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio`. El perfil apunta al usuario (`profiles.userId`), no al revés. Cada usuario tiene su perfil: se crea vacío al crear el usuario (`POST /api/users` y el seed).
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -287,7 +287,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | GET | `/api/users/active` | Solo activos y no eliminados (`_id`, `name`, `email`) |
 | GET | `/api/users/deleted` | Solo eliminados |
 | GET | `/api/users/:id` | Un usuario activo |
-| POST | `/api/users` | Crea. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcionales: `status`, `avatarImageUrl` |
+| POST | `/api/users` | Crea el usuario y su perfil vacío. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcionales: `status`, `avatarImageUrl` |
 | PATCH | `/api/users/:id` | Modifica los campos enviados. `password` solo si se quiere cambiar |
 | PATCH | `/api/users/:id/active` | Activa o desactiva. Eliminado → `409` |
 | PATCH | `/api/users/:id/softdelete` | Borrado lógico. Si gestiona algún organizador no eliminado → `409` |

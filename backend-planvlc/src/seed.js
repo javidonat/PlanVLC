@@ -184,6 +184,8 @@ const runSeed = async () => {
       roleId: adminRole._id,
       status: "active",
     });
+    // Su perfil (User 1 → 1 Profile), igual que al crear un usuario desde la API
+    await Profile.create({ userId: admin._id });
 
     // 3) Planes (referencian a categorías, lugares y organizadores)
     const categoryId = mapBy(categories, (c) => c.name);
@@ -245,7 +247,7 @@ const runSeed = async () => {
     console.log(`   - ${organizers.length} organizadores`);
     console.log(`   - ${images.length} imágenes`);
     console.log(`   - ${roles.length} roles`);
-    console.log(`   - 1 usuario (${admin.email} / Admin1234 → cámbiala)`);
+    console.log(`   - 1 usuario (${admin.email} / Admin1234 → cámbiala) y su perfil`);
     console.log(`   - ${plans.length} planes`);
     console.log(`   - ${sessions.length} sesiones`);
 

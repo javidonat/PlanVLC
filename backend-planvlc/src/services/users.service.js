@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import usersRepo from "../repos/users.repo.js";
 import organizersRepo from "../repos/organizers.repo.js";
+import profilesRepo from "../repos/profiles.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
@@ -76,13 +77,15 @@ const getUserById = async (id) => {
   return user;
 };
 
-// POST: crea un usuario nuevo. La contraseña nunca se guarda en claro: solo su hash
+// POST: crea un usuario nuevo y su perfil vacío. La contraseña nunca se guarda en claro: solo su hash
 const createUser = async (body) => {
   const data = pickFields(body);
   await validateData(data);
   data.passwordHash = await hashPassword(body.password);
 
   const user = await usersRepo.create(data);
+  // Cada usuario tiene su perfil (User 1 → 1 Profile): se crea vacío junto al usuario
+  await profilesRepo.create(user._id);
 
   if (body.avatarImageUrl === undefined) return user;
   // El avatar necesita el _id del usuario: se guarda después y se devuelve el usuario ya con él
