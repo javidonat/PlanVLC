@@ -1,5 +1,5 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
-// Punto de integración para una futura autenticación, sin simular credenciales hoy.
+// Cabecera común a todas las peticiones. El token lo añade authInterceptor.
 export const requestInterceptor: HttpInterceptorFn = (request, next) =>
   next(request.clone({ setHeaders: { Accept: 'application/json' } }));

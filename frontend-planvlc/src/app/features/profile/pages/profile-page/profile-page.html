@@ -1,0 +1,14 @@
+<section class="mx-auto max-w-4xl px-4 py-9 sm:px-6">
+  <div class="mb-7">
+    <p class="text-sm font-semibold text-marca-600">Mi cuenta</p>
+    <h1 class="mt-2 text-3xl font-bold text-gris-900">Perfil</h1>
+  </div>
+
+  @if (pageLoading()) {
+    <app-skeleton-loader [count]="2" label="Cargando perfil" />
+  } @else if (loadError(); as message) {
+    <app-error-state [message]="message" (retry)="loadPage()" />
+  } @else if (auth.user(); as user) {
+    <app-profile-card [user]="user" [profile]="profile()" [initials]="auth.initials()" />
+  }
+</section>

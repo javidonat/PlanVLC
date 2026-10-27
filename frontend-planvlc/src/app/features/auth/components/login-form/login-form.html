@@ -1,0 +1,15 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-5">
+  <div>
+    <label for="email" class="field-label">Email</label>
+    <input id="email" type="email" class="field-input" formControlName="email" autocomplete="username" placeholder="tu@email.com" />
+    @if (fieldError('email'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="password" class="field-label">Contraseña</label>
+    <input id="password" type="password" class="field-input" formControlName="password" autocomplete="current-password" />
+    @if (fieldError('password'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <button type="submit" [disabled]="submitting()" class="w-full rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white hover:bg-marca-700 disabled:opacity-60">{{ submitting() ? 'Entrando…' : 'Iniciar sesión' }}</button>
+</form>

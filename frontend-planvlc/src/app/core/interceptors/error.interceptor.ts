@@ -41,7 +41,9 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
   return next(request).pipe(catchError(error => {
     const failure = apiError(error);
     // Los formularios muestran los errores 400 junto a cada campo.
-    if (failure.status !== 400) alerts.error(failure.message);
+    // El 401 lo gestiona authInterceptor (vuelve al login) y los errores del login los muestra su formulario
+    const handledElsewhere = failure.status === 400 || failure.status === 401 || request.url.endsWith('/auth/login');
+    if (!handledElsewhere) alerts.error(failure.message);
     return throwError(() => failure);
   }));
 };

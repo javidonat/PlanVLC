@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideBuilding2, LucideCalendarDays, LucideImage, LucideMapPin, LucideShieldCheck, LucideTags, LucideTicket, LucideUsers } from '@lucide/angular';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Loader } from '../../shared/components/loader/loader';
+import { AuthStore } from '../../core/stores/auth.store';
 
 // Navbar lateral: una entrada por cada sección del panel.
 // En escritorio el menú es una columna blanca fija a la izquierda (con el logo arriba);
@@ -18,6 +19,8 @@ import { Loader } from '../../shared/components/loader/loader';
         <span>Plan<span class="text-marca-600">VLC</span></span>
       </a>
       <nav class="flex gap-1 overflow-x-auto px-3 py-2 md:flex-1 md:flex-col md:overflow-y-auto md:px-4 md:pb-4 md:pt-0" aria-label="Navegación lateral">
+        <!-- Las secciones del panel solo las ve un admin (adminGuard protege además las rutas) -->
+        @if (auth.isAdmin()) {
         <p class="menu-titulo hidden md:block">Contenido</p>
         <a routerLink="/admin/planes" routerLinkActive="activo" class="menu-link"><svg lucideTicket width="18" height="18"></svg> Planes</a>
         <a routerLink="/admin/sesiones" routerLinkActive="activo" class="menu-link"><svg lucideCalendarDays width="18" height="18"></svg> Sesiones</a>
@@ -28,6 +31,7 @@ import { Loader } from '../../shared/components/loader/loader';
         <p class="menu-titulo hidden md:block">Acceso</p>
         <a routerLink="/admin/usuarios" routerLinkActive="activo" class="menu-link"><svg lucideUsers width="18" height="18"></svg> Usuarios</a>
         <a routerLink="/admin/roles" routerLinkActive="activo" class="menu-link"><svg lucideShieldCheck width="18" height="18"></svg> Roles</a>
+        }
       </nav>
       <p class="hidden border-t border-gris-200 px-6 py-4 text-xs text-gris-400 md:block">PlanVLC · Panel de administración</p>
     </aside>
@@ -37,4 +41,6 @@ import { Loader } from '../../shared/components/loader/loader';
     </div>
   `,
 })
-export class MainLayout {}
+export class MainLayout {
+  readonly auth = inject(AuthStore);
+}
