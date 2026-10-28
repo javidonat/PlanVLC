@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import AppError from "./AppError.js";
 
@@ -17,10 +18,12 @@ const getSecret = () => {
 export const getExpires = () => process.env.JWT_EXPIRES_IN || "1h";
 
 // Crea un token firmado con el id del usuario (sub), su email y su rol.
-// tokenVersion sirve para el logout: al salir se incrementa y los tokens anteriores dejan de valer
-export const createToken = ({ id, email, role, tokenVersion = 0 }) => {
-  return jwt.sign({ email, role, tokenVersion }, getSecret(), {
+// jwtid (jti) hace que cada token sea distinto: si no, dos logins en el mismo segundo darían el mismo
+// token y, tras un logout, el nuevo login nacería ya en la lista negra
+export const createToken = ({ id, email, role }) => {
+  return jwt.sign({ email, role }, getSecret(), {
     subject: String(id),
+    jwtid: randomUUID(),
     expiresIn: getExpires(),
     algorithm: ALGORITHM,
   });

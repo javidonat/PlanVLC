@@ -12,6 +12,10 @@ const profileSchema = new Schema(
     bio: { type: String, trim: true, maxlength: 2000, default: null },
     // URL de la imagen del avatar. Al crear el perfil se pone un robot (services/utils/avatar.js)
     avatar: { type: String, trim: true, default: null },
+    // Integridad referencial: siguen al usuario. Si el usuario se desactiva o se elimina (soft delete),
+    // su perfil también (lo hace users.service)
+    isActive: { type: Boolean, default: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

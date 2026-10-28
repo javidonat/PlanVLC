@@ -9,5 +9,6 @@ import Image from "./image.model.js";
 import Role from "./role.model.js";
 import User from "./user.model.js";
 import Profile from "./profile.model.js";
+import BlacklistedToken from "./blacklist.model.js";
 
-export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile };
+export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, BlacklistedToken };

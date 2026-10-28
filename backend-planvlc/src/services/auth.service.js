@@ -1,4 +1,5 @@
 import authRepo from "../repos/auth.repo.js";
+import blacklistRepo from "../repos/blacklist.repo.js";
 import profilesRepo from "../repos/profiles.repo.js";
 import AppError from "./utils/AppError.js";
 import { hashPassword, verifyPassword } from "./utils/password.js";
@@ -39,7 +40,7 @@ const login = async ({ email, password }) => {
   }
 
   const role = user.roleId.name;
-  const token = createToken({ id: user._id, email: user.email, role, tokenVersion: user.tokenVersion ?? 0 });
+  const token = createToken({ id: user._id, email: user.email, role });
   await authRepo.updateLastLogin(user._id);
   // Avatar del perfil (o el robot si aún no tiene perfil) para mostrarlo en el navbar
   const profile = await profilesRepo.findByUserId(user._id);
@@ -52,9 +53,10 @@ const login = async ({ email, password }) => {
   };
 };
 
-// POST /api/auth/logout: invalida todos los tokens del usuario (también los de otros dispositivos)
-const logout = async (userId) => {
-  await authRepo.incrementTokenVersion(userId);
+// POST /api/auth/logout: el JWT no se puede borrar, así que se guarda en la lista negra
+// y el middleware de autenticación ya no lo acepta. Se guarda hasta que caduca (exp del token)
+const logout = async ({ token, userId, exp }) => {
+  await blacklistRepo.add({ token, userId, expiresAt: new Date(exp * 1000) });
 };
 
 export default { login, logout };

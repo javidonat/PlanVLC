@@ -36,7 +36,7 @@ El servidor arranca en `http://localhost:3000` (o el `PORT` que pongas en `.env`
 |---|---|
 | `npm start` | Arranca el servidor con Node |
 | `npm run dev` | Arranca con nodemon |
-| `npm run seed` | **Borra** el contenido de las 9 colecciones (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
+| `npm run seed` | **Borra** el contenido de las 9 colecciones y de la lista negra de tokens (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
 
 ## Arquitectura
 
@@ -86,6 +86,7 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `roles` | `Role` | admin, editor, organizer, user |
 | `users` | `User` | Usuarios del sistema |
 | `profiles` | `Profile` | Datos extendidos del usuario (1 a 1) |
+| `blacklistedtokens` | `BlacklistedToken` | Tokens cerrados con logout (lista negra) |
 
 ### Relaciones
 
@@ -250,14 +251,14 @@ Solo hay **login** y **logout**: no existe registro, los usuarios los crea un ad
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role, avatar } }` (`avatar` es el del perfil) |
-| POST | `/api/auth/logout` | Con token. Invalida todos los tokens del usuario |
+| POST | `/api/auth/logout` | Con token. Mete ese token en la lista negra (`blacklistedtokens`) y deja de valer |
 
 Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
 
-- **Token** (`services/utils/jwt.js`): `createToken` firma con `SECRET` (HS256) el id del usuario (`sub`), `email`, `role` y `tokenVersion`, y caduca según `JWT_EXPIRES_IN`. `verifyToken` comprueba la firma, la caducidad y que lleve `email` y `role`.
+- **Token** (`services/utils/jwt.js`): `createToken` firma con `SECRET` (HS256) el id del usuario (`sub`), `email`, `role` y un id único (`jti`), y caduca según `JWT_EXPIRES_IN`. `verifyToken` comprueba la firma, la caducidad y que lleve `email` y `role`.
 - **Contraseñas** (`services/utils/password.js`): hash con Argon2id; nunca se guardan en claro.
-- **`authenticate`** (`middleware/authentication.js`): además del token, comprueba en la base de datos que el usuario sigue activo, con `status: "active"`, con su rol activo, y que su email, su rol y su `tokenVersion` coinciden con los del token. Si no → `401 Autenticación requerida`.
-- **Logout**: el JWT no se puede borrar, así que el logout incrementa `users.tokenVersion` y los tokens anteriores dejan de valer.
+- **`authenticate`** (`middleware/authentication.js`): además del token, comprueba en la base de datos que el usuario sigue activo, con `status: "active"`, con su rol activo, y que su email y su rol coinciden con los del token. También rechaza los tokens de la lista negra. Si no → `401 Autenticación requerida`.
+- **Logout (lista negra)**: el JWT no se puede borrar, así que el logout lo guarda en la colección `blacklistedtokens` (`token`, `userId`, `expiresAt`) y `authenticate` ya no lo acepta (`401`). Solo deja de valer ese token: si el usuario tiene sesión en otro dispositivo, esa sigue. `expiresAt` es la caducidad del token y tiene un índice TTL, así que MongoDB borra el documento solo cuando el token ya habría caducado.
 - **`isAdmin` / `authorizeRoles(...)`** (`middleware/authorization.js`): RBAC por rol. Si el rol no está permitido → `403 No tienes permiso para acceder a este recurso`.
 - **`isOwnerOrAdmin(param)`**: ABAC. El usuario solo accede a lo suyo (`req.user.id === :userId`); un admin, a todo.
 - Login con email o contraseña incorrectos → `401` (mismo mensaje en los dos casos). Usuario desactivado, suspendido, bloqueado o con el rol desactivado → `403`.
@@ -271,6 +272,8 @@ Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
 ## Endpoints (`profiles`)
 
 Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, `phone`, `bio` y `avatar` (URL de la imagen; por defecto un robot de [DiceBear](https://www.dicebear.com/styles/bottts/) distinto para cada usuario). El perfil apunta al usuario (`profiles.userId`), no al revés. Cada usuario tiene su perfil: se crea vacío al crear el usuario (`POST /api/users` y el seed).
+
+**Integridad referencial**: el perfil sigue a su usuario. Al activar o desactivar el usuario (`PATCH /api/users/:id/active`) se activa o desactiva su perfil (`profiles.isActive`), y al eliminarlo (`PATCH /api/users/:id/softdelete`) el perfil también queda eliminado (`isActive: false`, `deletedAt`).
 
 | Método | Ruta | Descripción |
 |---|---|---|

@@ -1,7 +1,7 @@
 import "dotenv/config";
 import mongoose from "mongoose";
 import conectarDB from "./config/db.js";
-import { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile } from "./models/index.js";
+import { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, BlacklistedToken } from "./models/index.js";
 import { generateSlug } from "./services/utils/slug.util.js";
 import { generateSku } from "./services/utils/sku.js";
 import { hashPassword } from "./services/utils/password.js";
@@ -155,7 +155,7 @@ const runSeed = async () => {
 
     // Borramos lo que hubiera antes para empezar desde cero (borrado real)
     await Promise.all(
-      [Session, Plan, Profile, User, Role, Image, Organizer, Venue, Category].map((Model) => Model.deleteMany({}))
+      [Session, Plan, Profile, BlacklistedToken, User, Role, Image, Organizer, Venue, Category].map((Model) => Model.deleteMany({}))
     );
     // La colección antigua "eventos" (versión anterior del proyecto) ya no se usa
     try {

@@ -149,6 +149,8 @@ const setActive = async (id, body) => {
   // El repositorio solo actualiza usuarios con deletedAt: null (uno eliminado no se reactiva)
   const user = await usersRepo.setActive(id, { isActive: body.isActive });
   if (user) {
+    // Integridad referencial: el perfil se activa o desactiva con su usuario
+    await profilesRepo.setActiveByUserId(id, body.isActive);
     return user;
   }
 
@@ -176,6 +178,8 @@ const softDeleteUser = async (id) => {
   if (!user) {
     throw new AppError("Usuario no encontrado", 404);
   }
+  // Integridad referencial: el perfil también queda eliminado (soft delete)
+  await profilesRepo.softDeleteByUserId(id);
   return user;
 };
 

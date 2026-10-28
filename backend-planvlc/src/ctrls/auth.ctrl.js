@@ -10,10 +10,10 @@ const login = async (req, res, next) => {
   }
 };
 
-// POST /api/auth/logout (req.user lo pone el middleware de autenticación)
+// POST /api/auth/logout (req.user, req.token y req.tokenExp los pone el middleware de autenticación)
 const logout = async (req, res, next) => {
   try {
-    await authService.logout(req.user.id);
+    await authService.logout({ token: req.token, userId: req.user.id, exp: req.tokenExp });
     res.status(200).json({ ok: true, message: "Sesión cerrada correctamente" });
   } catch (error) {
     next(error);

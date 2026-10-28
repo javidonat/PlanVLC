@@ -25,4 +25,14 @@ const upsertByUserId = (userId, data) => {
   }).lean();
 };
 
-export default { findByUserId, create, upsertByUserId };
+// Integridad referencial con users: el perfil se activa/desactiva junto a su usuario
+const setActiveByUserId = (userId, isActive) => {
+  return Profile.updateOne({ userId, deletedAt: null }, { isActive });
+};
+
+// Soft delete del perfil cuando se elimina su usuario
+const softDeleteByUserId = (userId) => {
+  return Profile.updateOne({ userId, deletedAt: null }, { isActive: false, deletedAt: new Date() });
+};
+
+export default { findByUserId, create, upsertByUserId, setActiveByUserId, softDeleteByUserId };

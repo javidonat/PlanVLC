@@ -20,8 +20,6 @@ const userSchema = new Schema(
     roleId: { type: Schema.Types.ObjectId, ref: "Role", required: [true, "El rol es obligatorio"] },
     // El avatar vive en "images" (entityType "user", type "avatar")
     lastLoginAt: { type: Date, default: null },
-    // Versión de los tokens del usuario: el logout la incrementa y los JWT con la versión anterior dejan de valer
-    tokenVersion: { type: Number, default: 0, select: false },
 
     status: {
       type: String,
@@ -40,7 +38,6 @@ const userSchema = new Schema(
       virtuals: true,
       transform: (_doc, ret) => {
         delete ret.passwordHash;
-        delete ret.tokenVersion;
         return ret;
       },
     },
