@@ -1,9 +1,15 @@
 <section class="mx-auto max-w-3xl px-4 py-9 sm:px-6">
   <a routerLink="/admin/lugares" class="text-sm font-semibold text-marca-700 hover:underline">← Volver a lugares</a>
-  <div class="mb-7 mt-5">
-    <p class="text-sm font-semibold text-marca-600">Administración</p>
-    <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar lugar</h1>
-    <p class="mt-2 text-gris-500">{{ venue()?.name || 'Completa los datos del lugar.' }}</p>
+  <div class="mb-7 mt-5 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-marca-600">Administración</p>
+      <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar lugar</h1>
+      <p class="mt-2 text-gris-500">{{ venue()?.name || 'Completa los datos del lugar.' }}</p>
+    </div>
+    <!-- Desactivar desde dentro (igual que el interruptor del listado) -->
+    @if (venue(); as current) {
+      <app-active-switch [active]="current.isActive" [busy]="toggling()" [name]="current.name" (toggle)="onDeactivate()" />
+    }
   </div>
 
   @if (pageLoading()) {

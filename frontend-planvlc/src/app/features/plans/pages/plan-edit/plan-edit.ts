@@ -9,12 +9,13 @@ import { PlansStore } from '../../../../core/stores/plans.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { ActiveSwitch } from '../../../../shared/components/active-switch/active-switch';
 import { PlanForm } from '../../components/plan-form/plan-form';
 import { PlanRefs } from '../../utils/plans.utils';
 
 @Component({
   selector: 'app-plan-edit',
-  imports: [RouterLink, SkeletonLoader, ErrorState, PlanForm],
+  imports: [RouterLink, SkeletonLoader, ErrorState, ActiveSwitch, PlanForm],
   templateUrl: './plan-edit.html',
 })
 export class PlanEdit implements OnInit {
@@ -35,6 +36,7 @@ export class PlanEdit implements OnInit {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly serverErrors = signal<Record<string, string>>({});
+  readonly toggling = signal(false);
 
   ngOnInit(): void {
     void this.loadPage();
@@ -58,6 +60,23 @@ export class PlanEdit implements OnInit {
       this.loadError.set(apiError(error).message);
     } finally {
       this.pageLoading.set(false);
+    }
+  }
+
+  // Desactivar desde la página de editar. El backend solo deja editar lo que está activo,
+  // así que después se vuelve al listado (allí se puede volver a activar)
+  async onDeactivate(): Promise<void> {
+    const current = this.plan();
+    if (!current) return;
+    try {
+      this.toggling.set(true);
+      const res = await this.service.setActive(current._id, false);
+      this.store.upsert(res.data);
+      await this.router.navigate(['/admin/planes']);
+    } catch {
+      // El interceptor ya muestra el error (p. ej. 409).
+    } finally {
+      this.toggling.set(false);
     }
   }
 

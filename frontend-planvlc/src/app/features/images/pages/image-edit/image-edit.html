@@ -1,9 +1,15 @@
 <section class="mx-auto max-w-3xl px-4 py-9 sm:px-6">
   <a routerLink="/admin/imagenes" class="text-sm font-semibold text-marca-700 hover:underline">← Volver a imágenes</a>
-  <div class="mb-7 mt-5">
-    <p class="text-sm font-semibold text-marca-600">Administración</p>
-    <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar imagen</h1>
-    <p class="mt-2 text-gris-500">{{ image()?.entityName || 'Completa los datos de la imagen.' }}</p>
+  <div class="mb-7 mt-5 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-marca-600">Administración</p>
+      <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar imagen</h1>
+      <p class="mt-2 text-gris-500">{{ image()?.entityName || 'Completa los datos de la imagen.' }}</p>
+    </div>
+    <!-- Desactivar desde dentro (igual que el interruptor del listado) -->
+    @if (image(); as current) {
+      <app-active-switch [feminine]="true" [active]="current.isActive" [busy]="toggling()" [name]="current.entityName ?? ''" (toggle)="onDeactivate()" />
+    }
   </div>
 
   @if (pageLoading()) {

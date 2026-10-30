@@ -1,9 +1,15 @@
 <section class="mx-auto max-w-3xl px-4 py-9 sm:px-6">
   <a routerLink="/admin/sesiones" class="text-sm font-semibold text-marca-700 hover:underline">← Volver a sesiones</a>
-  <div class="mb-7 mt-5">
-    <p class="text-sm font-semibold text-marca-600">Administración</p>
-    <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar sesión</h1>
-    <p class="mt-2 text-gris-500">{{ session()?.sku || 'Completa los datos de la sesión.' }}</p>
+  <div class="mb-7 mt-5 flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-marca-600">Administración</p>
+      <h1 class="mt-2 text-3xl font-bold text-gris-900">Editar sesión</h1>
+      <p class="mt-2 text-gris-500">{{ session()?.sku || 'Completa los datos de la sesión.' }}</p>
+    </div>
+    <!-- Desactivar desde dentro (igual que el interruptor del listado) -->
+    @if (session(); as current) {
+      <app-active-switch [feminine]="true" [active]="current.isActive" [busy]="toggling()" [name]="current.sku" (toggle)="onDeactivate()" />
+    }
   </div>
 
   @if (pageLoading()) {

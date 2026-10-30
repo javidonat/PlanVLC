@@ -6,11 +6,12 @@ import { CategoriesStore } from '../../../../core/stores/categories.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
+import { ActiveSwitch } from '../../../../shared/components/active-switch/active-switch';
 import { CategoryForm } from '../../components/category-form/category-form';
 
 @Component({
   selector: 'app-category-edit',
-  imports: [RouterLink, SkeletonLoader, ErrorState, CategoryForm],
+  imports: [RouterLink, SkeletonLoader, ErrorState, ActiveSwitch, CategoryForm],
   templateUrl: './category-edit.html',
 })
 export class CategoryEdit implements OnInit {
@@ -27,6 +28,7 @@ export class CategoryEdit implements OnInit {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly serverErrors = signal<Record<string, string>>({});
+  readonly toggling = signal(false);
 
   ngOnInit(): void {
     void this.loadPage();
@@ -43,6 +45,23 @@ export class CategoryEdit implements OnInit {
       this.loadError.set(apiError(error).message);
     } finally {
       this.pageLoading.set(false);
+    }
+  }
+
+  // Desactivar desde la página de editar. El backend solo deja editar lo que está activo,
+  // así que después se vuelve al listado (allí se puede volver a activar)
+  async onDeactivate(): Promise<void> {
+    const current = this.category();
+    if (!current) return;
+    try {
+      this.toggling.set(true);
+      const res = await this.service.setActive(current._id, false);
+      this.store.upsert(res.data);
+      await this.router.navigate(['/admin/categorias']);
+    } catch {
+      // El interceptor ya muestra el error (p. ej. 409).
+    } finally {
+      this.toggling.set(false);
     }
   }
 
