@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { LucideBuilding2, LucideCalendarDays, LucideIdCard, LucideImage, LucideMapPin, LucideShieldCheck, LucideTags, LucideTicket, LucideUsers } from '@lucide/angular';
+import { LucideBuilding2, LucideCalendarDays, LucideIdCard, LucideMapPin, LucideShieldCheck, LucideTags, LucideTicket, LucideUsers } from '@lucide/angular';
 import { Navbar } from '../../shared/components/navbar/navbar';
 import { Loader } from '../../shared/components/loader/loader';
 import { AuthStore } from '../../core/stores/auth.store';
@@ -10,7 +10,7 @@ import { AuthStore } from '../../core/stores/auth.store';
 // en móvil pasa a ser una fila de pestañas debajo de la barra superior.
 @Component({
   selector: 'app-main-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideTicket, LucideCalendarDays, LucideMapPin, LucideBuilding2, LucideTags, LucideUsers, LucideIdCard, LucideShieldCheck, LucideImage, Navbar, Loader],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideTicket, LucideCalendarDays, LucideMapPin, LucideBuilding2, LucideTags, LucideUsers, LucideIdCard, LucideShieldCheck, Navbar, Loader],
   template: `
     <app-navbar /><app-loader />
     <aside class="sticky top-16 z-30 flex flex-col border-b border-gris-200 bg-white md:fixed md:inset-y-0 md:left-0 md:top-0 md:w-64 md:border-b-0 md:border-r">
@@ -27,7 +27,6 @@ import { AuthStore } from '../../core/stores/auth.store';
         <a routerLink="/admin/lugares" routerLinkActive="activo" class="menu-link"><svg lucideMapPin width="18" height="18"></svg> Lugares</a>
         <a routerLink="/admin/organizadores" routerLinkActive="activo" class="menu-link"><svg lucideBuilding2 width="18" height="18"></svg> Organizadores</a>
         <a routerLink="/admin/categorias" routerLinkActive="activo" class="menu-link"><svg lucideTags width="18" height="18"></svg> Categorías</a>
-        <a routerLink="/admin/imagenes" routerLinkActive="activo" class="menu-link"><svg lucideImage width="18" height="18"></svg> Imágenes</a>
         <p class="menu-titulo hidden md:block">Acceso</p>
         <a routerLink="/admin/usuarios" routerLinkActive="activo" class="menu-link"><svg lucideUsers width="18" height="18"></svg> Usuarios</a>
         <a routerLink="/admin/perfiles" routerLinkActive="activo" class="menu-link"><svg lucideIdCard width="18" height="18"></svg> Perfiles</a>
