@@ -23,7 +23,8 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     // withComponentInputBinding: los parámetros de la URL (:id) llegan como input() al componente
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
-    // Al arrancar, recupera la sesión guardada en localStorage (si el token no ha caducado)
+    // Al arrancar, si hay token en localStorage, pide el usuario al backend (GET /api/auth/me).
+    // La app espera a que termine antes de pintar las rutas (los guards ya saben si hay sesión)
     provideAppInitializer(() => inject(AuthService).restoreSession()),
     provideHttpClient(withInterceptors([requestInterceptor, authInterceptor, loadingInterceptor, errorInterceptor])),
   ],

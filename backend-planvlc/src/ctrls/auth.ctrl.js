@@ -20,4 +20,14 @@ const logout = async (req, res, next) => {
   }
 };
 
-export default { login, logout };
+// GET /api/auth/me (req.user lo pone el middleware de autenticación)
+const me = async (req, res, next) => {
+  try {
+    const data = await authService.me(req.user.id);
+    res.status(200).json({ ok: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default { login, logout, me };

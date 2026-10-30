@@ -4,11 +4,11 @@ import { AuthStore } from '../stores/auth.store';
 import { ApiResponse } from '../models/api.model';
 import { AuthUser, LoginPayload, LoginResponse } from '../models/auth.model';
 
-// Claves de localStorage. El token lo lee también el interceptor de autenticación
+// Clave de localStorage del token. La lee también el interceptor de autenticación.
+// Solo se guarda el token: los datos del usuario se piden al backend con GET /api/auth/me
 export const TOKEN_KEY = 'planvlc.token';
-const USER_KEY = 'planvlc.user';
 
-// Login y logout: habla con la API, guarda el JWT en localStorage y actualiza AuthStore
+// Login, logout y me: habla con la API, guarda el JWT en localStorage y actualiza AuthStore
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
@@ -18,7 +18,6 @@ export class AuthService {
     const res = await this.api.post<ApiResponse<LoginResponse>>('auth/login', payload);
     const { token, user } = res.data;
     localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
     this.store.setSession(token, user);
     return user;
   }
@@ -34,36 +33,31 @@ export class AuthService {
     }
   }
 
-  // Al cambiar el avatar en el perfil: actualiza el navbar y la sesión guardada
+  // Al cambiar el avatar en el perfil: actualiza el navbar
   updateAvatar(avatar: string | null): void {
     this.store.updateUser({ avatar });
-    const user = this.store.user();
-    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 
   // Borra el token y el usuario (logout o 401 del backend)
   clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
     this.store.clear();
   }
 
-  // Al arrancar la app: recupera la sesión guardada si el token no ha caducado
-  restoreSession(): void {
+  // Al arrancar la app: si hay un token sin caducar, pide al backend quién es el usuario (GET /api/auth/me).
+  // Así el nombre y el rol vienen siempre del servidor y no de localStorage, donde se podrían modificar.
+  // Si el backend lo rechaza (logout, usuario desactivado...), se cierra la sesión
+  async restoreSession(): Promise<void> {
     const token = localStorage.getItem(TOKEN_KEY);
-    const user = this.readUser();
-    if (!token || !user || isExpired(token)) {
+    if (!token || isExpired(token)) {
       this.clearSession();
       return;
     }
-    this.store.setSession(token, user);
-  }
-
-  private readUser(): AuthUser | null {
     try {
-      return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null') as AuthUser | null;
+      const res = await this.api.get<ApiResponse<AuthUser>>('auth/me');
+      this.store.setSession(token, res.data);
     } catch {
-      return null;
+      this.clearSession();
     }
   }
 }

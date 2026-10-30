@@ -246,12 +246,13 @@ El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las 
 
 ## Autenticación (JWT)
 
-Solo hay **login** y **logout**: no existe registro, los usuarios los crea un admin desde `/api/users`.
+Solo hay **login**, **logout** y **me**: no existe registro, los usuarios los crea un admin desde `/api/users`.
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role, avatar } }` (`avatar` es el del perfil) |
 | POST | `/api/auth/logout` | Con token. Mete ese token en la lista negra (`blacklistedtokens`) y deja de valer |
+| GET | `/api/auth/me` | Con token. Los datos del usuario autenticado: `{ _id, name, email, role, avatar }` (los mismos que el `user` del login) |
 
 Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
 

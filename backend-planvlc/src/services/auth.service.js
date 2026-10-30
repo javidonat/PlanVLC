@@ -1,12 +1,13 @@
 import authRepo from "../repos/auth.repo.js";
 import blacklistRepo from "../repos/blacklist.repo.js";
+import usersRepo from "../repos/users.repo.js";
 import profilesRepo from "../repos/profiles.repo.js";
 import AppError from "./utils/AppError.js";
 import { hashPassword, verifyPassword } from "./utils/password.js";
 import { createToken, getExpires } from "./utils/jwt.js";
 import { defaultAvatar } from "./utils/avatar.js";
 
-// Solo login y logout: no hay registro, los usuarios se crean desde el panel (admin)
+// Login, logout y me: no hay registro, los usuarios se crean desde el panel (admin)
 
 // Comprueba que el usuario puede usar la aplicación: activo, con status "active" y con un rol activo.
 // La usan el login y el middleware de autenticación. Devuelve el mensaje del problema o null
@@ -59,4 +60,20 @@ const logout = async ({ token, userId, exp }) => {
   await blacklistRepo.add({ token, userId, expiresAt: new Date(exp * 1000) });
 };
 
-export default { login, logout };
+// GET /api/auth/me: los datos del usuario del token (los mismos que devuelve el login).
+// El frontend los pide al arrancar en vez de guardarlos en localStorage
+const me = async (userId) => {
+  const user = await usersRepo.findById(userId);
+  if (!user) {
+    throw new AppError("Usuario no encontrado", 404);
+  }
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.roleId.name,
+    avatar: user.profile?.avatar || defaultAvatar(user._id),
+  };
+};
+
+export default { login, logout, me };
