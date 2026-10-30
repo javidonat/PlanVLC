@@ -1,0 +1,17 @@
+<section class="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
+  <header class="mb-8">
+    <p class="mb-1 text-sm font-semibold text-marca-600">Panel de administración</p>
+    <h1 class="text-3xl font-bold tracking-tight text-gris-900">Perfiles</h1>
+    <p class="mt-2 text-gris-500">Datos extendidos de cada usuario. Se activan, desactivan y eliminan junto a su usuario.</p>
+  </header>
+
+  @if (store.loading()) {
+    <app-skeleton-loader [count]="5" label="Cargando perfiles" />
+  } @else if (store.error(); as error) {
+    <app-error-state [message]="error" (retry)="load()" />
+  } @else if (store.isEmpty()) {
+    <app-empty-state message="Todavía no hay perfiles." />
+  } @else {
+    <app-profile-table [profiles]="store.items()" (editProfile)="onEdit($event)" />
+  }
+</section>

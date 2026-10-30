@@ -18,6 +18,9 @@ const validateUser = async (userId) => {
   }
 };
 
+// GET /: todos los perfiles (solo admin)
+const getAllProfiles = () => profilesRepo.findAll();
+
 // GET /:userId. Si aún no tiene perfil, se devuelve vacío
 const getProfile = async (userId) => {
   await validateUser(userId);
@@ -43,4 +46,4 @@ const updateProfile = async (userId, body) => {
   return profilesRepo.upsertByUserId(userId, data);
 };
 
-export default { getProfile, updateProfile };
+export default { getAllProfiles, getProfile, updateProfile };

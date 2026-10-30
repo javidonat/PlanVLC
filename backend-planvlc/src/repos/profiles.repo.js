@@ -3,6 +3,11 @@ import { defaultAvatar } from "../services/utils/avatar.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
+// Todos los perfiles (también los desactivados o eliminados), con el nombre y el email de su usuario
+const findAll = () => {
+  return Profile.find().populate({ path: "userId", select: "name email" }).sort({ createdAt: -1 }).lean();
+};
+
 const findByUserId = (userId) => {
   return Profile.findOne({ userId }).lean();
 };
@@ -35,4 +40,4 @@ const softDeleteByUserId = (userId) => {
   return Profile.updateOne({ userId, deletedAt: null }, { isActive: false, deletedAt: new Date() });
 };
 
-export default { findByUserId, create, upsertByUserId, setActiveByUserId, softDeleteByUserId };
+export default { findAll, findByUserId, create, upsertByUserId, setActiveByUserId, softDeleteByUserId };

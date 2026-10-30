@@ -20,6 +20,7 @@ export const routes: Routes = [
       { path: 'admin/organizadores', canActivate: [adminGuard], loadChildren: () => import('./features/organizers/organizers.routes').then(m => m.ORGANIZERS_ROUTES) },
       { path: 'admin/categorias', canActivate: [adminGuard], loadChildren: () => import('./features/categories/categories.routes').then(m => m.CATEGORIES_ROUTES) },
       { path: 'admin/usuarios', canActivate: [adminGuard], loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) },
+      { path: 'admin/perfiles', canActivate: [adminGuard], loadChildren: () => import('./features/profiles/profiles.routes').then(m => m.PROFILES_ROUTES) },
       { path: 'admin/roles', canActivate: [adminGuard], loadChildren: () => import('./features/roles/roles.routes').then(m => m.ROLES_ROUTES) },
       { path: 'admin/imagenes', canActivate: [adminGuard], loadChildren: () => import('./features/images/images.routes').then(m => m.IMAGES_ROUTES) },
       { path: '**', title: 'Página no encontrada · PlanVLC', loadComponent: () => import('./features/not-found/pages/not-found-page/not-found-page').then(m => m.NotFoundPage) },

@@ -277,6 +277,7 @@ Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, 
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| GET | `/api/profiles` | Solo admin. Todos los perfiles (también desactivados y eliminados), con `userId` poblado (`name`, `email`) |
 | GET | `/api/profiles/:userId` | El perfil del usuario (vacío si aún no tiene) |
 | PATCH | `/api/profiles/:userId` | Modifica los campos enviados (`null` = vaciar; en `avatar`, volver al robot). Si no tenía perfil, se crea |
 

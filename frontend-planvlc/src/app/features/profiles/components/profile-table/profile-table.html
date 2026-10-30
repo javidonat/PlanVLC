@@ -1,0 +1,18 @@
+<div class="overflow-x-auto rounded-2xl border border-gris-200 bg-white shadow-sm">
+  <table class="min-w-[800px] w-full text-left text-sm">
+    <thead class="bg-gris-50 text-[0.8rem] font-semibold text-gris-500">
+      <tr>
+        <th class="px-5 py-4">Usuario</th>
+        <th class="px-5 py-4">Nombre y apellidos</th>
+        <th class="px-5 py-4">Teléfono</th>
+        <th class="px-5 py-4">Disponibilidad</th>
+        <th class="px-5 py-4 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gris-100">
+      @for (profile of profiles(); track profile._id) {
+        <tr app-profile-row [profile]="profile" (editClick)="editProfile.emit($event)"></tr>
+      }
+    </tbody>
+  </table>
+</div>

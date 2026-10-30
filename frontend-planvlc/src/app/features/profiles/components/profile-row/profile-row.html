@@ -1,0 +1,30 @@
+<td class="px-5 py-4">
+  <div class="flex items-center gap-3">
+    @if (profile().avatar; as avatar) {
+      <img [src]="avatar" alt="" class="h-10 w-10 shrink-0 rounded-full border border-gris-200 bg-marca-100 object-cover" />
+    }
+    <div>
+      <p class="font-semibold text-gris-900">{{ profile().userId?.name || 'Usuario no encontrado' }}</p>
+      <p class="mt-1 text-xs text-gris-500">{{ profile().userId?.email }}</p>
+    </div>
+  </div>
+</td>
+<td class="px-5 py-4 text-gris-700">{{ fullName() || '—' }}</td>
+<td class="px-5 py-4 text-gris-700">{{ profile().phone || '—' }}</td>
+<td class="px-5 py-4">
+  <!-- Solo lectura: el perfil sigue a su usuario (se cambia desde Usuarios) -->
+  @if (profile().deletedAt) {
+    <span class="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700">Eliminado</span>
+  } @else if (profile().isActive === false) {
+    <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-800">Inactivo</span>
+  } @else {
+    <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">Activo</span>
+  }
+</td>
+<td class="px-5 py-4">
+  <div class="flex justify-end gap-2">
+    @if (!profile().deletedAt && profile().userId) {
+      <button type="button" (click)="editClick.emit(profile())" class="rounded-lg border border-gris-200 p-2 text-gris-600 hover:bg-marca-50 hover:text-marca-700" [attr.aria-label]="'Editar perfil de ' + profile().userId?.name"><svg lucidePencil width="17" height="17"></svg></button>
+    }
+  </div>
+</td>
