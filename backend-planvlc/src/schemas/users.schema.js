@@ -17,13 +17,6 @@ const objectId = (required, invalid) =>
     .string({ error: (issue) => (issue.input === undefined ? required : invalid) })
     .regex(/^[a-f\d]{24}$/i, invalid);
 
-// URL de imagen (http o https)
-const imageUrl = (invalid) =>
-  z
-    .string({ error: invalid })
-    .trim()
-    .pipe(z.url({ protocol: /^https?$/, error: invalid }));
-
 // La contraseña llega en claro (por HTTPS) y el servidor guarda solo su hash
 const password = z
   .string({ error: (issue) => (issue.input === undefined ? "La contraseña es obligatoria" : "La contraseña debe ser un texto") })
@@ -41,10 +34,7 @@ const required = {
 
 const optional = {
   status: z.enum(USER_STATUSES, { error: (issue) => `El estado '${issue.input}' no es válido` }).optional(),
-  // Avatar: se envía la URL y el servidor la guarda en "images" (entityType "user")
-  avatarImageUrl: imageUrl("La URL del avatar no es válida")
-    .nullable() // null = sin avatar
-    .optional(),
+  // El avatar no va aquí: se cambia en el perfil (PATCH /api/profiles/:userId)
 };
 
 // POST: obligatorios + contraseña + opcionales

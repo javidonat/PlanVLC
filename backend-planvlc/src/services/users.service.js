@@ -3,7 +3,6 @@ import usersRepo from "../repos/users.repo.js";
 import organizersRepo from "../repos/organizers.repo.js";
 import profilesRepo from "../repos/profiles.repo.js";
 import refsRepo from "../repos/refs.repo.js";
-import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
 import { hashPassword } from "./utils/password.js";
 
@@ -12,7 +11,7 @@ import { hashPassword } from "./utils/password.js";
 
 // Campos que se pueden enviar desde fuera (el resto se ignora)
 // passwordHash, lastLoginAt, isActive y deletedAt no están: los gestiona el servidor.
-// La contraseña (password) se guarda como hash y el avatar (avatarImageUrl) en "images"
+// La contraseña (password) se guarda como hash. El avatar no está aquí: es del perfil (profiles.avatar)
 const FIELDS = ["name", "email", "roleId", "status"];
 
 // ---------- Funciones auxiliares ----------
@@ -43,13 +42,6 @@ const validateData = async (data, excludeId) => {
   if (data.roleId && !(await refsRepo.roleExists(data.roleId))) {
     throw new AppError("El rol indicado no existe o está desactivado", 400);
   }
-};
-
-// Avatar del usuario: se envía como URL y se guarda en "images" (entityType "user").
-// null = quitar el avatar
-const saveAvatar = async (user, avatarImageUrl) => {
-  const urls = avatarImageUrl ? [avatarImageUrl] : [];
-  await imagesService.replaceImages("user", user._id, "avatar", urls, user.name);
 };
 
 // ---------- Operaciones ----------
@@ -86,10 +78,6 @@ const createUser = async (body) => {
   const user = await usersRepo.create(data);
   // Cada usuario tiene su perfil (User 1 → 1 Profile): se crea vacío junto al usuario
   await profilesRepo.create(user._id);
-
-  if (body.avatarImageUrl === undefined) return user;
-  // El avatar necesita el _id del usuario: se guarda después y se devuelve el usuario ya con él
-  await saveAvatar(user, body.avatarImageUrl);
   return usersRepo.findById(user._id);
 };
 
@@ -102,21 +90,21 @@ const updateUser = async (id, body) => {
   if (body.password) {
     data.passwordHash = await hashPassword(body.password);
   }
-  const hasData = Object.keys(data).length > 0;
-  if (!hasData && body.avatarImageUrl === undefined) {
+  if (Object.keys(data).length === 0) {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
   await validateData(data, id);
 
-  // Si solo cambia el avatar no hay nada que actualizar en el usuario, pero debe existir y estar activo
-  const user = hasData ? await usersRepo.update(id, data) : await usersRepo.findById(id);
+  const user = await usersRepo.update(id, data);
   if (!user) {
     throw new AppError("Usuario no encontrado", 404);
   }
-
-  if (body.avatarImageUrl === undefined) return user;
-  await saveAvatar(user, body.avatarImageUrl);
-  return usersRepo.findById(id);
+  // Igual que al crear: el usuario tiene que tener su perfil. Si no lo tenía (usuarios antiguos), se crea
+  if (!user.profile) {
+    await profilesRepo.create(id);
+    return usersRepo.findById(id);
+  }
+  return user;
 };
 
 // PATCH /:id/active: activa o desactiva el usuario

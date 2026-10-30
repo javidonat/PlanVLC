@@ -292,12 +292,12 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 | GET | `/api/users/active` | Solo activos y no eliminados (`_id`, `name`, `email`) |
 | GET | `/api/users/deleted` | Solo eliminados |
 | GET | `/api/users/:id` | Un usuario activo |
-| POST | `/api/users` | Crea el usuario y su perfil vacío. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcionales: `status`, `avatarImageUrl` |
-| PATCH | `/api/users/:id` | Modifica los campos enviados. `password` solo si se quiere cambiar |
+| POST | `/api/users` | Crea el usuario y su perfil vacío. Obligatorios: `name`, `email` (único), `password` (8 a 72 caracteres) y `roleId`. Opcional: `status` |
+| PATCH | `/api/users/:id` | Modifica los campos enviados. `password` solo si se quiere cambiar. Si el usuario no tenía perfil, se crea |
 | PATCH | `/api/users/:id/active` | Activa o desactiva. Eliminado → `409` |
 | PATCH | `/api/users/:id/softdelete` | Borrado lógico. Si gestiona algún organizador no eliminado → `409` |
 
-**Solo para admin** (token de un usuario con rol `admin`; sin token → `401`, otro rol → `403`). La contraseña llega en claro y el servidor guarda solo su hash con Argon2id (igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar se guarda en `images` (`entityType: "user"`, `type: "avatar"`) y las respuestas lo traen en `avatar`.
+**Solo para admin** (token de un usuario con rol `admin`; sin token → `401`, otro rol → `403`). La contraseña llega en claro y el servidor guarda solo su hash con Argon2id (igual que el seed). Email repetido → `409`; rol que no existe → `400`. El avatar es el del perfil: se cambia con `PATCH /api/profiles/:userId` y las respuestas lo traen en `profile.avatar`.
 
 ## Endpoints (`roles`)
 
