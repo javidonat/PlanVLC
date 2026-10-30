@@ -51,5 +51,4 @@ export interface UserPayload {
   roleId: string;
   password?: string;
   status: UserStatus;
-  avatarImageUrl: string | null; // null = sin avatar
 }

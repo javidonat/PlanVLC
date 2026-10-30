@@ -29,13 +29,6 @@
     </div>
   </div>
 
-  <div>
-    <label for="avatarImageUrl" class="field-label">URL del avatar</label>
-    <input id="avatarImageUrl" type="url" class="field-input" formControlName="avatarImageUrl" placeholder="https://..." />
-    @if (fieldError('avatarImageUrl'); as message) {<p class="field-error">{{ message }}</p>}
-    @if (avatarPreview(); as url) {<img [src]="url" alt="Vista previa del avatar" class="mt-3 h-20 w-20 rounded-full border border-gris-200 bg-gris-100 object-cover" />}
-  </div>
-
   <div class="sm:w-1/2">
     <label for="status" class="field-label">Estado *</label>
     <select id="status" class="field-input" formControlName="status">
