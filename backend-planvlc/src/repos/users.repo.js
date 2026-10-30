@@ -3,10 +3,12 @@ import { User } from "../models/index.js";
 // El repositorio es la única capa que habla con MongoDB directamente
 // passwordHash tiene select: false en el modelo: ninguna de estas consultas lo devuelve
 
-// Cambia el id del rol por su nombre (como un JOIN de SQL) y busca el avatar en "images"
+// Cambia el id del rol por su nombre (como un JOIN de SQL), busca el avatar en "images"
+// y el avatar del perfil (el que se ve en el navbar y en Perfiles)
 const POPULATE = [
   { path: "roleId", select: "name" },
   { path: "avatar", select: "url alt entityId" },
+  { path: "profile", select: "userId avatar" },
 ];
 
 // TODOS: sin ningún filtro

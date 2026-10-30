@@ -19,12 +19,19 @@ export function userStatusLabel(status: UserStatus): string {
 // Rol tal y como llega con populate() (backend: repos/users.repo.js → POPULATE)
 export type UserRoleRef = { _id: string; name: string };
 
+// Avatar que se muestra en el panel: el del perfil (como en el navbar y en Perfiles);
+// si no tiene perfil, el de "images"
+export function userAvatarUrl(user: User): string | null {
+  return user.profile?.avatar || user.avatar?.url || null;
+}
+
 export interface User {
   _id: string;
   name: string;
   email: string;
   roleId: string | UserRoleRef; // puede llegar poblado o solo como id
   avatar?: ImageRef | null; // colección images con entityType "user"
+  profile?: { avatar: string | null } | null; // perfil del usuario (profiles), con su avatar
   lastLoginAt: string | null;
   status: UserStatus;
   isActive: boolean;

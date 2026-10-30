@@ -54,4 +54,12 @@ userSchema.virtual("avatar", {
   match: { entityType: "user", type: "avatar", isActive: true, deletedAt: null },
 });
 
+// Perfil del usuario (relación inversa: profiles.userId → users._id). El panel muestra su avatar
+userSchema.virtual("profile", {
+  ref: "Profile",
+  localField: "_id",
+  foreignField: "userId",
+  justOne: true,
+});
+
 export default mongoose.model("User", userSchema);

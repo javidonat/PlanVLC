@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucidePencil } from '@lucide/angular';
-import { User, userStatusLabel } from '../../../../core/models/user.model';
+import { User, userAvatarUrl, userStatusLabel } from '../../../../core/models/user.model';
 import { UsersService } from '../../../../core/services/users.service';
 import { UsersStore } from '../../../../core/stores/users.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
@@ -27,6 +27,7 @@ export class UserDetail implements OnInit {
   readonly user = computed(() => this.store.findById(this.id()) ?? null);
 
   readonly userStatusLabel = userStatusLabel;
+  readonly avatarUrl = userAvatarUrl;
 
   ngOnInit(): void {
     // Al venir desde el listado el usuario ya está en el store; si se entra por URL, se carga la lista

@@ -1,7 +1,7 @@
 <td class="px-5 py-4">
   <div class="flex items-center gap-3">
-    @if (user().avatar; as avatar) {
-      <img [src]="avatar.url" alt="" class="h-10 w-10 shrink-0 rounded-full border border-gris-200 bg-gris-100 object-cover" />
+    @if (avatarUrl(); as avatar) {
+      <img [src]="avatar" alt="" class="h-10 w-10 shrink-0 rounded-full border border-gris-200 bg-gris-100 object-cover" />
     } @else {
       <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gris-100 text-sm font-bold text-gris-500">{{ user().name.charAt(0).toUpperCase() }}</span>
     }
