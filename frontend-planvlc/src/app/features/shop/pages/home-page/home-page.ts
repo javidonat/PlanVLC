@@ -1,22 +1,23 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { LucideTicket } from '@lucide/angular';
-import { ShopCategory, ShopOrganizer, ShopVenue } from '../../../../core/models/shop.model';
+import { EMPTY_FILTERS, ShopCategory, ShopOrganizer, ShopVenue } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { Carousel } from '../../../../shared/components/carousel/carousel';
+import { ImageSlideshow, SlideshowImage } from '../../../../shared/components/image-slideshow/image-slideshow';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { CategoryCard } from '../../components/category-card/category-card';
 import { OrganizerCard } from '../../components/organizer-card/organizer-card';
 import { VenueCard } from '../../components/venue-card/venue-card';
 
-// Home: carruseles de categorías, organizadores y lugares.
+// Home: cabecera con fotos de los planes y carruseles de categorías, organizadores y lugares.
 // Al pulsar una card se va al shop ya filtrado (deep-linking: /planes?category=<id>)
 @Component({
   selector: 'app-home-page',
-  imports: [RouterLink, LucideTicket, Carousel, SkeletonLoader, ErrorState, CategoryCard, OrganizerCard, VenueCard],
+  imports: [RouterLink, LucideTicket, Carousel, ImageSlideshow, SkeletonLoader, ErrorState, CategoryCard, OrganizerCard, VenueCard],
   templateUrl: './home-page.html',
 })
 export class HomePage implements OnInit {
@@ -24,7 +25,11 @@ export class HomePage implements OnInit {
   private readonly service = inject(ShopService);
   private readonly router = inject(Router);
 
+  // Portadas de los últimos planes publicados: fondo de la cabecera
+  readonly heroImages = signal<SlideshowImage[]>([]);
+
   ngOnInit(): void {
+    void this.loadHeroImages();
     // El catálogo se comparte con los filtros del shop: si ya se cargó, no se repite la petición
     if (!this.store.catalogLoaded()) void this.loadCatalog();
   }
@@ -43,6 +48,15 @@ export class HomePage implements OnInit {
       this.store.setCatalogError(apiError(error).message);
     } finally {
       this.store.setCatalogLoading(false);
+    }
+  }
+
+  async loadHeroImages(): Promise<void> {
+    try {
+      const res = await this.service.getPlans(EMPTY_FILTERS);
+      this.heroImages.set(res.data.flatMap(plan => (plan.coverImage ? [{ url: plan.coverImage.url, alt: plan.title }] : [])));
+    } catch {
+      // Sin fotos la cabecera se queda con el fondo de color: no hace falta avisar
     }
   }
 

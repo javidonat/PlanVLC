@@ -14,48 +14,51 @@ import { defaultAvatar } from "./services/utils/avatar.js";
 // Las fechas llevan +02:00 (hora de verano de Valencia). Los datos de ejemplo de
 // organizadores y horas de fin son inventados: cámbialos por los reales cuando los tengas.
 
-const categoriesData = [
-  { name: "Fiesta", group: "nightlife" },
-  { name: "Concierto", group: "nightlife" },
-  { name: "Tardeo", group: "nightlife" },
-  { name: "Festival", group: "nightlife" },
-  { name: "Discoteca", group: "nightlife" },
-  { name: "Discomóvil", group: "nightlife" },
-  { name: "Deporte", group: "sports" },
-  { name: "Motos de agua", group: "activities" },
-  { name: "Actividades", group: "activities" },
-  { name: "Espectáculo", group: "other" },
-];
-
-// Imágenes de ejemplo (Unsplash) para comprobar la portada y la galería de los planes
+// Imágenes de ejemplo (Unsplash) para las fotos de los planes, categorías, lugares y organizadores.
+// Las categorías sin planes de ejemplo reutilizan fotos parecidas: cámbialas desde el panel
 const unsplash = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=1200&q=80`;
 
+const categoriesData = [
+  { name: "Fiesta", group: "nightlife", cover: unsplash("1578736641330-3155e606cd40") },
+  { name: "Concierto", group: "nightlife", cover: unsplash("1524368535928-5b5e00ddc76b") },
+  { name: "Tardeo", group: "nightlife", cover: unsplash("1698141825633-a34c5f129225") },
+  { name: "Festival", group: "nightlife", cover: unsplash("1533174072545-7a4b6ad7a6c3") },
+  { name: "Discoteca", group: "nightlife", cover: unsplash("1709131518045-0aa4d3b90e7c") },
+  { name: "Discomóvil", group: "nightlife", cover: unsplash("1708449530105-ea7d453a6f89") },
+  { name: "Deporte", group: "sports", cover: unsplash("1434648957308-5e6a859697e8") },
+  { name: "Motos de agua", group: "activities", cover: unsplash("1666861522569-3a352a533c1e") },
+  { name: "Actividades", group: "activities", cover: unsplash("1501386761578-eac5c94b800a") },
+  { name: "Espectáculo", group: "other", cover: unsplash("1565035010268-a3816f98589a") },
+];
+
 const venuesData = [
-  { key: "loco", name: "Sala Loco Club", city: "Valencia" },
-  { key: "musicoleg", name: "Sala El Musicòleg", city: "Valencia" },
+  { key: "loco", name: "Sala Loco Club", city: "Valencia", cover: unsplash("1545128485-c400e7702796") },
+  { key: "musicoleg", name: "Sala El Musicòleg", city: "Valencia", cover: unsplash("1470229722913-7c0e2dbbafd3") },
   {
     key: "ruzafa",
     name: "Ruzafa",
     city: "Valencia",
     neighborhood: "Ruzafa",
+    cover: unsplash("1509824227185-9c5a01ceba0d"),
     location: { type: "Point", coordinates: [-0.3745, 39.4605] }, // aproximadas
   },
-  { key: "rototom", name: "Recinto Rototom Sunsplash", city: "Benicàssim", province: "Castellón" },
+  { key: "rototom", name: "Recinto Rototom Sunsplash", city: "Benicàssim", province: "Castellón", cover: unsplash("1459749411175-04bf5292ceea") },
   {
     key: "mestalla",
     name: "Estadio de Mestalla",
     city: "Valencia",
+    cover: unsplash("1522778119026-d647f0596c20"),
     location: { type: "Point", coordinates: [-0.3584, 39.4747] }, // aproximadas
   },
 ];
 
 // Los organizadores de ejemplo ya están verificados (por defecto, uno nuevo empieza en "pending")
 const organizersData = [
-  { key: "loco", name: "Sala Loco Club", type: "nightclub", status: "verified" },
-  { key: "musicoleg", name: "Sala El Musicòleg", type: "club", status: "verified" },
-  { key: "tardeosvlc", name: "Tardeos VLC", type: "promoter", status: "verified", contact: { instagram: "@tardeosvlc" } },
-  { key: "rototom", name: "Rototom Sunsplash", type: "promoter", status: "verified" },
-  { key: "vcf", name: "Valencia CF", type: "club", status: "verified" },
+  { key: "loco", name: "Sala Loco Club", type: "nightclub", status: "verified", logo: unsplash("1709131518045-0aa4d3b90e7c") },
+  { key: "musicoleg", name: "Sala El Musicòleg", type: "club", status: "verified", logo: unsplash("1565035010268-a3816f98589a") },
+  { key: "tardeosvlc", name: "Tardeos VLC", type: "promoter", status: "verified", contact: { instagram: "@tardeosvlc" }, logo: unsplash("1666861522569-3a352a533c1e") },
+  { key: "rototom", name: "Rototom Sunsplash", type: "promoter", status: "verified", logo: unsplash("1540039155733-5bb30b53aa14") },
+  { key: "vcf", name: "Valencia CF", type: "club", status: "verified", logo: unsplash("1579952363873-27f3bade9f55") },
 ];
 
 const rolesData = [
@@ -168,14 +171,14 @@ const runSeed = async () => {
 
     // 1) Colecciones independientes
     const categories = await Category.insertMany(
-      categoriesData.map((c) => ({ ...c, slug: generateSlug(c.name) }))
+      categoriesData.map(({ cover, ...c }) => ({ ...c, slug: generateSlug(c.name) }))
     );
-    const venues = await Venue.insertMany(venuesData.map(({ key, ...v }) => ({ ...v, slug: generateSlug(v.name) })));
+    const venues = await Venue.insertMany(venuesData.map(({ key, cover, ...v }) => ({ ...v, slug: generateSlug(v.name) })));
     const roles = await Role.insertMany(rolesData);
 
     // 2) Organizadores y usuario admin
     const organizers = await Organizer.insertMany(
-      organizersData.map(({ key, ...o }) => ({ ...o, slug: generateSlug(o.name) }))
+      organizersData.map(({ key, logo, ...o }) => ({ ...o, slug: generateSlug(o.name) }))
     );
     const adminRole = roles.find((r) => r.name === "admin");
     const admin = await User.create({
@@ -213,9 +216,13 @@ const runSeed = async () => {
       })
     );
 
-    // 4) Imágenes de los planes: la imagen apunta al plan (entityType + entityId)
-    const images = await Image.insertMany(
-      plansData.flatMap((p, i) => [
+    // 4) Imágenes: la imagen apunta a su entidad (entityType + entityId).
+    // Portadas de categorías y lugares, logos de organizadores y portada + galería de los planes
+    const images = await Image.insertMany([
+      ...categoriesData.map((c, i) => ({ url: c.cover, alt: c.name, entityType: "category", entityId: categories[i]._id, type: "cover", position: 0 })),
+      ...venuesData.map((v, i) => ({ url: v.cover, alt: v.name, entityType: "venue", entityId: venues[i]._id, type: "cover", position: 0 })),
+      ...organizersData.map((o, i) => ({ url: o.logo, alt: o.name, entityType: "organizer", entityId: organizers[i]._id, type: "logo", position: 0 })),
+      ...plansData.flatMap((p, i) => [
         { url: p.cover, alt: p.title, entityType: "plan", entityId: plans[i]._id, type: "cover", position: 0 },
         ...p.gallery.map((url, position) => ({
           url,
@@ -225,8 +232,8 @@ const runSeed = async () => {
           type: "gallery",
           position,
         })),
-      ])
-    );
+      ]),
+    ]);
 
     // 5) Sesiones (referencian al plan)
     const sessionsToInsert = plansData.flatMap((p, i) =>
