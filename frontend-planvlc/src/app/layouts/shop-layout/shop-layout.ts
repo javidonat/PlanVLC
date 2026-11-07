@@ -17,7 +17,6 @@ import { AuthStore } from '../../core/stores/auth.store';
             <span class="hidden sm:inline">Plan<span class="text-marca-600">VLC</span></span>
           </a>
           <nav class="flex items-center gap-1 text-sm font-semibold" aria-label="Navegación principal">
-            <a routerLink="/" routerLinkActive="bg-marca-50 text-marca-700" [routerLinkActiveOptions]="{ exact: true }" class="rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100">Inicio</a>
             <a routerLink="/planes" routerLinkActive="bg-marca-50 text-marca-700" class="rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100">Planes</a>
           </nav>
         </div>
