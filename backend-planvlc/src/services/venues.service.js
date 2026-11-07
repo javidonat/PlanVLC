@@ -3,12 +3,13 @@ import venuesRepo from "../repos/venues.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import imagesService from "./images.service.js";
 import AppError from "./utils/AppError.js";
+import { generateSlug } from "./utils/slug.util.js";
 
 // El servicio contiene la lógica de negocio
 // No sabe nada de HTTP (req, res), solo trabaja con datos
 
 // Campos que se pueden enviar desde fuera (el resto se ignora)
-// isActive y deletedAt no están: los gestiona el servidor.
+// slug, isActive y deletedAt no están: los gestiona el servidor.
 // latitude/longitude se guardan en location (ver pickLocation) y las imágenes en "images" (ver saveImages)
 const FIELDS = ["name", "address", "neighborhood", "city", "province", "postalCode", "capacity", "status"];
 
@@ -55,6 +56,46 @@ const saveImages = async (venue, images) => {
   }
 };
 
+// Genera un slug a partir del nombre y añade -1, -2... si ya existe otro igual.
+// excludeId evita que un lugar choque consigo mismo al editarse.
+const buildUniqueSlug = async (name, excludeId) => {
+  const base = generateSlug(name) || "lugar";
+  let candidate = base;
+  let suffix = 1;
+
+  while (await venuesRepo.slugExists(candidate, excludeId)) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+};
+
+// ¿Este slug ya corresponde a ese nombre? (el slug base, o el base con sufijo: "sala-mirror" / "sala-mirror-2")
+// Sirve para no cambiar el slug de un lugar cuando se edita sin cambiar su nombre
+const slugMatchesName = (slug, name) => {
+  const base = generateSlug(name) || "lugar";
+  return slug === base || new RegExp(`^${base}-\\d+$`).test(slug);
+};
+
+// El índice único de MongoDB rechaza un slug repetido con el error 11000
+const isDuplicateSlug = (error) =>
+  error?.code === 11000 && (error.keyPattern?.slug !== undefined || error.keyValue?.slug !== undefined);
+
+const MAX_SLUG_ATTEMPTS = 3;
+
+// Calcula un slug único y ejecuta save(slug). Si otra petición simultánea se queda con el mismo
+// slug entre la comprobación y el guardado, el índice único lo rechaza: se recalcula y se reintenta.
+const saveWithUniqueSlug = async (name, excludeId, save) => {
+  for (let attempt = 1; ; attempt += 1) {
+    const slug = await buildUniqueSlug(name, excludeId);
+    try {
+      return await save(slug);
+    } catch (error) {
+      if (!isDuplicateSlug(error) || attempt >= MAX_SLUG_ATTEMPTS) throw error;
+    }
+  }
+};
+
 // ---------- Operaciones ----------
 
 const getAllVenues = async () => {
@@ -80,14 +121,14 @@ const getVenueById = async (id) => {
   return venue;
 };
 
-// POST: crea un lugar nuevo
+// POST: crea un lugar nuevo. El slug se genera a partir del nombre
 const createVenue = async (body) => {
   const data = pickFields(body);
   const location = pickLocation(body);
   if (location) data.location = location;
   const images = pickImages(body);
 
-  const venue = await venuesRepo.create(data);
+  const venue = await saveWithUniqueSlug(data.name, undefined, (slug) => venuesRepo.create({ ...data, slug }));
 
   if (!hasImages(images)) return venue;
   // Las imágenes necesitan el _id del lugar: se guardan después y se devuelve el lugar ya con ellas
@@ -110,11 +151,28 @@ const updateVenue = async (id, body) => {
     throw new AppError("No se ha enviado ningún campo válido para modificar", 400);
   }
 
-  // Si solo cambian las imágenes no hay nada que actualizar en el lugar, pero debe existir y estar activo
-  const venue = hasData ? await venuesRepo.update(id, data) : await venuesRepo.findById(id);
-  if (!venue) {
-    throw new AppError("Lugar no encontrado", 404);
+  const save = async (slug) => {
+    // Si solo cambian las imágenes no hay nada que actualizar en el lugar, pero debe existir y estar activo
+    const venue = hasData ? await venuesRepo.update(id, slug ? { ...data, slug } : data) : await venuesRepo.findById(id);
+    if (!venue) {
+      throw new AppError("Lugar no encontrado", 404);
+    }
+    return venue;
+  };
+
+  // Si se envía un nombre nuevo, el slug se regenera (siempre único). Si el nombre no cambia, se mantiene.
+  // (Los lugares creados antes de existir el slug lo reciben la primera vez que se edita su nombre)
+  let venue;
+  if (typeof data.name === "string" && data.name.trim() !== "") {
+    const current = await venuesRepo.findById(id);
+    if (!current) {
+      throw new AppError("Lugar no encontrado", 404);
+    }
+    if (!current.slug || !slugMatchesName(current.slug, data.name)) {
+      venue = await saveWithUniqueSlug(data.name, id, save);
+    }
   }
+  venue ??= await save();
 
   if (!hasImages(images)) return venue;
   await saveImages(venue, images);

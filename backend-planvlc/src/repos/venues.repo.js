@@ -66,6 +66,13 @@ const existsById = async (id) => {
   return Boolean(await Venue.exists({ _id: id }));
 };
 
+// ¿Hay otro lugar con este slug? (excludeId = el propio lugar al editarse)
+const slugExists = async (slug, excludeId) => {
+  const filter = { slug };
+  if (excludeId) filter._id = { $ne: excludeId };
+  return Boolean(await Venue.exists(filter));
+};
+
 export default {
-  findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById,
+  findActive, findAll, findDeleted, findById, create, update, softDelete, setActive, existsById, slugExists,
 };

@@ -14,6 +14,7 @@ import usersRoutes from "./routes/users.routes.js";
 import imagesRoutes from "./routes/images.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import profilesRoutes from "./routes/profiles.routes.js";
+import shopRoutes from "./routes/shop.routes.js";
 
 const app = express();
 
@@ -31,6 +32,8 @@ app.get("/health", (_req, res) => {
 // --- Rutas ---
 app.use("/api/auth", authRoutes);
 app.use("/api/profiles", profilesRoutes);
+// Tienda pública (home y shop del frontend): sin token
+app.use("/api/shop", shopRoutes);
 app.use("/api/plans", plansRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/sessions", sessionsRoutes);

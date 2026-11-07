@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LucideMapPin } from '@lucide/angular';
 import { LoginPayload } from '../../../../core/models/auth.model';
 import { AuthService } from '../../../../core/services/auth.service';
+import { AuthStore } from '../../../../core/stores/auth.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { LoginForm } from '../../components/login-form/login-form';
 
@@ -14,6 +15,7 @@ import { LoginForm } from '../../components/login-form/login-form';
 })
 export class LoginPage {
   private readonly auth = inject(AuthService);
+  private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -27,8 +29,9 @@ export class LoginPage {
       this.error.set(null);
       this.serverErrors.set({});
       await this.auth.login(payload);
-      // Vuelve a la página que pedía el guard o, si no, a la portada (admin → panel, resto → perfil)
-      await this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('returnUrl') || '/');
+      // Vuelve a la página que pedía el guard o, si no, el admin al panel y el resto al home
+      const home = this.authStore.isAdmin() ? '/admin/planes' : '/';
+      await this.router.navigateByUrl(this.route.snapshot.queryParamMap.get('returnUrl') || home);
     } catch (error) {
       const failure = apiError(error);
       this.error.set(failure.message);

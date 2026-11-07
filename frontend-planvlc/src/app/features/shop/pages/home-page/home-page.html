@@ -1,0 +1,49 @@
+<section class="bg-gradient-to-br from-marca-700 via-marca-600 to-marca-500 text-white">
+  <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <p class="text-sm font-semibold uppercase tracking-widest text-marca-100">PlanVLC</p>
+    <h1 class="mt-3 max-w-2xl text-4xl font-extrabold tracking-tight sm:text-5xl">Planes y eventos en Valencia</h1>
+    <p class="mt-4 max-w-xl text-lg text-marca-100">Fiestas, conciertos, tardeos, deporte y actividades. Elige el plan y la fecha que mejor te vaya.</p>
+    <a routerLink="/planes" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 font-semibold text-marca-700 shadow-sm hover:bg-marca-50"><svg lucideTicket width="18" height="18"></svg> Ver todos los planes</a>
+  </div>
+</section>
+
+<div class="mx-auto max-w-7xl space-y-14 px-4 py-12 sm:px-6 lg:px-8">
+  @if (store.catalogLoading()) {
+    <app-skeleton-loader [count]="3" label="Cargando categorías, organizadores y lugares" />
+  } @else if (store.catalogError(); as message) {
+    <app-error-state [message]="message" (retry)="loadCatalog()" />
+  } @else {
+    @if (store.categories().length) {
+      <section>
+        <h2 class="mb-5 text-2xl font-bold text-gris-900">Explora por categoría</h2>
+        <app-carousel label="Categorías">
+          @for (category of store.categories(); track category._id) {
+            <app-category-card class="w-44 shrink-0 snap-start sm:w-52" [category]="category" (selected)="onCategory($event)" />
+          }
+        </app-carousel>
+      </section>
+    }
+
+    @if (store.organizers().length) {
+      <section>
+        <h2 class="mb-5 text-2xl font-bold text-gris-900">Organizadores</h2>
+        <app-carousel label="Organizadores">
+          @for (organizer of store.organizers(); track organizer._id) {
+            <app-organizer-card class="w-44 shrink-0 snap-start sm:w-52" [organizer]="organizer" (selected)="onOrganizer($event)" />
+          }
+        </app-carousel>
+      </section>
+    }
+
+    @if (store.venues().length) {
+      <section>
+        <h2 class="mb-5 text-2xl font-bold text-gris-900">Lugares</h2>
+        <app-carousel label="Lugares">
+          @for (venue of store.venues(); track venue._id) {
+            <app-venue-card class="w-44 shrink-0 snap-start sm:w-52" [venue]="venue" (selected)="onVenue($event)" />
+          }
+        </app-carousel>
+      </section>
+    }
+  }
+</div>

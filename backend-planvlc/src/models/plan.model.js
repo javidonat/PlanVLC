@@ -81,6 +81,14 @@ const planSchema = new Schema(
 
 planSchema.index({ nextSessionAt: 1 });
 
+// Índices de la tienda (repos/shop.repo.js): todas sus consultas filtran por los planes visibles
+// (status, isActive, deletedAt) y, según los filtros, por categoría, organizador, lugar o precio
+planSchema.index({ status: 1, isActive: 1, deletedAt: 1, createdAt: -1 });
+planSchema.index({ categoryIds: 1, status: 1, isActive: 1, deletedAt: 1 });
+planSchema.index({ organizerId: 1, status: 1, isActive: 1, deletedAt: 1 });
+planSchema.index({ venueId: 1, status: 1, isActive: 1, deletedAt: 1 });
+planSchema.index({ status: 1, isActive: 1, deletedAt: 1, priceFrom: 1 });
+
 // Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las activas y no eliminadas.
 planSchema.virtual("coverImage", {
   ref: "Image",

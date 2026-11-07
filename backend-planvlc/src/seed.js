@@ -79,7 +79,7 @@ const plansData = [
     cover: unsplash("1545128485-c400e7702796"),
     gallery: [unsplash("1578736641330-3155e606cd40"), unsplash("1709131518045-0aa4d3b90e7c"), unsplash("1708449530105-ea7d453a6f89")],
     sessions: [
-      { start: "2025-10-04T23:00:00+02:00", end: "2025-10-05T06:00:00+02:00", price: 10, capacity: 300 },
+      { start: "2027-10-04T23:00:00+02:00", end: "2027-10-05T06:00:00+02:00", price: 10, capacity: 300 },
     ],
   },
   {
@@ -94,7 +94,7 @@ const plansData = [
     cover: unsplash("1470229722913-7c0e2dbbafd3"),
     gallery: [unsplash("1524368535928-5b5e00ddc76b"), unsplash("1565035010268-a3816f98589a")],
     sessions: [
-      { start: "2025-10-11T21:00:00+02:00", end: "2025-10-12T00:00:00+02:00", price: 20, capacity: 150 },
+      { start: "2027-10-11T21:00:00+02:00", end: "2027-10-12T00:00:00+02:00", price: 20, capacity: 150 },
     ],
   },
   {
@@ -110,8 +110,8 @@ const plansData = [
     cover: unsplash("1509824227185-9c5a01ceba0d"),
     gallery: [unsplash("1698141825633-a34c5f129225"), unsplash("1666861522569-3a352a533c1e")],
     sessions: [
-      { start: "2025-10-05T17:00:00+02:00", end: "2025-10-05T23:00:00+02:00", price: 0, capacity: null },
-      { start: "2025-10-12T17:00:00+02:00", end: "2025-10-12T23:00:00+02:00", price: 0, capacity: null },
+      { start: "2027-10-05T17:00:00+02:00", end: "2027-10-05T23:00:00+02:00", price: 0, capacity: null },
+      { start: "2027-10-12T17:00:00+02:00", end: "2027-10-12T23:00:00+02:00", price: 0, capacity: null },
     ],
   },
   {
@@ -126,7 +126,7 @@ const plansData = [
     cover: unsplash("1459749411175-04bf5292ceea"),
     gallery: [unsplash("1533174072545-7a4b6ad7a6c3"), unsplash("1501386761578-eac5c94b800a"), unsplash("1540039155733-5bb30b53aa14")],
     sessions: [
-      { start: "2025-08-16T12:00:00+02:00", end: "2025-08-17T02:00:00+02:00", price: 85, capacity: 5000 },
+      { start: "2027-08-16T12:00:00+02:00", end: "2027-08-17T02:00:00+02:00", price: 85, capacity: 5000 },
     ],
   },
   {
@@ -141,7 +141,7 @@ const plansData = [
     cover: unsplash("1522778119026-d647f0596c20"),
     gallery: [unsplash("1434648957308-5e6a859697e8"), unsplash("1489944440615-453fc2b6a9a9"), unsplash("1579952363873-27f3bade9f55")],
     sessions: [
-      { start: "2025-10-19T18:30:00+02:00", end: "2025-10-19T20:30:00+02:00", price: 35, capacity: 800 },
+      { start: "2027-10-19T18:30:00+02:00", end: "2027-10-19T20:30:00+02:00", price: 35, capacity: 800 },
     ],
   },
 ];
@@ -170,7 +170,7 @@ const runSeed = async () => {
     const categories = await Category.insertMany(
       categoriesData.map((c) => ({ ...c, slug: generateSlug(c.name) }))
     );
-    const venues = await Venue.insertMany(venuesData.map(({ key, ...v }) => v));
+    const venues = await Venue.insertMany(venuesData.map(({ key, ...v }) => ({ ...v, slug: generateSlug(v.name) })));
     const roles = await Role.insertMany(rolesData);
 
     // 2) Organizadores y usuario admin

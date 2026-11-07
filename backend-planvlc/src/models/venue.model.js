@@ -8,6 +8,7 @@ const { Schema } = mongoose;
 const venueSchema = new Schema(
   {
     name: { type: String, required: [true, "El nombre es obligatorio"], trim: true },
+    slug: { type: String, unique: true, lowercase: true, trim: true }, // para la URL de la tienda (?venue=sala-mirror)
     address: { type: String, trim: true, default: "" },
     city: { type: String, trim: true, default: "Valencia" },
     province: { type: String, trim: true, default: "Valencia" },

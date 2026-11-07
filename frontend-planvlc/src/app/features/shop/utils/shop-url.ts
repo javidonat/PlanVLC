@@ -1,0 +1,46 @@
+import { ParamMap, Params } from '@angular/router';
+import { EMPTY_FILTERS, ShopFilters } from '../../../core/models/shop.model';
+
+// Sincronización filtros ⇄ URL del shop
+// (/planes?category=tardeo&organizer=...&venue=...&minPrice=10&maxPrice=30&search=...&page=2)
+
+const slugFrom = (value: string | null): string | null => {
+  const slug = value?.trim().toLowerCase() ?? '';
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 200 ? slug : null;
+};
+
+const priceFrom = (value: string | null): number | null => {
+  if (value === null || value.trim() === '') return null;
+  const price = Number(value);
+  return Number.isFinite(price) && price >= 0 ? price : null;
+};
+
+// URL → filtros. Lo que no es válido (slugs mal escritos, precios o página no numéricos) se ignora
+export function filtersFromUrl(params: ParamMap): ShopFilters {
+  const page = Number(params.get('page'));
+  const minPrice = priceFrom(params.get('minPrice'));
+  const maxPrice = priceFrom(params.get('maxPrice'));
+  const validRange = minPrice === null || maxPrice === null || minPrice <= maxPrice;
+  return {
+    category: slugFrom(params.get('category')),
+    organizer: slugFrom(params.get('organizer')),
+    venue: slugFrom(params.get('venue')),
+    minPrice,
+    maxPrice: validRange ? maxPrice : null, // un máximo menor que el mínimo se ignora
+    search: (params.get('search') ?? '').trim().slice(0, 100),
+    page: Number.isInteger(page) && page > 1 ? page : EMPTY_FILTERS.page,
+  };
+}
+
+// Filtros → query params. Solo los que tienen valor (la página 1 no se escribe)
+export function filtersToUrl(filters: ShopFilters): Params {
+  const params: Params = {};
+  if (filters.category) params['category'] = filters.category;
+  if (filters.organizer) params['organizer'] = filters.organizer;
+  if (filters.venue) params['venue'] = filters.venue;
+  if (filters.minPrice !== null) params['minPrice'] = filters.minPrice;
+  if (filters.maxPrice !== null) params['maxPrice'] = filters.maxPrice;
+  if (filters.search) params['search'] = filters.search;
+  if (filters.page > 1) params['page'] = filters.page;
+  return params;
+}

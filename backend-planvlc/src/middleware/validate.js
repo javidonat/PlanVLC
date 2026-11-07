@@ -4,14 +4,14 @@ import AppError from "../services/utils/AppError.js";
 //
 //   router.post("/", validate({ body: createPlanSchema }), ctrl.postPlan);
 //
-// Valida req.params y/o req.body contra el esquema que se le pase. Si todo es correcto,
-// sustituye req.body por los datos ya limpios (campos desconocidos fuera, textos sin espacios
+// Valida req.params, req.query y/o req.body contra el esquema que se le pase. Si todo es correcto,
+// sustituye req.query y req.body por los datos ya limpios (campos desconocidos fuera, textos sin espacios
 // sobrantes). Si algo falla, lanza un AppError 400 que recoge el middleware de errores.
 const validate = (schemas) => (req, _res, next) => {
   const errors = [];
   const clean = {};
 
-  for (const source of ["params", "body"]) {
+  for (const source of ["params", "query", "body"]) {
     const schema = schemas[source];
     if (!schema) continue;
 
@@ -30,6 +30,7 @@ const validate = (schemas) => (req, _res, next) => {
     return next(new AppError(message, 400, errors));
   }
 
+  if (clean.query) req.query = clean.query; // ej. ?page=2 → page: 2 (número)
   if (clean.body) req.body = clean.body;
   next();
 };

@@ -174,6 +174,23 @@ Se **embebe** (dentro del propio documento) solo lo pequeño que no se reutiliza
 
 `npm run seed` crea 10 categorías, 5 lugares, 5 organizadores (verificados), 18 imágenes de Unsplash (portada y galería de cada plan), 4 roles, 1 usuario admin (`admin@planvlc.com` / `Admin1234`, **cámbiala**), 5 planes y 6 sesiones. "Tardeo Ruzafa" tiene 2 sesiones para mostrar un plan recurrente.
 
+## Endpoints (`shop`): tienda pública
+
+Lo que usan el home y el shop del frontend. **No piden token** y solo devuelven lo que se puede enseñar: activo, no eliminado y publicado (organizadores no suspendidos y lugares no cerrados definitivamente).
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/shop/categories` | Categorías (carrusel del home y filtro) |
+| GET | `/api/shop/organizers` | Organizadores (carrusel del home y filtro) |
+| GET | `/api/shop/venues` | Lugares (carrusel del home y filtro) |
+| GET | `/api/shop/plans` | Planes paginados. Query params opcionales y combinables: `category`, `organizer`, `venue` (slugs), `minPrice` y `maxPrice` (precio "desde" del plan, en euros), `search` (contiene el texto en el título, sin distinguir mayúsculas), `page` (por defecto 1) y `limit` (por defecto 6, máximo 50). Devuelve `{ ok, total, page, limit, totalPages, data }` |
+| GET | `/api/shop/plans/:slug` | Detalle del plan, con sus categorías, organizador, lugar, portada y galería |
+| GET | `/api/shop/plans/:slug/sessions` | Sus próximas sesiones (variantes) publicadas: fechas de inicio y fin, aforo, plazas libres y precio |
+
+- **Query dinámica**: el controlador pasa `req.query` (ya validado con Zod en `schemas/shop.schema.js`) al servicio, que pone la página y el límite por defecto; el repositorio (`repos/shop.repo.js`) parte de los planes visibles y solo añade las condiciones de los filtros que lleguen. La búsqueda se escapa para que sea texto literal.
+- **Índices** (`models/plan.model.js`): uno para los planes visibles ordenados por fecha de creación y uno por cada filtro (`categoryIds`, `organizerId`, `venueId`) junto a `status`, `isActive` y `deletedAt`. Las sesiones usan el índice `planId + startDateTime`.
+- Parámetros no válidos (id mal escrito, `page=0`...) → `400`. Plan que no existe o no está publicado → `404`.
+
 ## Endpoints (`plans`)
 
 | Método | Ruta | Descripción |

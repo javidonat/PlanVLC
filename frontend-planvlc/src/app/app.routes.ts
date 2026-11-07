@@ -1,18 +1,18 @@
 import { Routes } from '@angular/router';
-import { inject } from '@angular/core';
 import { MainLayout } from './layouts/main-layout/main-layout';
+import { ShopLayout } from './layouts/shop-layout/shop-layout';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
-import { AuthStore } from './core/stores/auth.store';
 
-// canActivate: authGuard protege todo el panel (hay que estar logueado)
+// La parte pública (home, shop y detalle) no pide sesión.
+// canActivate: authGuard protege el perfil y el panel (hay que estar logueado)
 // y adminGuard las secciones de administración (solo rol admin)
 export const routes: Routes = [
   { path: 'login', title: 'Iniciar sesión · PlanVLC', loadComponent: () => import('./features/auth/pages/login-page/login-page').then(m => m.LoginPage) },
+  // Tienda pública: / (home), /planes (shop) y /planes/:slug (detalle)
+  { path: '', component: ShopLayout, loadChildren: () => import('./features/shop/shop.routes').then(m => m.SHOP_ROUTES) },
   {
     path: '', component: MainLayout, canActivate: [authGuard], children: [
-      // Portada: el admin va al panel; el resto de usuarios, a su perfil
-      { path: '', pathMatch: 'full', redirectTo: () => (inject(AuthStore).isAdmin() ? 'admin/planes' : 'perfil') },
       { path: 'perfil', loadChildren: () => import('./features/profile/profile.routes').then(m => m.PROFILE_ROUTES) },
       { path: 'admin/planes', canActivate: [adminGuard], loadChildren: () => import('./features/plans/plans.routes').then(m => m.PLANS_ROUTES) },
       { path: 'admin/sesiones', canActivate: [adminGuard], loadChildren: () => import('./features/sessions/sessions.routes').then(m => m.SESSIONS_ROUTES) },
@@ -22,6 +22,11 @@ export const routes: Routes = [
       { path: 'admin/usuarios', canActivate: [adminGuard], loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) },
       { path: 'admin/perfiles', canActivate: [adminGuard], loadChildren: () => import('./features/profiles/profiles.routes').then(m => m.PROFILES_ROUTES) },
       { path: 'admin/roles', canActivate: [adminGuard], loadChildren: () => import('./features/roles/roles.routes').then(m => m.ROLES_ROUTES) },
+    ],
+  },
+  // Cualquier otra dirección: página 404 (pública, con el layout de la tienda)
+  {
+    path: '', component: ShopLayout, children: [
       { path: '**', title: 'Página no encontrada · PlanVLC', loadComponent: () => import('./features/not-found/pages/not-found-page/not-found-page').then(m => m.NotFoundPage) },
     ],
   },
