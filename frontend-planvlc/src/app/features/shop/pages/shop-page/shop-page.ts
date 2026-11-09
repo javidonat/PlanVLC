@@ -1,6 +1,7 @@
-import { Component, DestroyRef, OnInit, computed, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
+import { LucideSlidersHorizontal } from '@lucide/angular';
 import { ShopFilters, ShopPlan } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ShopStore } from '../../../../core/stores/shop.store';
@@ -23,7 +24,7 @@ type FilterKey = 'category' | 'organizer' | 'venue';
 // guarda los filtros en el store y pide los planes.
 @Component({
   selector: 'app-shop-page',
-  imports: [SearchBar, SelectFilter, PriceFilter, Pagination, SkeletonLoader, EmptyState, ErrorState, PlanList],
+  imports: [LucideSlidersHorizontal, SearchBar, SelectFilter, PriceFilter, Pagination, SkeletonLoader, EmptyState, ErrorState, PlanList],
   templateUrl: './shop-page.html',
 })
 export class ShopPage implements OnInit {
@@ -38,6 +39,15 @@ export class ShopPage implements OnInit {
   readonly categoryOptions = computed<FilterOption[]>(() => this.store.categories().map(c => ({ value: c.slug, label: c.name })));
   readonly organizerOptions = computed<FilterOption[]>(() => this.store.organizers().map(o => ({ value: o.slug, label: o.name })));
   readonly venueOptions = computed<FilterOption[]>(() => this.store.venues().map(v => ({ value: v.slug, label: v.name })));
+
+  // Panel de filtros abierto (solo en móvil: en escritorio siempre se ve)
+  readonly showFilters = signal(false);
+
+  // Cuántos filtros hay puestos (precio cuenta como uno). La búsqueda va aparte
+  readonly activeFilters = computed(() => {
+    const { category, organizer, venue, minPrice, maxPrice } = this.store.filters();
+    return [category, organizer, venue].filter(Boolean).length + (minPrice !== null || maxPrice !== null ? 1 : 0);
+  });
 
   constructor() {
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {

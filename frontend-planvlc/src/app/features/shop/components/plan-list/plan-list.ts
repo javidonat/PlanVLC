@@ -7,7 +7,7 @@ import { PlanCard } from '../plan-card/plan-card';
   selector: 'app-plan-list',
   imports: [PlanCard],
   template: `
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
       @for (plan of plans(); track plan._id) {
         <app-plan-card [plan]="plan" (selected)="planSelect.emit($event)" />
       }
