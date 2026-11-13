@@ -34,6 +34,9 @@ const categorySchema = new Schema(
   }
 );
 
+// Listados de categorías (tienda y panel): filtran por activas y no eliminadas y ordenan por nombre
+categorySchema.index({ isActive: 1, deletedAt: 1, name: 1 });
+
 // Portada de la categoría (relación inversa: images.entityId → categories._id)
 categorySchema.virtual("coverImage", {
   ref: "Image",

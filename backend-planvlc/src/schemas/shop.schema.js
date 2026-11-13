@@ -6,6 +6,13 @@ import { z } from "zod";
 // slug de la URL (minúsculas, números y guiones: ?category=tardeo)
 const slug = (invalid) => z.string({ error: invalid }).trim().toLowerCase().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, invalid).max(200, invalid);
 
+// Uno o varios slugs: ?category=tardeo,concierto (o ?category=tardeo&category=concierto).
+// Llega como lista sin repetidos
+const slugList = (invalid) => z.preprocess(
+  (value) => (value === undefined ? undefined : [value].flat().flatMap((v) => String(v).split(",")).filter((v) => v.trim() !== "")),
+  z.array(slug(invalid)).max(20, invalid).transform((slugs) => [...new Set(slugs)])
+);
+
 // Número entero positivo que llega como texto en la URL (?page=2)
 const positiveInt = (invalid) => z.coerce.number({ error: invalid }).int(invalid).min(1, invalid);
 
@@ -17,11 +24,12 @@ const price = (invalid) => z.coerce.number({ error: invalid }).min(0, invalid).m
 
 // Filtros comunes del listado y del calendario.
 // Todos son opcionales: la consulta solo filtra por los que lleguen.
-// category, organizer y venue son slugs (es lo que ve el cliente en la URL), no ids
+// category, organizer y venue son slugs (es lo que ve el cliente en la URL), no ids.
+// Se pueden elegir varios de cada (separados por comas): vale cualquiera de ellos
 const filtersShape = {
-  category: slug("La categoría no es válida").optional(),
-  organizer: slug("El organizador no es válido").optional(),
-  venue: slug("El lugar no es válido").optional(),
+  category: slugList("La categoría no es válida").optional(),
+  organizer: slugList("El organizador no es válido").optional(),
+  venue: slugList("El lugar no es válido").optional(),
   minPrice: price("El precio mínimo debe ser un número mayor o igual que 0").optional(),
   maxPrice: price("El precio máximo debe ser un número mayor o igual que 0").optional(),
   search: z.string({ error: "La búsqueda debe ser un texto" }).trim().max(100, "La búsqueda no puede superar los 100 caracteres").optional(),

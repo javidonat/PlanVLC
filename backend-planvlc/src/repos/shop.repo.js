@@ -45,32 +45,31 @@ const findVenues = () => {
 
 // ---------- Listado de planes (filtros + búsqueda + paginación) ----------
 
-// Slug de la URL → _id. Solo si se puede mostrar en la tienda (si no, null). Usan el índice único de slug
-const findCategoryIdBySlug = async (slug) => {
-  const category = await Category.findOne({ slug, status: "published", isActive: true, deletedAt: null }).select("_id").lean();
-  return category?._id ?? null;
+// Slugs de la URL → lista de _id. Solo los que se pueden mostrar en la tienda (los demás no salen).
+// Usan el índice único de slug
+const findCategoryIdsBySlugs = (slugs) => {
+  return Category.distinct("_id", { slug: { $in: slugs }, status: "published", isActive: true, deletedAt: null });
 };
 
-const findOrganizerIdBySlug = async (slug) => {
-  const organizer = await Organizer.findOne({ slug, status: { $ne: "suspended" }, isActive: true, deletedAt: null }).select("_id").lean();
-  return organizer?._id ?? null;
+const findOrganizerIdsBySlugs = (slugs) => {
+  return Organizer.distinct("_id", { slug: { $in: slugs }, status: { $ne: "suspended" }, isActive: true, deletedAt: null });
 };
 
-const findVenueIdBySlug = async (slug) => {
-  const venue = await Venue.findOne({ slug, status: { $ne: "permanently_closed" }, isActive: true, deletedAt: null }).select("_id").lean();
-  return venue?._id ?? null;
+const findVenueIdsBySlugs = (slugs) => {
+  return Venue.distinct("_id", { slug: { $in: slugs }, status: { $ne: "permanently_closed" }, isActive: true, deletedAt: null });
 };
 
 // Escapa los caracteres especiales para que la búsqueda sea texto literal y no una expresión regular
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Query dinámica: parte de los planes visibles y solo añade las condiciones de los filtros que lleguen
-// (category, organizer y venue ya llegan como _id: el servicio traduce los slugs)
+// (category, organizer y venue ya llegan como listas de _id: el servicio traduce los slugs).
+// Dentro de un mismo filtro vale cualquiera ($in); entre filtros distintos, todos a la vez
 const buildPlansFilter = ({ category, organizer, venue, minPrice, maxPrice, search }) => {
   const filter = { ...VISIBLE_PLAN };
-  if (category) filter.categoryIds = category; // categoryIds es una lista: basta con que la contenga
-  if (organizer) filter.organizerId = organizer;
-  if (venue) filter.venueId = venue;
+  if (category) filter.categoryIds = { $in: category }; // el plan tiene alguna de esas categorías
+  if (organizer) filter.organizerId = { $in: organizer };
+  if (venue) filter.venueId = { $in: venue };
   // Precio "desde" del plan (el de su sesión más barata) dentro del rango
   if (minPrice !== undefined || maxPrice !== undefined) {
     filter.priceFrom = {};
@@ -160,7 +159,7 @@ const findUpcomingSessions = (planId) => {
 
 export default {
   findCategories, findOrganizers, findVenues,
-  findCategoryIdBySlug, findOrganizerIdBySlug, findVenueIdBySlug,
+  findCategoryIdsBySlugs, findOrganizerIdsBySlugs, findVenueIdsBySlugs,
   findPlans, findPlanIds, findSessionsBetween, findFirstUpcomingDate,
   findPlanBySlugAndCountView, findPlanIdBySlug, findUpcomingSessions,
 };

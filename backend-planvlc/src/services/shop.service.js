@@ -12,19 +12,25 @@ const getCategories = () => shopRepo.findCategories();
 const getOrganizers = () => shopRepo.findOrganizers();
 const getVenues = () => shopRepo.findVenues();
 
-// Traduce los slugs de la URL a _id (en paralelo). Un slug que no llega se queda en undefined;
-// uno que no existe (o no se puede mostrar) se queda en null
+// Traduce los slugs de la URL a _id (en paralelo). Un filtro que no llega se queda en undefined;
+// si ninguno de sus slugs existe (o se puede mostrar), en null. Los que no existen se ignoran
+const toIds = async (slugs, findIds) => {
+  if (!slugs?.length) return undefined;
+  const ids = await findIds(slugs);
+  return ids.length ? ids : null;
+};
+
 const resolveSlugs = async ({ category, organizer, venue }) => {
-  const [categoryId, organizerId, venueId] = await Promise.all([
-    category ? shopRepo.findCategoryIdBySlug(category) : undefined,
-    organizer ? shopRepo.findOrganizerIdBySlug(organizer) : undefined,
-    venue ? shopRepo.findVenueIdBySlug(venue) : undefined,
+  const [categoryIds, organizerIds, venueIds] = await Promise.all([
+    toIds(category, shopRepo.findCategoryIdsBySlugs),
+    toIds(organizer, shopRepo.findOrganizerIdsBySlugs),
+    toIds(venue, shopRepo.findVenueIdsBySlugs),
   ]);
-  return { category: categoryId, organizer: organizerId, venue: venueId };
+  return { category: categoryIds, organizer: organizerIds, venue: venueIds };
 };
 
 // Filtros de la consulta ya listos para el repositorio (slugs → _id).
-// null si se filtra por una categoría, organizador o lugar que no existe: no habrá resultados
+// null si se filtra solo por categorías, organizadores o lugares que no existen: no habrá resultados
 const buildFilters = async (query) => {
   const ids = await resolveSlugs(query);
   if (ids.category === null || ids.organizer === null || ids.venue === null) return null;

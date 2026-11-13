@@ -80,12 +80,12 @@ export const DEFAULT_SORT: ShopSort = 'popular';
 // Cómo se ven los resultados: rejilla de cards, lista o calendario de sesiones (?view=list)
 export type ShopView = 'grid' | 'list' | 'calendar';
 
-// Filtros, búsqueda, orden y página del shop. Se guardan en ShopStore y en la URL (?category=tardeo&page=2).
+// Filtros, búsqueda, orden y página del shop. Se guardan en ShopStore y en la URL (?category=tardeo,concierto&page=2).
 // La tienda la ve el cliente: categoría, organizador y lugar van por slug, no por _id
 export interface ShopFilters {
-  category: string | null; // slug de la categoría
-  organizer: string | null; // slug del organizador
-  venue: string | null; // slug del lugar
+  category: string[]; // slugs de las categorías elegidas (vale cualquiera de ellas)
+  organizer: string[]; // slugs de los organizadores
+  venue: string[]; // slugs de los lugares
   minPrice: number | null; // precio "desde" del plan, en euros
   maxPrice: number | null;
   search: string;
@@ -94,7 +94,7 @@ export interface ShopFilters {
 }
 
 export const EMPTY_FILTERS: ShopFilters = {
-  category: null, organizer: null, venue: null, minPrice: null, maxPrice: null, search: '', sort: DEFAULT_SORT, page: 1,
+  category: [], organizer: [], venue: [], minPrice: null, maxPrice: null, search: '', sort: DEFAULT_SORT, page: 1,
 };
 
 // GET /api/shop/plans → { ok, total, page, limit, totalPages, data }

@@ -44,15 +44,12 @@ export class ShopStore {
 
   readonly isEmpty = computed(() => !this._loading() && this._plans().length === 0);
 
-  // Filtros aplicados (el precio cuenta como uno). La búsqueda y el orden van aparte
+  // Filtros aplicados: cada opción marcada cuenta uno y el precio, uno. La búsqueda y el orden van aparte
   readonly activeFilterCount = computed(() => {
     const { category, organizer, venue, minPrice, maxPrice } = this._filters();
-    return [category, organizer, venue].filter(Boolean).length + (minPrice !== null || maxPrice !== null ? 1 : 0);
+    return category.length + organizer.length + venue.length + (minPrice !== null || maxPrice !== null ? 1 : 0);
   });
-  readonly hasActiveFilters = computed(() => {
-    const { category, organizer, venue, minPrice, maxPrice, search } = this._filters();
-    return !!(category || organizer || venue || search) || minPrice !== null || maxPrice !== null;
-  });
+  readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0 || !!this._filters().search);
 
   setCatalog(categories: ShopCategory[], organizers: ShopOrganizer[], venues: ShopVenue[]): void {
     this._categories.set(categories);

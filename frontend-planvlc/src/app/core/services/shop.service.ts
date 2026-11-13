@@ -43,9 +43,9 @@ export class ShopService {
   // Filtros → query params del backend. Los vacíos no se envían (ApiService los descarta)
   private buildParams(filters: ShopFilters): QueryParams {
     return {
-      category: filters.category,
-      organizer: filters.organizer,
-      venue: filters.venue,
+      category: filters.category.join(',') || null, // varios slugs separados por comas
+      organizer: filters.organizer.join(',') || null,
+      venue: filters.venue.join(',') || null,
       minPrice: filters.minPrice,
       maxPrice: filters.maxPrice,
       search: filters.search.trim(),

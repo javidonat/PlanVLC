@@ -2,12 +2,18 @@ import { ParamMap, Params } from '@angular/router';
 import { EMPTY_FILTERS, SHOP_SORTS, ShopFilters, ShopSort, ShopView } from '../../../core/models/shop.model';
 
 // Sincronización filtros ⇄ URL del shop
-// (/planes?category=tardeo&organizer=...&venue=...&minPrice=10&maxPrice=30&search=...&sort=date&page=2)
+// (/planes?category=tardeo,concierto&organizer=...&venue=...&minPrice=10&maxPrice=30&search=...&sort=date&page=2)
 // La vista y el mes del calendario también van en la URL (?view=calendar&month=2027-10)
 
 const slugFrom = (value: string | null): string | null => {
   const slug = value?.trim().toLowerCase() ?? '';
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 200 ? slug : null;
+};
+
+// ?category=tardeo,concierto → ['tardeo', 'concierto'] (sin repetidos ni slugs mal escritos)
+const slugsFrom = (value: string | null): string[] => {
+  const slugs = (value ?? '').split(',').map(slugFrom).filter((slug): slug is string => slug !== null);
+  return [...new Set(slugs)].slice(0, 20);
 };
 
 const priceFrom = (value: string | null): number | null => {
@@ -23,9 +29,9 @@ export function filtersFromUrl(params: ParamMap): ShopFilters {
   const maxPrice = priceFrom(params.get('maxPrice'));
   const validRange = minPrice === null || maxPrice === null || minPrice <= maxPrice;
   return {
-    category: slugFrom(params.get('category')),
-    organizer: slugFrom(params.get('organizer')),
-    venue: slugFrom(params.get('venue')),
+    category: slugsFrom(params.get('category')),
+    organizer: slugsFrom(params.get('organizer')),
+    venue: slugsFrom(params.get('venue')),
     minPrice,
     maxPrice: validRange ? maxPrice : null, // un máximo menor que el mínimo se ignora
     search: (params.get('search') ?? '').trim().slice(0, 100),
@@ -37,9 +43,9 @@ export function filtersFromUrl(params: ParamMap): ShopFilters {
 // Filtros → query params. Solo los que tienen valor (la página 1 no se escribe)
 export function filtersToUrl(filters: ShopFilters): Params {
   const params: Params = {};
-  if (filters.category) params['category'] = filters.category;
-  if (filters.organizer) params['organizer'] = filters.organizer;
-  if (filters.venue) params['venue'] = filters.venue;
+  if (filters.category.length) params['category'] = filters.category.join(',');
+  if (filters.organizer.length) params['organizer'] = filters.organizer.join(',');
+  if (filters.venue.length) params['venue'] = filters.venue.join(',');
   if (filters.minPrice !== null) params['minPrice'] = filters.minPrice;
   if (filters.maxPrice !== null) params['maxPrice'] = filters.maxPrice;
   if (filters.search) params['search'] = filters.search;

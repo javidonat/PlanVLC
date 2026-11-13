@@ -52,17 +52,20 @@ export class ShopPage implements OnInit {
   // Mes del calendario que viene en la URL (null = el que elija el backend)
   private urlMonth: string | null = null;
 
-  // Texto del resultado: "5 planes encontrados · 2 filtros aplicados"
+  // Texto del resultado: "5 planes encontrados" (los filtros aplicados se cuentan en el panel de filtros)
   readonly resultText = computed(() => {
-    const count = this.store.activeFilterCount();
-    const filters = count ? ` · ${count} ${count === 1 ? 'filtro aplicado' : 'filtros aplicados'}` : '';
     if (this.store.view() === 'calendar') {
       const total = this.store.calendarSessions().length;
       const month = this.store.calendarMonth();
-      return `${total} ${total === 1 ? 'sesión' : 'sesiones'}${month ? ` en ${monthLabel(month)}` : ''}${filters}`;
+      return `${total} ${total === 1 ? 'sesión' : 'sesiones'}${month ? ` en ${monthLabel(month)}` : ''}`;
     }
     const total = this.store.pagination().total;
-    return `${total} ${total === 1 ? 'plan encontrado' : 'planes encontrados'}${filters}`;
+    return `${total} ${total === 1 ? 'plan encontrado' : 'planes encontrados'}`;
+  });
+
+  readonly filterCountText = computed(() => {
+    const count = this.store.activeFilterCount();
+    return `${count} ${count === 1 ? 'filtro aplicado' : 'filtros aplicados'}`;
   });
 
   constructor() {
@@ -129,8 +132,8 @@ export class ShopPage implements OnInit {
     this.updateUrl({ search, page: 1 }, true); // replaceUrl: no llena el historial con cada búsqueda
   }
 
-  onFilter(key: FilterKey, value: string | null): void {
-    this.updateUrl({ [key]: value, page: 1 });
+  onFilter(key: FilterKey, values: string[]): void {
+    this.updateUrl({ [key]: values, page: 1 });
   }
 
   onPrice(range: PriceRange): void {
@@ -144,7 +147,7 @@ export class ShopPage implements OnInit {
   // Quita filtros y búsqueda; la vista y el orden se quedan
   onClear(): void {
     const { sort } = this.store.filters();
-    this.updateUrl({ category: null, organizer: null, venue: null, minPrice: null, maxPrice: null, search: '', page: 1, sort });
+    this.updateUrl({ category: [], organizer: [], venue: [], minPrice: null, maxPrice: null, search: '', page: 1, sort });
   }
 
   onView(view: ShopView): void {

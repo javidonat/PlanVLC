@@ -4,8 +4,8 @@ export type Theme = 'light' | 'dark';
 
 const STORAGE_KEY = 'planvlc-theme';
 
-// Modo claro / oscuro. Se guarda en el navegador (localStorage) y, la primera vez,
-// se usa el del sistema. El tema se aplica con la clase "dark" en <html> (ver styles.css).
+// Modo claro / oscuro. Siempre empieza en claro: solo se pone oscuro si el usuario lo elige
+// con el botón (ThemeToggle). La elección se guarda en el navegador (localStorage). El tema se aplica con la clase "dark" en <html> (ver styles.css).
 // index.html la pone antes de que arranque Angular para que la página no parpadee en blanco.
 @Injectable({ providedIn: 'root' })
 export class ThemeStore {
@@ -31,10 +31,10 @@ export class ThemeStore {
   private initialTheme(): Theme {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light' || saved === 'dark') return saved;
+      if (saved === 'dark') return 'dark';
     } catch {
-      // sin localStorage: el del sistema
+      // sin localStorage: claro
     }
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return 'light';
   }
 }
