@@ -6,7 +6,7 @@ import { initial } from '../../utils/shop.utils';
 @Component({
   selector: 'app-category-card',
   template: `
-    <button type="button" (click)="selected.emit(category())" class="group block w-full overflow-hidden rounded-2xl border border-gris-200 bg-white text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <button type="button" (click)="selected.emit(category())" class="group block w-full overflow-hidden rounded-2xl border border-gris-200 bg-superficie text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
       @if (category().coverImage; as image) {
         <img [src]="image.url" [alt]="image.alt || category().name" class="h-28 w-full object-cover" loading="lazy" />
       } @else {

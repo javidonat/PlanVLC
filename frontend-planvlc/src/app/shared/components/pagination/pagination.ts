@@ -9,17 +9,17 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
   template: `
     @if (totalPages() > 1) {
       <nav class="flex flex-wrap items-center justify-center gap-1.5" aria-label="Paginación">
-        <button type="button" [disabled]="page() <= 1" (click)="go(page() - 1)" class="flex h-10 items-center gap-1 rounded-xl border border-gris-200 bg-white px-3 text-sm font-semibold text-gris-700 hover:bg-gris-50 disabled:cursor-not-allowed disabled:opacity-40"><svg lucideChevronLeft width="16" height="16"></svg> Anterior</button>
+        <button type="button" [disabled]="page() <= 1" (click)="go(page() - 1)" class="flex h-10 items-center gap-1 rounded-xl border border-gris-200 bg-superficie px-3 text-sm font-semibold text-gris-700 hover:bg-gris-50 disabled:cursor-not-allowed disabled:opacity-40"><svg lucideChevronLeft width="16" height="16"></svg> Anterior</button>
         @for (item of pages(); track $index) {
           @if (item === null) {
             <span class="px-1 text-gris-400">…</span>
           } @else {
             <button type="button" (click)="go(item)" [attr.aria-current]="item === page() ? 'page' : null"
-              [class]="item === page() ? 'border-marca-600 bg-marca-600 text-white' : 'border-gris-200 bg-white text-gris-700 hover:bg-gris-50'"
+              [class]="item === page() ? 'border-marca-600 bg-marca-600 text-white' : 'border-gris-200 bg-superficie text-gris-700 hover:bg-gris-50'"
               class="h-10 min-w-10 rounded-xl border px-3 text-sm font-semibold">{{ item }}</button>
           }
         }
-        <button type="button" [disabled]="page() >= totalPages()" (click)="go(page() + 1)" class="flex h-10 items-center gap-1 rounded-xl border border-gris-200 bg-white px-3 text-sm font-semibold text-gris-700 hover:bg-gris-50 disabled:cursor-not-allowed disabled:opacity-40">Siguiente <svg lucideChevronRight width="16" height="16"></svg></button>
+        <button type="button" [disabled]="page() >= totalPages()" (click)="go(page() + 1)" class="flex h-10 items-center gap-1 rounded-xl border border-gris-200 bg-superficie px-3 text-sm font-semibold text-gris-700 hover:bg-gris-50 disabled:cursor-not-allowed disabled:opacity-40">Siguiente <svg lucideChevronRight width="16" height="16"></svg></button>
       </nav>
     }
   `,

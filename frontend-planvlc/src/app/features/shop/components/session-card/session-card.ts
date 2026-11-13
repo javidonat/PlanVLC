@@ -10,7 +10,7 @@ import { isSoldOut, priceText, sessionTimeText, stockText } from '../../utils/sh
   imports: [LucideCheck, LucideClock],
   template: `
     <button type="button" (click)="selected.emit(session())" [disabled]="soldOut()" [attr.aria-pressed]="checked()"
-      [class]="checked() ? 'border-marca-600 bg-marca-50 ring-2 ring-marca-200' : 'border-gris-200 bg-white hover:border-marca-300'"
+      [class]="checked() ? 'border-marca-600 bg-marca-50 ring-2 ring-marca-200' : 'border-gris-200 bg-superficie hover:border-marca-300'"
       class="flex w-full items-center justify-between gap-4 rounded-2xl border p-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50">
       <span>
         <span class="flex items-center gap-2 font-semibold text-gris-900"><svg lucideClock width="16" height="16" class="text-gris-400"></svg> {{ sessionTimeText(session()) }}</span>

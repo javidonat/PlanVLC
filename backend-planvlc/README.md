@@ -183,8 +183,9 @@ Lo que usan el home y el shop del frontend. **No piden token** y solo devuelven 
 | GET | `/api/shop/categories` | Categorías (carrusel del home y filtro) |
 | GET | `/api/shop/organizers` | Organizadores (carrusel del home y filtro) |
 | GET | `/api/shop/venues` | Lugares (carrusel del home y filtro) |
-| GET | `/api/shop/plans` | Planes paginados. Query params opcionales y combinables: `category`, `organizer`, `venue` (slugs), `minPrice` y `maxPrice` (precio "desde" del plan, en euros), `search` (contiene el texto en el título, sin distinguir mayúsculas), `page` (por defecto 1) y `limit` (por defecto 6, máximo 50). Devuelve `{ ok, total, page, limit, totalPages, data }` |
-| GET | `/api/shop/plans/:slug` | Detalle del plan, con sus categorías, organizador, lugar, portada y galería |
+| GET | `/api/shop/plans` | Planes paginados. Query params opcionales y combinables: `category`, `organizer`, `venue` (slugs), `minPrice` y `maxPrice` (precio "desde" del plan, en euros), `search` (contiene el texto en el título, sin distinguir mayúsculas), `sort` (`popular` = más visitados, por defecto; `recent`, `date`, `price_asc`, `price_desc`, `name`), `page` (por defecto 1) y `limit` (por defecto 6, máximo 50). Devuelve `{ ok, total, page, limit, totalPages, data }` |
+| GET | `/api/shop/sessions` | Sesiones de un mes para la vista calendario: `month` (`AAAA-MM`; sin él, el mes de la primera sesión que viene) y los mismos filtros que `/plans`. Devuelve `{ ok, month, total, data }` |
+| GET | `/api/shop/plans/:slug` | Detalle del plan, con sus categorías, organizador, lugar, portada y galería. Cada consulta suma una visita (`views`, para el orden "más visitados") |
 | GET | `/api/shop/plans/:slug/sessions` | Sus próximas sesiones (variantes) publicadas: fechas de inicio y fin, aforo, plazas libres y precio |
 
 - **Query dinámica**: el controlador pasa `req.query` (ya validado con Zod en `schemas/shop.schema.js`) al servicio, que pone la página y el límite por defecto; el repositorio (`repos/shop.repo.js`) parte de los planes visibles y solo añade las condiciones de los filtros que lleguen. La búsqueda se escapa para que sea texto literal.

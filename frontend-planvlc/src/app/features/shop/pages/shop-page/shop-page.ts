@@ -2,19 +2,23 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideSlidersHorizontal } from '@lucide/angular';
-import { ShopFilters, ShopPlan } from '../../../../core/models/shop.model';
+import { SHOP_SORTS, ShopCalendarSession, ShopFilters, ShopPlan, ShopSort, ShopView } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { SearchBar } from '../../../../shared/components/search-bar/search-bar';
 import { FilterOption, SelectFilter } from '../../../../shared/components/select-filter/select-filter';
+import { SortSelect } from '../../../../shared/components/sort-select/sort-select';
 import { PriceFilter, PriceRange } from '../../../../shared/components/price-filter/price-filter';
 import { Pagination } from '../../../../shared/components/pagination/pagination';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { EmptyState } from '../../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { PlanList } from '../../components/plan-list/plan-list';
-import { filtersFromUrl, filtersToUrl } from '../../utils/shop-url';
+import { PlanCalendar } from '../../components/plan-calendar/plan-calendar';
+import { ViewSwitcher } from '../../components/view-switcher/view-switcher';
+import { monthLabel } from '../../utils/calendar.utils';
+import { filtersFromUrl, filtersToUrl, monthFromUrl, viewFromUrl } from '../../utils/shop-url';
 
 type FilterKey = 'category' | 'organizer' | 'venue';
 
@@ -24,7 +28,7 @@ type FilterKey = 'category' | 'organizer' | 'venue';
 // guarda los filtros en el store y pide los planes.
 @Component({
   selector: 'app-shop-page',
-  imports: [LucideSlidersHorizontal, SearchBar, SelectFilter, PriceFilter, Pagination, SkeletonLoader, EmptyState, ErrorState, PlanList],
+  imports: [LucideSlidersHorizontal, SearchBar, SelectFilter, PriceFilter, Pagination, SkeletonLoader, EmptyState, ErrorState, PlanList, PlanCalendar, ViewSwitcher, SortSelect],
   templateUrl: './shop-page.html',
 })
 export class ShopPage implements OnInit {
@@ -43,16 +47,31 @@ export class ShopPage implements OnInit {
   // Panel de filtros abierto (solo en móvil: en escritorio siempre se ve)
   readonly showFilters = signal(false);
 
-  // Cuántos filtros hay puestos (precio cuenta como uno). La búsqueda va aparte
-  readonly activeFilters = computed(() => {
-    const { category, organizer, venue, minPrice, maxPrice } = this.store.filters();
-    return [category, organizer, venue].filter(Boolean).length + (minPrice !== null || maxPrice !== null ? 1 : 0);
+  readonly sortOptions = SHOP_SORTS;
+
+  // Mes del calendario que viene en la URL (null = el que elija el backend)
+  private urlMonth: string | null = null;
+
+  // Texto del resultado: "5 planes encontrados · 2 filtros aplicados"
+  readonly resultText = computed(() => {
+    const count = this.store.activeFilterCount();
+    const filters = count ? ` · ${count} ${count === 1 ? 'filtro aplicado' : 'filtros aplicados'}` : '';
+    if (this.store.view() === 'calendar') {
+      const total = this.store.calendarSessions().length;
+      const month = this.store.calendarMonth();
+      return `${total} ${total === 1 ? 'sesión' : 'sesiones'}${month ? ` en ${monthLabel(month)}` : ''}${filters}`;
+    }
+    const total = this.store.pagination().total;
+    return `${total} ${total === 1 ? 'plan encontrado' : 'planes encontrados'}${filters}`;
   });
 
   constructor() {
+    // Cada cambio de la URL: guarda filtros y vista en el store y pide los datos de esa vista
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe(params => {
       this.store.setFilters(filtersFromUrl(params));
-      void this.loadPlans();
+      this.store.setView(viewFromUrl(params));
+      this.urlMonth = monthFromUrl(params);
+      void this.load();
     });
     inject(DestroyRef).onDestroy(() => this.abortController?.abort());
   }
@@ -62,7 +81,8 @@ export class ShopPage implements OnInit {
     if (!this.store.catalogLoaded()) void this.loadCatalog();
   }
 
-  async loadPlans(): Promise<void> {
+  // Planes (rejilla y lista) o sesiones del mes (calendario). Una petición nueva cancela la anterior
+  async load(): Promise<void> {
     this.abortController?.abort();
     const controller = new AbortController();
     this.abortController = controller;
@@ -70,8 +90,13 @@ export class ShopPage implements OnInit {
     try {
       this.store.setLoading(true);
       this.store.setError(null);
-      const res = await this.service.getPlans(this.store.filters(), controller.signal);
-      this.store.setPlans(res.data, { total: res.total, page: res.page, limit: res.limit, totalPages: res.totalPages });
+      if (this.store.view() === 'calendar') {
+        const res = await this.service.getSessions(this.store.filters(), this.urlMonth, controller.signal);
+        this.store.setCalendar(res.month, res.data);
+      } else {
+        const res = await this.service.getPlans(this.store.filters(), controller.signal);
+        this.store.setPlans(res.data, { total: res.total, page: res.page, limit: res.limit, totalPages: res.totalPages });
+      }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return; // la sustituye otra más nueva
       this.store.setError(apiError(error).message);
@@ -112,8 +137,28 @@ export class ShopPage implements OnInit {
     this.updateUrl({ minPrice: range.min, maxPrice: range.max, page: 1 });
   }
 
+  onSort(sort: string): void {
+    this.updateUrl({ sort: sort as ShopSort, page: 1 });
+  }
+
+  // Quita filtros y búsqueda; la vista y el orden se quedan
   onClear(): void {
-    void this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+    const { sort } = this.store.filters();
+    this.updateUrl({ category: null, organizer: null, venue: null, minPrice: null, maxPrice: null, search: '', page: 1, sort });
+  }
+
+  onView(view: ShopView): void {
+    this.urlMonth = null; // al volver al calendario, el backend elige el mes
+    this.updateUrl({ page: 1 }, false, view);
+  }
+
+  onMonth(month: string): void {
+    this.urlMonth = month;
+    this.updateUrl({});
+  }
+
+  onSession(session: ShopCalendarSession): void {
+    void this.router.navigate(['/planes', session.planId.slug]);
   }
 
   onPage(page: number): void {
@@ -125,8 +170,11 @@ export class ShopPage implements OnInit {
     void this.router.navigate(['/planes', plan.slug]);
   }
 
-  private updateUrl(changes: Partial<ShopFilters>, replaceUrl = false): void {
-    const filters = { ...this.store.filters(), ...changes };
-    void this.router.navigate([], { relativeTo: this.route, queryParams: filtersToUrl(filters), replaceUrl });
+  // Filtros + vista (+ mes del calendario) → URL. El resto lo hace la suscripción a la URL
+  private updateUrl(changes: Partial<ShopFilters>, replaceUrl = false, view = this.store.view()): void {
+    const queryParams = filtersToUrl({ ...this.store.filters(), ...changes });
+    if (view !== 'grid') queryParams['view'] = view;
+    if (view === 'calendar' && this.urlMonth) queryParams['month'] = this.urlMonth;
+    void this.router.navigate([], { relativeTo: this.route, queryParams, replaceUrl });
   }
 }

@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { EMPTY_FILTERS, ShopCategory, ShopFilters, ShopOrganizer, ShopPagination, ShopPlan, ShopVenue } from '../models/shop.model';
+import { EMPTY_FILTERS, ShopCalendarSession, ShopCategory, ShopFilters, ShopOrganizer, ShopPagination, ShopPlan, ShopVenue, ShopView } from '../models/shop.model';
 
 // Estado compartido de la tienda. Solo guarda datos: las páginas llaman al servicio
 // y actualizan el store. Las señales privadas solo se modifican desde aquí.
@@ -33,7 +33,22 @@ export class ShopStore {
   readonly loading = this._loading.asReadonly();
   readonly error = this._error.asReadonly();
 
+  // --- Vista (rejilla, lista o calendario) y sesiones del mes del calendario ---
+  private readonly _view = signal<ShopView>('grid');
+  private readonly _calendarMonth = signal<string | null>(null); // AAAA-MM
+  private readonly _calendarSessions = signal<ShopCalendarSession[]>([]);
+
+  readonly view = this._view.asReadonly();
+  readonly calendarMonth = this._calendarMonth.asReadonly();
+  readonly calendarSessions = this._calendarSessions.asReadonly();
+
   readonly isEmpty = computed(() => !this._loading() && this._plans().length === 0);
+
+  // Filtros aplicados (el precio cuenta como uno). La búsqueda y el orden van aparte
+  readonly activeFilterCount = computed(() => {
+    const { category, organizer, venue, minPrice, maxPrice } = this._filters();
+    return [category, organizer, venue].filter(Boolean).length + (minPrice !== null || maxPrice !== null ? 1 : 0);
+  });
   readonly hasActiveFilters = computed(() => {
     const { category, organizer, venue, minPrice, maxPrice, search } = this._filters();
     return !!(category || organizer || venue || search) || minPrice !== null || maxPrice !== null;
@@ -61,6 +76,15 @@ export class ShopStore {
   setPlans(plans: ShopPlan[], pagination: ShopPagination): void {
     this._plans.set(plans);
     this._pagination.set(pagination);
+  }
+
+  setView(view: ShopView): void {
+    this._view.set(view);
+  }
+
+  setCalendar(month: string, sessions: ShopCalendarSession[]): void {
+    this._calendarMonth.set(month);
+    this._calendarSessions.set(sessions);
   }
 
   setLoading(value: boolean): void {

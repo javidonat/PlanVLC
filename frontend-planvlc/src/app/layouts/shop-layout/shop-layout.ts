@@ -2,14 +2,16 @@ import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideLayoutDashboard, LucideLogIn, LucideMapPin } from '@lucide/angular';
 import { AuthStore } from '../../core/stores/auth.store';
+import { ThemeStore } from '../../core/stores/theme.store';
+import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
 
 // Layout de la parte pública (home, shop y detalle): barra superior y pie, sin menú lateral.
 // Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel
 @Component({
   selector: 'app-shop-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle],
   template: `
-    <header class="sticky top-0 z-40 border-b border-gris-200 bg-white/90 backdrop-blur-md">
+    <header class="sticky top-0 z-40 border-b border-gris-200 bg-superficie/90 backdrop-blur-md">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-6">
           <a routerLink="/" class="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-gris-900" aria-label="PlanVLC, ir al inicio">
@@ -20,6 +22,8 @@ import { AuthStore } from '../../core/stores/auth.store';
             <a routerLink="/planes" routerLinkActive="bg-marca-50 text-marca-700" class="rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100">Planes</a>
           </nav>
         </div>
+        <div class="flex items-center gap-1">
+        <app-theme-toggle [dark]="theme.theme() === 'dark'" (toggle)="theme.toggle()" />
         @if (auth.user(); as user) {
           <div class="flex items-center gap-1 text-sm font-semibold">
             @if (auth.isAdmin()) {
@@ -37,6 +41,7 @@ import { AuthStore } from '../../core/stores/auth.store';
         } @else {
           <a routerLink="/login" class="flex items-center gap-2 rounded-xl bg-marca-600 px-4 py-2 text-sm font-semibold text-white hover:bg-marca-700"><svg lucideLogIn width="17" height="17"></svg> Iniciar sesión</a>
         }
+        </div>
       </div>
     </header>
     <main class="min-h-[calc(100vh-8rem)]"><router-outlet /></main>
@@ -45,4 +50,5 @@ import { AuthStore } from '../../core/stores/auth.store';
 })
 export class ShopLayout {
   readonly auth = inject(AuthStore);
+  readonly theme = inject(ThemeStore);
 }

@@ -1,8 +1,9 @@
 import { ParamMap, Params } from '@angular/router';
-import { EMPTY_FILTERS, ShopFilters } from '../../../core/models/shop.model';
+import { EMPTY_FILTERS, SHOP_SORTS, ShopFilters, ShopSort, ShopView } from '../../../core/models/shop.model';
 
 // Sincronización filtros ⇄ URL del shop
-// (/planes?category=tardeo&organizer=...&venue=...&minPrice=10&maxPrice=30&search=...&page=2)
+// (/planes?category=tardeo&organizer=...&venue=...&minPrice=10&maxPrice=30&search=...&sort=date&page=2)
+// La vista y el mes del calendario también van en la URL (?view=calendar&month=2027-10)
 
 const slugFrom = (value: string | null): string | null => {
   const slug = value?.trim().toLowerCase() ?? '';
@@ -28,6 +29,7 @@ export function filtersFromUrl(params: ParamMap): ShopFilters {
     minPrice,
     maxPrice: validRange ? maxPrice : null, // un máximo menor que el mínimo se ignora
     search: (params.get('search') ?? '').trim().slice(0, 100),
+    sort: SHOP_SORTS.some(s => s.value === params.get('sort')) ? (params.get('sort') as ShopSort) : EMPTY_FILTERS.sort,
     page: Number.isInteger(page) && page > 1 ? page : EMPTY_FILTERS.page,
   };
 }
@@ -41,6 +43,21 @@ export function filtersToUrl(filters: ShopFilters): Params {
   if (filters.minPrice !== null) params['minPrice'] = filters.minPrice;
   if (filters.maxPrice !== null) params['maxPrice'] = filters.maxPrice;
   if (filters.search) params['search'] = filters.search;
+  if (filters.sort !== EMPTY_FILTERS.sort) params['sort'] = filters.sort;
   if (filters.page > 1) params['page'] = filters.page;
   return params;
+}
+
+const VIEWS: ShopView[] = ['grid', 'list', 'calendar'];
+
+// ?view=list → 'list'. Sin vista o no válida: rejilla
+export function viewFromUrl(params: ParamMap): ShopView {
+  const view = params.get('view') as ShopView;
+  return VIEWS.includes(view) ? view : 'grid';
+}
+
+// ?month=2027-10 → '2027-10'. Sin mes o no válido: null (el backend elige)
+export function monthFromUrl(params: ParamMap): string | null {
+  const month = params.get('month');
+  return month && /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? month : null;
 }

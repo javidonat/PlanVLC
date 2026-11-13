@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-40 border-b border-gris-200 bg-white/85 backdrop-blur-md md:ml-64">
+<header class="sticky top-0 z-40 border-b border-gris-200 bg-superficie/85 backdrop-blur-md md:ml-64">
   <div class="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
     <!-- En móvil el logo va aquí; en escritorio está arriba del menú lateral -->
     <a routerLink="/" class="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-gris-900 md:hidden" aria-label="PlanVLC, ir al inicio">
@@ -6,6 +6,8 @@
       <span>Plan<span class="text-marca-600">VLC</span></span>
     </a>
     <p class="hidden items-center gap-2 text-sm text-gris-500 md:flex"><svg lucideMapPin width="16" height="16" class="text-gris-400"></svg> Planes y eventos en Valencia</p>
+    <div class="flex items-center gap-1">
+    <app-theme-toggle [dark]="theme.theme() === 'dark'" (toggle)="theme.toggle()" />
     <!-- Usuario autenticado: avatar (iniciales), nombre (enlace a su perfil) y logout -->
     @if (store.user(); as user) {
       <nav class="flex items-center gap-1 text-sm font-semibold" aria-label="Navegación principal">
@@ -22,5 +24,6 @@
         </button>
       </nav>
     }
+    </div>
   </div>
 </header>

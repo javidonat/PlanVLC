@@ -33,11 +33,21 @@ const getVenues = async (_req, res, next) => {
   }
 };
 
-// GET /api/shop/plans?category=&organizer=&venue=&search=&page=&limit=
+// GET /api/shop/plans?category=&organizer=&venue=&minPrice=&maxPrice=&search=&sort=&page=&limit=
 const getPlans = async (req, res, next) => {
   try {
     const { items, total, page, limit, totalPages } = await shopService.getPlans(req.query);
     res.status(200).json({ ok: true, total, page, limit, totalPages, data: items });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/shop/sessions?month=&category=&organizer=&venue=&minPrice=&maxPrice=&search=
+const getSessions = async (req, res, next) => {
+  try {
+    const { month, items } = await shopService.getSessions(req.query);
+    res.status(200).json({ ok: true, month, total: items.length, data: items });
   } catch (error) {
     next(error);
   }
@@ -63,4 +73,4 @@ const getPlanSessions = async (req, res, next) => {
   }
 };
 
-export default { getCategories, getOrganizers, getVenues, getPlans, getPlanBySlug, getPlanSessions };
+export default { getCategories, getOrganizers, getVenues, getPlans, getSessions, getPlanBySlug, getPlanSessions };

@@ -52,6 +52,7 @@ const planSchema = new Schema(
     // Se guardan aquí para que el listado no tenga que consultar "sessions" cada vez
     priceFrom: { type: Number, min: 0, default: 0 }, // precio mínimo; 0 = gratis
     nextSessionAt: { type: Date, default: null }, // fecha de la próxima sesión
+    views: { type: Number, min: 0, default: 0 }, // visitas al detalle en la tienda (orden "más visitados")
 
     minAge: {
       type: Number,
@@ -82,12 +83,15 @@ const planSchema = new Schema(
 planSchema.index({ nextSessionAt: 1 });
 
 // Índices de la tienda (repos/shop.repo.js): todas sus consultas filtran por los planes visibles
-// (status, isActive, deletedAt) y, según los filtros, por categoría, organizador, lugar o precio
+// (status, isActive, deletedAt) y, según los filtros y el orden, por categoría, organizador, lugar, precio,
+// visitas o fecha
 planSchema.index({ status: 1, isActive: 1, deletedAt: 1, createdAt: -1 });
 planSchema.index({ categoryIds: 1, status: 1, isActive: 1, deletedAt: 1 });
 planSchema.index({ organizerId: 1, status: 1, isActive: 1, deletedAt: 1 });
 planSchema.index({ venueId: 1, status: 1, isActive: 1, deletedAt: 1 });
 planSchema.index({ status: 1, isActive: 1, deletedAt: 1, priceFrom: 1 });
+planSchema.index({ status: 1, isActive: 1, deletedAt: 1, views: -1 });
+planSchema.index({ status: 1, isActive: 1, deletedAt: 1, nextSessionAt: 1 });
 
 // Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las activas y no eliminadas.
 planSchema.virtual("coverImage", {

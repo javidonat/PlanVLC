@@ -11,6 +11,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400..800&display=swap" rel="stylesheet">
+  <!-- Modo oscuro: se aplica antes de pintar para que no parpadee en blanco (lo gestiona ThemeStore) -->
+  <script>
+    try {
+      var tema = localStorage.getItem('planvlc-theme');
+      if (tema === 'dark' || (!tema && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <app-root></app-root>

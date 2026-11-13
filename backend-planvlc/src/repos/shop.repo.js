@@ -81,13 +81,24 @@ const buildPlansFilter = ({ category, organizer, venue, minPrice, maxPrice, sear
   return filter;
 };
 
+// Órdenes del listado. _id al final para que el orden sea siempre el mismo (la paginación no repite ni salta planes)
+const SORTS = {
+  popular: { views: -1, createdAt: -1, _id: -1 }, // más visitados
+  recent: { createdAt: -1, _id: -1 }, // más nuevos
+  date: { nextSessionAt: 1, _id: 1 }, // fecha más próxima
+  price_asc: { priceFrom: 1, _id: 1 },
+  price_desc: { priceFrom: -1, _id: -1 },
+  name: { title: 1, _id: 1 }, // alfabético (con collation "es": la ñ y los acentos van en su sitio)
+};
+
 // Una página de planes y el total (para calcular las páginas). Las dos consultas van en paralelo
-const findPlans = async ({ page, limit, ...filters }) => {
+const findPlans = async ({ page, limit, sort, ...filters }) => {
   const filter = buildPlansFilter(filters);
+  const query = Plan.find(filter).populate(PLAN_POPULATE).sort(SORTS[sort]);
+  // La collation solo para el orden alfabético: con otra collation MongoDB no puede usar los índices
+  if (sort === "name") query.collation({ locale: "es" });
   const [items, total] = await Promise.all([
-    Plan.find(filter)
-      .populate(PLAN_POPULATE)
-      .sort({ createdAt: -1, _id: -1 })
+    query
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),
@@ -96,21 +107,52 @@ const findPlans = async ({ page, limit, ...filters }) => {
   return { items, total };
 };
 
+// ---------- Calendario ----------
+
+// Sesiones que se pueden elegir (publicadas, activas y que no han empezado)
+const UPCOMING_SESSION = () => ({ status: "published", isActive: true, deletedAt: null, startDateTime: { $gte: new Date() } });
+
+// _id de los planes visibles que cumplen los filtros
+const findPlanIds = (filters) => Plan.distinct("_id", buildPlansFilter(filters));
+
+// Sesiones de esos planes entre dos fechas, con lo justo del plan para pintarlas (usa el índice planId + startDateTime)
+const findSessionsBetween = (planIds, from, to) => {
+  const upcoming = UPCOMING_SESSION();
+  const start = from > upcoming.startDateTime.$gte ? from : upcoming.startDateTime.$gte;
+  return Session.find({ ...upcoming, planId: { $in: planIds }, startDateTime: { $gte: start, $lt: to } })
+    .select("planId startDateTime endDateTime price currency stock")
+    .populate({ path: "planId", select: "title slug" })
+    .sort({ startDateTime: 1 })
+    .lean();
+};
+
+// Fecha de la primera sesión que viene de esos planes (para abrir el calendario en su mes)
+const findFirstUpcomingDate = async (planIds) => {
+  const session = await Session.findOne({ ...UPCOMING_SESSION(), planId: { $in: planIds } })
+    .select("startDateTime")
+    .sort({ startDateTime: 1 })
+    .lean();
+  return session?.startDateTime ?? null;
+};
+
 // ---------- Detalle ----------
 
-const findPlanBySlug = (slug) => {
-  return Plan.findOne({ slug, ...VISIBLE_PLAN }).populate(PLAN_DETAIL_POPULATE).lean();
+// Cada vez que alguien abre el detalle suma una visita (para el orden "más visitados")
+const findPlanBySlugAndCountView = (slug) => {
+  return Plan.findOneAndUpdate({ slug, ...VISIBLE_PLAN }, { $inc: { views: 1 } }, { new: true })
+    .populate(PLAN_DETAIL_POPULATE)
+    .lean();
+};
+
+// Solo el _id (las sesiones del detalle no cuentan como otra visita)
+const findPlanIdBySlug = async (slug) => {
+  const plan = await Plan.findOne({ slug, ...VISIBLE_PLAN }).select("_id").lean();
+  return plan?._id ?? null;
 };
 
 // Sesiones (variantes) que se pueden elegir: publicadas, activas y que todavía no han empezado
 const findUpcomingSessions = (planId) => {
-  return Session.find({
-    planId,
-    status: "published",
-    isActive: true,
-    deletedAt: null,
-    startDateTime: { $gte: new Date() },
-  })
+  return Session.find({ ...UPCOMING_SESSION(), planId })
     .select("sku startDateTime endDateTime price currency capacity stock")
     .sort({ startDateTime: 1 })
     .lean();
@@ -119,5 +161,6 @@ const findUpcomingSessions = (planId) => {
 export default {
   findCategories, findOrganizers, findVenues,
   findCategoryIdBySlug, findOrganizerIdBySlug, findVenueIdBySlug,
-  findPlans, findPlanBySlug, findUpcomingSessions,
+  findPlans, findPlanIds, findSessionsBetween, findFirstUpcomingDate,
+  findPlanBySlugAndCountView, findPlanIdBySlug, findUpcomingSessions,
 };

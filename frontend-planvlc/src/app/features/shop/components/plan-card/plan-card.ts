@@ -8,14 +8,14 @@ import { nextDateText, planPriceText, venueText } from '../../utils/shop.utils';
   selector: 'app-plan-card',
   imports: [LucideCalendarDays, LucideMapPin, LucideTicket],
   template: `
-    <button type="button" (click)="selected.emit(plan())" class="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-gris-200 bg-white text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <button type="button" (click)="selected.emit(plan())" class="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-gris-200 bg-superficie text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
       <span class="relative block overflow-hidden">
         @if (plan().coverImage; as image) {
           <img [src]="image.url" [alt]="image.alt || plan().title" class="aspect-[16/10] w-full bg-gris-100 object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
         } @else {
           <span class="flex aspect-[16/10] w-full items-center justify-center bg-gradient-to-br from-marca-100 to-marca-200 text-marca-500" aria-hidden="true"><svg lucideTicket width="40" height="40"></svg></span>
         }
-        <span class="absolute right-3 top-3 rounded-full bg-white/95 px-3 py-1 text-sm font-bold text-marca-700 shadow-sm">{{ planPriceText(plan()) }}</span>
+        <span class="absolute right-3 top-3 rounded-full bg-superficie/95 px-3 py-1 text-sm font-bold text-marca-700 shadow-sm">{{ planPriceText(plan()) }}</span>
       </span>
       <span class="flex flex-1 flex-col p-5">
         <span class="flex flex-wrap gap-1.5">

@@ -72,6 +72,7 @@ const rolesData = [
 const plansData = [
   {
     title: "Fiesta universitaria Valencia",
+    views: 180, // visitas de ejemplo (orden "más visitados")
     shortDescription: "La fiesta de inicio de curso más grande de Valencia",
     description: "La fiesta del inicio de curso más grande de Valencia. Música electrónica y pop hasta las 6am.",
     category: "Fiesta",
@@ -87,6 +88,7 @@ const plansData = [
   },
   {
     title: "Concierto Los Planetas",
+    views: 95, // visitas de ejemplo (orden "más visitados")
     shortDescription: "Los Planetas presentan su nuevo álbum",
     description: "Los Planetas presentan su nuevo álbum en Valencia. Una noche de indie español imprescindible.",
     category: "Concierto",
@@ -102,6 +104,7 @@ const plansData = [
   },
   {
     title: "Tardeo Ruzafa",
+    views: 420, // visitas de ejemplo (orden "más visitados")
     shortDescription: "Tarde de DJ sets en el corazón de Ruzafa",
     description: "Tarde de DJ sets en el corazón de Ruzafa. Entrada libre hasta las 20h.",
     category: "Tardeo",
@@ -119,6 +122,7 @@ const plansData = [
   },
   {
     title: "Festival Rototom Sunsplash",
+    views: 310, // visitas de ejemplo (orden "más visitados")
     shortDescription: "El festival de reggae más importante de Europa",
     description: "El festival de reggae más importante de Europa vuelve a Benicàssim con más de 30 artistas.",
     category: "Festival",
@@ -134,6 +138,7 @@ const plansData = [
   },
   {
     title: "Partido Valencia CF vs Villarreal",
+    views: 240, // visitas de ejemplo (orden "más visitados")
     shortDescription: "Derby de la Comunitat Valenciana en Mestalla",
     description: "Derby de la Comunitat Valenciana en Mestalla. Vive la emoción del fútbol en directo.",
     category: "Deporte",
@@ -212,6 +217,7 @@ const runSeed = async () => {
           // datos derivados de las sesiones
           priceFrom: Math.min(...p.sessions.map((s) => s.price)),
           nextSessionAt: new Date(Math.min(...starts)),
+          views: p.views,
         };
       })
     );

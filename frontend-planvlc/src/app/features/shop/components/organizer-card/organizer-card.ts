@@ -6,7 +6,7 @@ import { initial, organizerTypeText } from '../../utils/shop.utils';
 @Component({
   selector: 'app-organizer-card',
   template: `
-    <button type="button" (click)="selected.emit(organizer())" class="group flex h-full w-full flex-col items-center rounded-2xl border border-gris-200 bg-white p-5 text-center shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <button type="button" (click)="selected.emit(organizer())" class="group flex h-full w-full flex-col items-center rounded-2xl border border-gris-200 bg-superficie p-5 text-center shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
       @if (organizer().logo; as logo) {
         <img [src]="logo.url" [alt]="logo.alt || organizer().name" class="h-16 w-16 rounded-full border border-gris-200 object-cover" loading="lazy" />
       } @else {

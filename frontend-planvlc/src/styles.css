@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Modo oscuro: la clase "dark" en <html> (ThemeStore). Permite usar dark: en las clases si hace falta */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Paleta propia de PlanVLC.
    marca = violeta (botones, enlaces, sección activa del menú: lo que se puede pulsar)
    gris  = grises neutros con un toque frío (textos, bordes y fondos)
@@ -29,7 +32,60 @@
   --color-gris-700: #3f3f4c;
   --color-gris-800: #2a2a35;
   --color-gris-900: #18181f;
+
+  /* Fondo de cards, paneles, cabeceras y campos (bg-superficie). En modo oscuro cambia */
+  --color-superficie: #ffffff;
 }
+
+/* ---------- Modo oscuro ----------
+   En vez de repetir dark:... en cada clase, se cambian los colores de la paleta:
+   los grises se invierten (texto claro sobre fondo oscuro), la superficie se oscurece
+   y los violetas muy claros (fondos suaves) pasan a violetas oscuros. */
+:root.dark {
+  color-scheme: dark;
+  --color-superficie: #1a1a23;
+
+  --color-gris-50: #111117;
+  --color-gris-100: #23232d;
+  --color-gris-200: #2e2e3a;
+  --color-gris-300: #3d3d4b;
+  --color-gris-400: #6f6f80;
+  --color-gris-500: #9a9aab;
+  --color-gris-600: #b4b4c3;
+  --color-gris-700: #cbcbd6;
+  --color-gris-800: #e1e1e9;
+  --color-gris-900: #f4f4f8;
+
+  --color-marca-50: #251e40;
+  --color-marca-100: #2f2654;
+  --color-marca-200: #3d3170;
+
+  /* Estados (activo / desactivado / errores): fondos suaves oscuros y textos claros */
+  --color-emerald-50: #0f2a20;
+  --color-emerald-100: #123426;
+  --color-emerald-200: #17442f;
+  --color-emerald-300: #1f5a3e;
+  --color-emerald-800: #7ee2b0;
+  --color-red-50: #2e1416;
+  --color-red-100: #3a1719;
+  --color-red-200: #4d1d20;
+  --color-red-300: #67262a;
+  --color-red-700: #ff9b94;
+  --color-red-800: #ffb4ae;
+
+  --fondo: var(--color-gris-50);
+  --texto: var(--color-gris-900);
+  --texto-suave: var(--color-gris-500);
+  --borde: var(--color-gris-200);
+}
+
+/* Los textos violetas oscuros no se leen sobre fondo oscuro: se aclaran (los botones violetas no cambian) */
+.dark :is(.text-marca-600, .text-marca-700) { color: var(--color-marca-300); }
+.dark :is(.hover\:text-marca-700:hover, .hover\:text-marca-800:hover, .group:hover .group-hover\:text-marca-700) { color: #d9d1ff; }
+.dark .menu-link.activo { color: var(--color-marca-300); }
+.dark .field-error { color: #ff9b94; }
+/* Textos claros sobre la cabecera violeta del home: se quedan claros */
+.dark .text-marca-100 { color: #ebe7ff; }
 
 @layer base {
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; }
@@ -37,7 +93,7 @@
 
 @layer components {
   .field-label { display: block; margin-bottom: .5rem; font-size: .875rem; font-weight: 600; color: var(--color-gris-700); }
-  .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--color-gris-300); border-radius: .75rem; background: #fff; padding: .65rem .85rem; color: var(--color-gris-900); outline: none; transition: border-color .15s, box-shadow .15s; }
+  .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--color-gris-300); border-radius: .75rem; background: var(--color-superficie); padding: .65rem .85rem; color: var(--color-gris-900); outline: none; transition: border-color .15s, box-shadow .15s; }
   .field-input:focus { border-color: var(--color-marca-500); box-shadow: 0 0 0 4px var(--color-marca-100); }
   .field-error { margin-top: .35rem; color: #b91c1c; font-size: .8rem; }
 

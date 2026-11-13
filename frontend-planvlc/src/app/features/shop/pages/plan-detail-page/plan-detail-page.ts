@@ -43,7 +43,14 @@ export class PlanDetailPage {
   });
 
   // "Volver" mantiene los filtros con los que se llegó desde el shop
-  readonly backParams = computed(() => filtersToUrl(this.store.filters()));
+  // Volver al shop con los mismos filtros, orden y vista (y el mes, si venía del calendario)
+  readonly backParams = computed(() => {
+    const params = filtersToUrl(this.store.filters());
+    const view = this.store.view();
+    if (view !== 'grid') params['view'] = view;
+    if (view === 'calendar' && this.store.calendarMonth()) params['month'] = this.store.calendarMonth();
+    return params;
+  });
 
   readonly planPriceText = planPriceText;
   readonly priceText = priceText;

@@ -13,7 +13,7 @@ import { AuthStore } from '../../core/stores/auth.store';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideTicket, LucideCalendarDays, LucideMapPin, LucideBuilding2, LucideTags, LucideUsers, LucideIdCard, LucideShieldCheck, Navbar, Loader],
   template: `
     <app-navbar /><app-loader />
-    <aside class="sticky top-16 z-30 flex flex-col border-b border-gris-200 bg-white md:fixed md:inset-y-0 md:left-0 md:top-0 md:w-64 md:border-b-0 md:border-r">
+    <aside class="sticky top-16 z-30 flex flex-col border-b border-gris-200 bg-superficie md:fixed md:inset-y-0 md:left-0 md:top-0 md:w-64 md:border-b-0 md:border-r">
       <a routerLink="/" class="hidden h-16 shrink-0 items-center gap-2.5 px-6 text-xl font-extrabold tracking-tight text-gris-900 md:flex" aria-label="PlanVLC, ir al inicio">
         <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-marca-500 to-marca-700 text-white shadow-sm" aria-hidden="true"><svg lucideMapPin width="18" height="18"></svg></span>
         <span>Plan<span class="text-marca-600">VLC</span></span>

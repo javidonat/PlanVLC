@@ -21,10 +21,10 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
         <ng-content />
       </div>
       @if (canPrev()) {
-        <button type="button" (click)="scroll(-1)" aria-label="Anteriores" class="absolute left-0 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gris-200 bg-white text-gris-700 shadow-md hover:bg-gris-50 md:flex"><svg lucideChevronLeft width="18" height="18"></svg></button>
+        <button type="button" (click)="scroll(-1)" aria-label="Anteriores" class="absolute left-0 top-1/2 z-10 hidden h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gris-200 bg-superficie text-gris-700 shadow-md hover:bg-gris-50 md:flex"><svg lucideChevronLeft width="18" height="18"></svg></button>
       }
       @if (canNext()) {
-        <button type="button" (click)="scroll(1)" aria-label="Siguientes" class="absolute right-0 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-gris-200 bg-white text-gris-700 shadow-md hover:bg-gris-50 md:flex"><svg lucideChevronRight width="18" height="18"></svg></button>
+        <button type="button" (click)="scroll(1)" aria-label="Siguientes" class="absolute right-0 top-1/2 z-10 hidden h-10 w-10 -translate-y-1/2 translate-x-1/2 items-center justify-center rounded-full border border-gris-200 bg-superficie text-gris-700 shadow-md hover:bg-gris-50 md:flex"><svg lucideChevronRight width="18" height="18"></svg></button>
       }
     </div>
   `,

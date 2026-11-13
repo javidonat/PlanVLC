@@ -11,7 +11,7 @@ import { SessionCard } from '../session-card/session-card';
       @for (session of sessions(); track session._id) {
         <app-session-card [session]="session" [checked]="session._id === selectedId()" (selected)="sessionSelect.emit($event)" />
       } @empty {
-        <p class="rounded-2xl border border-gris-200 bg-white p-5 text-gris-500">Este plan no tiene fechas próximas.</p>
+        <p class="rounded-2xl border border-gris-200 bg-superficie p-5 text-gris-500">Este plan no tiene fechas próximas.</p>
       }
     </div>
   `,

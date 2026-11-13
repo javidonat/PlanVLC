@@ -7,7 +7,7 @@ import { ShopVenue } from '../../../../core/models/shop.model';
   selector: 'app-venue-card',
   imports: [LucideMapPin],
   template: `
-    <button type="button" (click)="selected.emit(venue())" class="group block w-full overflow-hidden rounded-2xl border border-gris-200 bg-white text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <button type="button" (click)="selected.emit(venue())" class="group block w-full overflow-hidden rounded-2xl border border-gris-200 bg-superficie text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
       @if (venue().coverImage; as image) {
         <img [src]="image.url" [alt]="image.alt || venue().name" class="h-28 w-full object-cover" loading="lazy" />
       } @else {

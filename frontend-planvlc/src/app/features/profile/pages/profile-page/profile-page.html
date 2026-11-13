@@ -5,7 +5,7 @@
       <h1 class="mt-2 text-3xl font-bold text-gris-900">{{ editing() ? 'Editar perfil' : 'Perfil' }}</h1>
     </div>
     @if (!editing() && !pageLoading() && !loadError()) {
-      <button type="button" (click)="startEdit()" class="inline-flex items-center gap-2 rounded-xl border border-gris-200 bg-white px-4 py-2.5 shadow-xs font-semibold text-gris-700 hover:bg-marca-50 hover:text-marca-700"><svg lucidePencil width="17" height="17"></svg> Editar</button>
+      <button type="button" (click)="startEdit()" class="inline-flex items-center gap-2 rounded-xl border border-gris-200 bg-superficie px-4 py-2.5 shadow-xs font-semibold text-gris-700 hover:bg-marca-50 hover:text-marca-700"><svg lucidePencil width="17" height="17"></svg> Editar</button>
     }
   </header>
 

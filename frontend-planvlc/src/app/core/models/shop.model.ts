@@ -63,7 +63,24 @@ export interface ShopSession {
   stock: number | null; // plazas libres; null = sin límite
 }
 
-// Filtros, búsqueda y página del shop. Se guardan en ShopStore y en la URL (?category=tardeo&page=2).
+// Orden del listado (backend: SHOP_SORTS). Por defecto, los más visitados
+export type ShopSort = 'popular' | 'recent' | 'date' | 'price_asc' | 'price_desc' | 'name';
+
+export const SHOP_SORTS: { value: ShopSort; label: string }[] = [
+  { value: 'popular', label: 'Más visitados' },
+  { value: 'date', label: 'Fecha más próxima' },
+  { value: 'recent', label: 'Más nuevos' },
+  { value: 'price_asc', label: 'Precio: de menor a mayor' },
+  { value: 'price_desc', label: 'Precio: de mayor a menor' },
+  { value: 'name', label: 'Nombre (A-Z)' },
+];
+
+export const DEFAULT_SORT: ShopSort = 'popular';
+
+// Cómo se ven los resultados: rejilla de cards, lista o calendario de sesiones (?view=list)
+export type ShopView = 'grid' | 'list' | 'calendar';
+
+// Filtros, búsqueda, orden y página del shop. Se guardan en ShopStore y en la URL (?category=tardeo&page=2).
 // La tienda la ve el cliente: categoría, organizador y lugar van por slug, no por _id
 export interface ShopFilters {
   category: string | null; // slug de la categoría
@@ -72,11 +89,12 @@ export interface ShopFilters {
   minPrice: number | null; // precio "desde" del plan, en euros
   maxPrice: number | null;
   search: string;
+  sort: ShopSort;
   page: number;
 }
 
 export const EMPTY_FILTERS: ShopFilters = {
-  category: null, organizer: null, venue: null, minPrice: null, maxPrice: null, search: '', page: 1,
+  category: null, organizer: null, venue: null, minPrice: null, maxPrice: null, search: '', sort: DEFAULT_SORT, page: 1,
 };
 
 // GET /api/shop/plans → { ok, total, page, limit, totalPages, data }
@@ -91,4 +109,20 @@ export interface ShopPagination {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+// Sesión del calendario: con lo justo de su plan para pintarla y enlazar al detalle
+export interface ShopCalendarSession {
+  _id: string;
+  planId: { _id: string; title: string; slug: string };
+  startDateTime: string;
+  endDateTime: string | null;
+  price: number;
+  currency: string;
+  stock: number | null;
+}
+
+// GET /api/shop/sessions → { ok, month, total, data }
+export interface ShopSessionsResponse extends ApiListResponse<ShopCalendarSession> {
+  month: string; // AAAA-MM
 }
