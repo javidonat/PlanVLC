@@ -48,7 +48,7 @@
 
     <div class="min-w-0">
       <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <app-view-switcher [value]="store.view()" (viewChange)="onView($event)" />
+        <app-view-switcher [options]="viewOptions" [value]="store.view()" (viewChange)="onView($event)" />
         @if (store.view() !== 'calendar') {
           <app-sort-select [options]="sortOptions" [value]="store.filters().sort" (valueChange)="onSort($event)" />
         }

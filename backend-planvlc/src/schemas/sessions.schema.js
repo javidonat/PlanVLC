@@ -45,6 +45,35 @@ const DATES_ERROR = { message: "La fecha de fin debe ser posterior a la de inici
 const STOCK_ERROR = { message: "El stock no puede superar el aforo", path: ["stock"] };
 
 // POST: obligatorios + opcionales (si faltan los opcionales, usa los valores por defecto del modelo)
+// ---------- Listado del panel (GET /?search=&status=&state=&sort=&page=&limit=) ----------
+// Los query params llegan como texto. Todos son opcionales; sin page se devuelven todos (para los desplegables)
+
+const queryId = (invalid) => z.string({ error: invalid }).regex(/^[a-f\d]{24}$/i, invalid);
+const queryInt = (invalid) => z.coerce.number({ error: invalid }).int(invalid).min(1, invalid);
+
+// Disponibilidad: activos, desactivados (no eliminados) o eliminados
+export const LIST_STATES = ["active", "inactive", "deleted"];
+
+const listShape = {
+  search: z.string({ error: "La búsqueda debe ser un texto" }).trim().max(100, "La búsqueda no puede superar los 100 caracteres").optional(),
+  status: z.enum(STATUSES, { error: (issue) => `El estado '${issue.input}' no es válido` }).optional(),
+  state: z.enum(LIST_STATES, { error: `La disponibilidad debe ser una de: ${LIST_STATES.join(", ")}` }).optional(),
+  page: queryInt("La página debe ser un número mayor que 0").optional(),
+  limit: queryInt("El límite debe ser un número mayor que 0").max(100, "El límite no puede ser mayor que 100").optional(),
+};
+
+// Órdenes del listado de sesiones (ver SORTS en repos/sessions.repo.js). Por defecto, por fecha de inicio
+export const SESSION_SORTS = ["date", "date_desc", "recent", "price_asc", "price_desc"];
+
+// GET /api/sessions?search=&status=&state=&plan=&month=&sort=&page=&limit=
+// search busca en el SKU. Con month (AAAA-MM) devuelve todas las sesiones de ese mes (vista calendario)
+export const listSessionsQuerySchema = z.object({
+  ...listShape,
+  plan: queryId("El plan no es válido").optional(),
+  month: z.string({ error: "El mes no es válido" }).regex(/^\d{4}-(0[1-9]|1[0-2])$/, "El mes debe tener el formato AAAA-MM").optional(),
+  sort: z.enum(SESSION_SORTS, { error: `El orden debe ser uno de: ${SESSION_SORTS.join(", ")}` }).optional(),
+});
+
 export const createSessionSchema = z
   .object({ ...required, ...optional })
   .refine(checkDates, DATES_ERROR)

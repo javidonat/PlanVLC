@@ -72,5 +72,7 @@ const sessionSchema = new Schema(
 );
 
 sessionSchema.index({ planId: 1, startDateTime: 1 });
+// Listado del panel ordenado por fecha y vista calendario (sesiones de un mes)
+sessionSchema.index({ startDateTime: 1 });
 
 export default mongoose.model("Session", sessionSchema);

@@ -3,11 +3,11 @@ import plansService from "../services/plans.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/plans
+// GET /api/plans (query params ya validados: filtros, orden y página)
 const getPlans = async (req, res, next) => {
   try {
-    const plans = await plansService.getAllPlans();
-    res.status(200).json({ ok: true, total: plans.length, data: plans });
+    const { items, ...pagination } = await plansService.getAllPlans(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }

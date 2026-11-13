@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ApiListResponse, ApiResponse } from '../models/api.model';
-import { Plan, PlanPayload } from '../models/plan.model';
+import { ApiListResponse, ApiPagedResponse, ApiResponse } from '../models/api.model';
+import { EMPTY_PLAN_FILTERS, Plan, PlanListFilters, PlanPayload } from '../models/plan.model';
 
 // Solo habla con la API: no guarda estado (eso es cosa de PlansStore)
 @Injectable({ providedIn: 'root' })
@@ -12,6 +12,21 @@ export class PlansService {
   // Todos: activos, desactivados y eliminados (para el panel)
   async getAll(): Promise<ApiListResponse<Plan>> {
     return this.api.get<ApiListResponse<Plan>>(this.path);
+  }
+
+  // Listado del panel: filtros, orden y página. signal cancela la petición si llega otra más nueva
+  async getList(filters: PlanListFilters, signal?: AbortSignal): Promise<ApiPagedResponse<Plan>> {
+    const params = {
+      search: filters.search.trim(),
+      status: filters.status,
+      state: filters.state,
+      category: filters.category,
+      organizer: filters.organizer,
+      venue: filters.venue,
+      sort: filters.sort !== EMPTY_PLAN_FILTERS.sort ? filters.sort : null,
+      page: filters.page,
+    };
+    return this.api.get<ApiPagedResponse<Plan>>(this.path, { params, signal });
   }
 
   // Solo activos: opciones del formulario de sesiones

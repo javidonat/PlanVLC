@@ -25,3 +25,19 @@ export interface ApiErrorResponse {
   message: string;
   errors?: ApiFieldError[];
 }
+
+// GET de listas paginadas (?page=2) → { ok, total, page, limit, totalPages, data: [...] }
+export interface ApiPagedResponse<T> extends ApiListResponse<T> {
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export const EMPTY_PAGINATION: Pagination = { total: 0, page: 1, limit: 10, totalPages: 0 };

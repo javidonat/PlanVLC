@@ -83,6 +83,8 @@
 .dark :is(.text-marca-600, .text-marca-700) { color: var(--color-marca-300); }
 .dark :is(.hover\:text-marca-700:hover, .hover\:text-marca-800:hover, .group:hover .group-hover\:text-marca-700) { color: #d9d1ff; }
 .dark .menu-link.activo { color: var(--color-marca-300); }
+/* Botones de texto desactivados (ej. "Quitar filtros" sin filtros): grises también en oscuro */
+.dark .disabled\:text-gris-300:disabled { color: var(--color-gris-300); }
 .dark .field-error { color: #ff9b94; }
 /* Textos claros sobre la cabecera violeta del home: se quedan claros */
 .dark .text-marca-100 { color: #ebe7ff; }

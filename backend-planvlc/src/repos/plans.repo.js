@@ -12,9 +12,45 @@ const POPULATE = [
   { path: "galleryImages", select: "url alt position entityId" },
 ];
 
-// TODOS: sin ningún filtro
-const findAll = () => {
-  return Plan.find().populate(POPULATE).sort({ nextSessionAt: 1 }).lean();
+// Disponibilidad del listado del panel → condición de MongoDB
+const STATE_FILTERS = {
+  active: { isActive: true, deletedAt: null },
+  inactive: { isActive: false, deletedAt: null },
+  deleted: { deletedAt: { $ne: null } },
+};
+
+// Escapa los caracteres especiales para que la búsqueda sea texto literal y no una expresión regular
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Órdenes del listado (schemas/plans.schema.js → PLAN_SORTS). _id desempata para que la paginación sea estable
+const SORTS = {
+  date: { nextSessionAt: 1, _id: 1 },
+  recent: { createdAt: -1, _id: -1 },
+  title: { title: 1, _id: 1 },
+  price_asc: { priceFrom: 1, _id: 1 },
+  price_desc: { priceFrom: -1, _id: -1 },
+  popular: { views: -1, _id: -1 },
+};
+
+// Query dinámica del listado: solo añade las condiciones de los filtros que lleguen
+const buildListFilter = ({ search, status, state, category, organizer, venue }) => {
+  const filter = { ...(state && STATE_FILTERS[state]) };
+  if (status) filter.status = status;
+  if (category) filter.categoryIds = category;
+  if (organizer) filter.organizerId = organizer;
+  if (venue) filter.venueId = venue;
+  if (search) filter.title = { $regex: escapeRegex(search), $options: "i" };
+  return filter;
+};
+
+// TODOS (sin filtros) o los que cumplan los filtros, ordenados. Con page y limit, solo esa página
+const findAll = async ({ sort = "date", page, limit, ...filters } = {}) => {
+  const filter = buildListFilter(filters);
+  const query = Plan.find(filter).populate(POPULATE).sort(SORTS[sort]).lean();
+  if (sort === "title") query.collation({ locale: "es" }); // orden alfabético en español
+  if (!page) return { items: await query, total: null };
+  const [items, total] = await Promise.all([query.skip((page - 1) * limit).limit(limit), Plan.countDocuments(filter)]);
+  return { items, total };
 };
 
 // SOLO ACTIVOS

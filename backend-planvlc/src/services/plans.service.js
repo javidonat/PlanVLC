@@ -150,8 +150,19 @@ const saveWithUniqueSlug = async (title, excludeId, save) => {
 
 // ---------- Operaciones ----------
 
-const getAllPlans = async () => {
-  return plansRepo.findAll();
+const DEFAULT_LIMIT = 10;
+
+// Resultado del listado: sin page, la lista entera; con page, la página y los datos de paginación
+const toList = ({ items, total }, page, limit) => {
+  if (!page) return { items };
+  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+};
+
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel)
+const getAllPlans = async (query = {}) => {
+  const limit = query.page ? (query.limit ?? DEFAULT_LIMIT) : undefined;
+  const result = await plansRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActivePlans = async () => {

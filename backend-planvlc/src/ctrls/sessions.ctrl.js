@@ -3,11 +3,11 @@ import sessionsService from "../services/sessions.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/sessions
+// GET /api/sessions (query params ya validados: filtros, mes, orden y página)
 const getSessions = async (req, res, next) => {
   try {
-    const sessions = await sessionsService.getAllSessions();
-    res.status(200).json({ ok: true, total: sessions.length, data: sessions });
+    const { items, ...pagination } = await sessionsService.getAllSessions(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }

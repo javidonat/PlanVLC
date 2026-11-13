@@ -1,4 +1,4 @@
-import { Status } from './status.model';
+import { ListState, Status } from './status.model';
 
 // Un Plan es la ficha general (ej. "Tardeo Ruzafa"). NO tiene fecha, precio ni aforo:
 // eso vive en cada Session del plan (ver session.model.ts).
@@ -54,3 +54,36 @@ export interface PlanPayload {
   minAge: number;
   status: Status;
 }
+
+// ---------- Listado del panel: filtros, orden, vista y página (van en la URL) ----------
+
+// Orden del listado (backend: PLAN_SORTS). Por defecto, por próxima sesión
+export type PlanSort = 'date' | 'recent' | 'title' | 'price_asc' | 'price_desc' | 'popular';
+
+export const PLAN_SORTS: { value: PlanSort; label: string }[] = [
+  { value: 'date', label: 'Próxima sesión' },
+  { value: 'recent', label: 'Más nuevos' },
+  { value: 'title', label: 'Título (A-Z)' },
+  { value: 'price_asc', label: 'Precio: de menor a mayor' },
+  { value: 'price_desc', label: 'Precio: de mayor a menor' },
+  { value: 'popular', label: 'Más visitados' },
+];
+
+// Tabla o tarjetas (?view=cards)
+export type PlanView = 'table' | 'cards';
+
+// En el panel las relaciones van por _id (en la tienda, por slug)
+export interface PlanListFilters {
+  search: string; // contiene el texto en el título
+  status: Status | null;
+  state: ListState | null;
+  category: string | null; // _id
+  organizer: string | null;
+  venue: string | null;
+  sort: PlanSort;
+  page: number;
+}
+
+export const EMPTY_PLAN_FILTERS: PlanListFilters = {
+  search: '', status: null, state: null, category: null, organizer: null, venue: null, sort: 'date', page: 1,
+};

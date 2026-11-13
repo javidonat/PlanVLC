@@ -1,11 +1,11 @@
 import { Router } from "express";
 import sessionsCtrl from "../ctrls/sessions.ctrl.js";
 import validate from "../middleware/validate.js";
-import { activeSchema, createSessionSchema, idParamsSchema, updateSessionSchema } from "../schemas/sessions.schema.js";
+import { activeSchema, createSessionSchema, idParamsSchema, listSessionsQuerySchema, updateSessionSchema } from "../schemas/sessions.schema.js";
 
 const router = Router();
 
-// GET    /api/sessions                  → obtener todas las sesiones (sin filtrar)
+// GET    /api/sessions                  → obtener todas las sesiones. Opcional: ?search=&status=&state=&plan=&month=&sort=&page=&limit=
 // GET    /api/sessions/active           → obtener solo las sesiones activas
 // GET    /api/sessions/deleted          → obtener solo las sesiones eliminadas (soft delete)
 // GET    /api/sessions/:id              → obtener una sesión activa por su id
@@ -16,7 +16,7 @@ const router = Router();
 // Cada cambio recalcula priceFrom y nextSessionAt de su plan
 
 // validate(...) comprueba params y body con Zod antes de llegar al controlador
-router.get("/", sessionsCtrl.getSessions); // todas
+router.get("/", validate({ query: listSessionsQuerySchema }), sessionsCtrl.getSessions); // todas (o filtradas y paginadas)
 router.get("/active", sessionsCtrl.getActiveSessions); // solo activas
 router.get("/deleted", sessionsCtrl.getDeletedSessions); // solo eliminadas
 router.get("/:id", validate({ params: idParamsSchema }), sessionsCtrl.getSessionById);

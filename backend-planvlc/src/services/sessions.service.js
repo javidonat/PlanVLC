@@ -87,8 +87,32 @@ const updatePlanFromSessions = async (planId) => {
 
 // ---------- Operaciones ----------
 
-const getAllSessions = async () => {
-  return sessionsRepo.findAll();
+const DEFAULT_LIMIT = 10;
+
+// Resultado del listado: sin page, la lista entera; con page, la página y los datos de paginación
+const toList = ({ items, total }, page, limit) => {
+  if (!page) return { items };
+  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+};
+
+// "2027-10" → { from: 1/10/2027, to: 1/11/2027 } (UTC).
+// Se amplía un día por cada lado: el frontend coloca cada sesión en su día con la hora local
+const monthRange = (month) => {
+  const [year, m] = month.split("-").map(Number);
+  const DAY = 24 * 60 * 60 * 1000;
+  return { from: new Date(Date.UTC(year, m - 1, 1) - DAY), to: new Date(Date.UTC(year, m, 1) + DAY) };
+};
+
+// GET /: todas o, con filtros, orden y página, las que se piden (listado del panel).
+// Con month, todas las de ese mes sin paginar (vista calendario)
+const getAllSessions = async ({ month, ...query } = {}) => {
+  if (month) {
+    const { page, limit, ...filters } = query;
+    return toList(await sessionsRepo.findAll({ ...filters, ...monthRange(month) }));
+  }
+  const limit = query.page ? (query.limit ?? DEFAULT_LIMIT) : undefined;
+  const result = await sessionsRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActiveSessions = async () => {

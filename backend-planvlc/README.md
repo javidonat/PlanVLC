@@ -197,7 +197,7 @@ Lo que usan el home y el shop del frontend. **No piden token** y solo devuelven 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/health` | Comprueba que el servidor está vivo |
-| GET | `/api/plans` | Lista todos los planes (activos, desactivados y eliminados), por `nextSessionAt` ascendente |
+| GET | `/api/plans` | Lista todos los planes (activos, desactivados y eliminados), por `nextSessionAt` ascendente. Query params opcionales (listado del panel): `search` (título), `status`, `state` (`active`, `inactive`, `deleted`), `category`, `organizer`, `venue` (ids), `sort` (`date` por defecto, `recent`, `title`, `price_asc`, `price_desc`, `popular`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages`, y `total` es el total de resultados |
 | GET | `/api/plans/active` | Lista solo los planes activos |
 | GET | `/api/plans/deleted` | Lista solo los planes eliminados (soft delete) |
 | GET | `/api/plans/slug/:slug` | Devuelve un plan activo por su slug |
@@ -217,7 +217,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/sessions` | Todas (activas, desactivadas y eliminadas), por `startDateTime` |
+| GET | `/api/sessions` | Todas (activas, desactivadas y eliminadas), por `startDateTime`. Query params opcionales (listado del panel): `search` (SKU), `status`, `state` (`active`, `inactive`, `deleted`), `plan` (id), `sort` (`date` por defecto, `date_desc`, `recent`, `price_asc`, `price_desc`), `page` y `limit` (por defecto 10, máximo 100). Con `month` (`AAAA-MM`) devuelve todas las de ese mes sin paginar (vista calendario) |
 | GET | `/api/sessions/active` | Solo activas |
 | GET | `/api/sessions/deleted` | Solo eliminadas |
 | GET | `/api/sessions/:id` | Una sesión activa |

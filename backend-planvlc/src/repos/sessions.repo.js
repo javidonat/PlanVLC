@@ -5,9 +5,43 @@ import { Session } from "../models/index.js";
 // Cambia el id del plan por sus datos básicos (como un JOIN de SQL)
 const POPULATE = [{ path: "planId", select: "title slug status isActive" }];
 
-// TODAS: sin ningún filtro
-const findAll = () => {
-  return Session.find().populate(POPULATE).sort({ startDateTime: 1 }).lean();
+// Disponibilidad del listado del panel → condición de MongoDB
+const STATE_FILTERS = {
+  active: { isActive: true, deletedAt: null },
+  inactive: { isActive: false, deletedAt: null },
+  deleted: { deletedAt: { $ne: null } },
+};
+
+// Escapa los caracteres especiales para que la búsqueda sea texto literal y no una expresión regular
+const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// Órdenes del listado (schemas/sessions.schema.js → SESSION_SORTS). _id desempata para que la paginación sea estable
+const SORTS = {
+  date: { startDateTime: 1, _id: 1 },
+  date_desc: { startDateTime: -1, _id: -1 },
+  recent: { createdAt: -1, _id: -1 },
+  price_asc: { price: 1, _id: 1 },
+  price_desc: { price: -1, _id: -1 },
+};
+
+// Query dinámica del listado: solo añade las condiciones de los filtros que lleguen.
+// from/to: sesiones que empiezan en ese rango (vista calendario)
+const buildListFilter = ({ search, status, state, plan, from, to }) => {
+  const filter = { ...(state && STATE_FILTERS[state]) };
+  if (status) filter.status = status;
+  if (plan) filter.planId = plan;
+  if (search) filter.sku = { $regex: escapeRegex(search), $options: "i" };
+  if (from && to) filter.startDateTime = { $gte: from, $lt: to };
+  return filter;
+};
+
+// TODAS (sin filtros) o las que cumplan los filtros, ordenadas. Con page y limit, solo esa página
+const findAll = async ({ sort = "date", page, limit, ...filters } = {}) => {
+  const filter = buildListFilter(filters);
+  const query = Session.find(filter).populate(POPULATE).sort(SORTS[sort]).lean();
+  if (!page) return { items: await query, total: null };
+  const [items, total] = await Promise.all([query.skip((page - 1) * limit).limit(limit), Session.countDocuments(filter)]);
+  return { items, total };
 };
 
 // SOLO ACTIVAS

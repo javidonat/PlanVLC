@@ -1,5 +1,5 @@
 import { Plan } from './plan.model';
-import { Status } from './status.model';
+import { ListState, Status } from './status.model';
 
 // Una Session es una fecha concreta de un Plan, con su precio, aforo y stock
 // (ej. cada domingo del "Tardeo Ruzafa", cada turno de motos de agua).
@@ -37,3 +37,32 @@ export interface SessionPayload {
   stock: number | null;
   status: Status;
 }
+
+// ---------- Listado del panel: filtros, orden, vista y página (van en la URL) ----------
+
+// Orden del listado (backend: SESSION_SORTS). Por defecto, por fecha de inicio
+export type SessionSort = 'date' | 'date_desc' | 'recent' | 'price_asc' | 'price_desc';
+
+export const SESSION_SORTS: { value: SessionSort; label: string }[] = [
+  { value: 'date', label: 'Fecha: más próximas' },
+  { value: 'date_desc', label: 'Fecha: más lejanas' },
+  { value: 'recent', label: 'Más nuevas' },
+  { value: 'price_asc', label: 'Precio: de menor a mayor' },
+  { value: 'price_desc', label: 'Precio: de mayor a menor' },
+];
+
+// Tabla o calendario del mes (?view=calendar&month=2027-10)
+export type SessionView = 'table' | 'calendar';
+
+export interface SessionListFilters {
+  search: string; // contiene el texto en el SKU
+  status: Status | null;
+  state: ListState | null;
+  plan: string | null; // _id del plan
+  sort: SessionSort;
+  page: number;
+}
+
+export const EMPTY_SESSION_FILTERS: SessionListFilters = {
+  search: '', status: null, state: null, plan: null, sort: 'date', page: 1,
+};

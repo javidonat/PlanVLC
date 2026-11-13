@@ -16,7 +16,7 @@ import { EmptyState } from '../../../../shared/components/empty-state/empty-stat
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { PlanList } from '../../components/plan-list/plan-list';
 import { PlanCalendar } from '../../components/plan-calendar/plan-calendar';
-import { ViewSwitcher } from '../../components/view-switcher/view-switcher';
+import { ViewOption, ViewSwitcher } from '../../../../shared/components/view-switcher/view-switcher';
 import { monthLabel } from '../../utils/calendar.utils';
 import { filtersFromUrl, filtersToUrl, monthFromUrl, viewFromUrl } from '../../utils/shop-url';
 
@@ -48,6 +48,12 @@ export class ShopPage implements OnInit {
   readonly showFilters = signal(false);
 
   readonly sortOptions = SHOP_SORTS;
+
+  readonly viewOptions: ViewOption[] = [
+    { value: 'grid', label: 'Rejilla', icon: 'grid' },
+    { value: 'list', label: 'Lista', icon: 'list' },
+    { value: 'calendar', label: 'Calendario', icon: 'calendar' },
+  ];
 
   // Mes del calendario que viene en la URL (null = el que elija el backend)
   private urlMonth: string | null = null;
@@ -150,9 +156,9 @@ export class ShopPage implements OnInit {
     this.updateUrl({ category: [], organizer: [], venue: [], minPrice: null, maxPrice: null, search: '', page: 1, sort });
   }
 
-  onView(view: ShopView): void {
+  onView(view: string): void {
     this.urlMonth = null; // al volver al calendario, el backend elige el mes
-    this.updateUrl({ page: 1 }, false, view);
+    this.updateUrl({ page: 1 }, false, view as ShopView);
   }
 
   onMonth(month: string): void {

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import plansCtrl from "../ctrls/plans.ctrl.js";
 import validate from "../middleware/validate.js";
-import { activeSchema, createPlanSchema, idParamsSchema, updatePlanSchema } from "../schemas/plans.schema.js";
+import { activeSchema, createPlanSchema, idParamsSchema, listPlansQuerySchema, updatePlanSchema } from "../schemas/plans.schema.js";
 
 const router = Router();
 
-// GET    /api/plans                  → obtener todos los planes (sin filtrar)
+// GET    /api/plans                  → obtener todos los planes. Opcional: ?search=&status=&state=&category=&organizer=&venue=&sort=&page=&limit=
 // GET    /api/plans/active           → obtener solo los planes activos
 // GET    /api/plans/deleted          → obtener solo los planes eliminados (soft delete)
 // GET    /api/plans/slug/:slug       → obtener un plan por su slug
@@ -16,7 +16,7 @@ const router = Router();
 // PATCH  /api/plans/:id/softdelete   → borrado lógico (isActive = false y deletedAt = ahora)
 
 // validate(...) comprueba params y body con Zod antes de llegar al controlador
-router.get("/", plansCtrl.getPlans); // todos
+router.get("/", validate({ query: listPlansQuerySchema }), plansCtrl.getPlans); // todos (o filtrados y paginados)
 router.get("/active", plansCtrl.getActivePlans); // solo activos
 router.get("/deleted", plansCtrl.getDeletedPlans); // solo eliminados
 router.get("/slug/:slug", plansCtrl.getPlanBySlug);

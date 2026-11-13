@@ -11,3 +11,12 @@ export const STATUSES: { value: Status; label: string }[] = [
 export function statusLabel(status: Status): string {
   return STATUSES.find(s => s.value === status)?.label ?? status;
 }
+
+// Disponibilidad en los listados del panel (?state=active). null = todos
+export type ListState = 'active' | 'inactive' | 'deleted';
+
+export const LIST_STATES: { value: ListState; label: string }[] = [
+  { value: 'active', label: 'Activos' },
+  { value: 'inactive', label: 'Inactivos' },
+  { value: 'deleted', label: 'Eliminados' },
+];

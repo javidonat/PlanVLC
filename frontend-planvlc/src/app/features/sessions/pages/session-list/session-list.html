@@ -1,5 +1,5 @@
 <section class="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
-  <header class="mb-8 flex flex-wrap items-start justify-between gap-4">
+  <header class="mb-6 flex flex-wrap items-start justify-between gap-4">
     <div>
       <p class="mb-1 text-sm font-semibold text-marca-600">Panel de administración</p>
       <h1 class="text-3xl font-bold tracking-tight text-gris-900">Sesiones</h1>
@@ -8,12 +8,42 @@
     <a routerLink="nueva" class="inline-flex items-center gap-2 rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white shadow-sm hover:bg-marca-700"><svg lucidePlus width="18" height="18"></svg> Nueva sesión</a>
   </header>
 
+  <!-- Búsqueda y filtros -->
+  <div class="mb-5 rounded-2xl border border-gris-200 bg-superficie p-4 shadow-xs">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <app-search-bar class="w-full sm:w-80" [value]="store.filters().search" placeholder="Buscar por SKU…" (searchChange)="onSearch($event)" />
+      <button type="button" (click)="onClear()" [disabled]="!store.hasActiveFilters()" class="text-sm font-semibold text-marca-600 hover:text-marca-800 disabled:cursor-not-allowed disabled:text-gris-300">Quitar filtros</button>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-3">
+      <app-dropdown-filter label="Plan" [options]="planOptions()" [value]="store.filters().plan" (valueChange)="onFilter('plan', $event)" />
+      <app-dropdown-filter label="Publicación" allLabel="Todas" [options]="statusOptions" [value]="store.filters().status" (valueChange)="onFilter('status', $event)" />
+      <app-dropdown-filter label="Disponibilidad" allLabel="Todas" [options]="stateOptions" [value]="store.filters().state" (valueChange)="onFilter('state', $event)" />
+    </div>
+  </div>
+
+  <!-- Resultado, vista y orden (el calendario va por fecha: no se ordena) -->
+  <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center gap-3">
+      <app-view-switcher [options]="viewOptions" [value]="store.view()" (viewChange)="onViewChange($event)" />
+      @if (!store.loading() && !store.error()) {
+        <p class="text-sm text-gris-500" aria-live="polite">{{ resultText() }}</p>
+      }
+    </div>
+    @if (store.view() !== 'calendar') {
+      <app-sort-select [options]="sortOptions" [value]="store.filters().sort" (valueChange)="onSort($event)" />
+    }
+  </div>
+
   @if (store.loading()) {
     <app-skeleton-loader [count]="5" label="Cargando sesiones" />
   } @else if (store.error(); as error) {
     <app-error-state [message]="error" (retry)="load()" />
+  } @else if (store.view() === 'calendar') {
+    @if (store.calendarMonth(); as month) {
+      <app-plan-calendar [month]="month" [sessions]="calendarSessions()" (monthChange)="onMonth($event)" (sessionSelect)="onCalendarSession($event)" />
+    }
   } @else if (store.isEmpty()) {
-    <app-empty-state message="Todavía no hay sesiones." />
+    <app-empty-state [message]="store.hasActiveFilters() ? 'No hay sesiones con estos filtros.' : 'Todavía no hay sesiones.'" />
   } @else {
     <app-session-table
       [sessions]="store.items()"
@@ -23,5 +53,8 @@
       (toggleSession)="onToggle($event)"
       (deleteSession)="onDelete($event)"
     />
+    <div class="mt-8">
+      <app-pagination [page]="store.pagination().page" [totalPages]="store.pagination().totalPages" (pageChange)="onPage($event)" />
+    </div>
   }
 </section>
