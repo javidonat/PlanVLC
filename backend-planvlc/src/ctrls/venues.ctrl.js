@@ -3,11 +3,11 @@ import venuesService from "../services/venues.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/venues
+// GET /api/venues (query params ya validados: filtros, orden y página)
 const getVenues = async (req, res, next) => {
   try {
-    const venues = await venuesService.getAllVenues();
-    res.status(200).json({ ok: true, total: venues.length, data: venues });
+    const { items, ...pagination } = await venuesService.getAllVenues(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }

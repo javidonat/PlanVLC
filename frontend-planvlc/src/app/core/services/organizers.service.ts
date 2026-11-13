@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ApiListResponse, ApiResponse } from '../models/api.model';
+import { ApiListResponse, ApiPagedResponse, ApiResponse } from '../models/api.model';
+import { ListFilters, ListSpec, listQueryParams } from '../models/list.model';
 import { OrganizerRef } from '../models/plan.model';
 import { Organizer, OrganizerPayload } from '../models/organizer.model';
 
@@ -21,6 +22,11 @@ export class OrganizersService {
   }
 
   // Solo devuelve organizadores activos (404 si está desactivado o eliminado)
+  // Listado del panel: filtros, orden y página. signal cancela la petición si llega otra más nueva
+  async getList(filters: ListFilters, spec: ListSpec, signal?: AbortSignal): Promise<ApiPagedResponse<Organizer>> {
+    return this.api.get<ApiPagedResponse<Organizer>>(this.path, { params: listQueryParams(filters, spec), signal });
+  }
+
   async getById(id: string): Promise<ApiResponse<Organizer>> {
     return this.api.get<ApiResponse<Organizer>>(`${this.path}/${encodeURIComponent(id)}`);
   }

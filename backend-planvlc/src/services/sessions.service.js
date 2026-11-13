@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { listLimit, toList } from "./utils/list.util.js";
 import sessionsRepo from "../repos/sessions.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import AppError from "./utils/AppError.js";
@@ -87,13 +88,6 @@ const updatePlanFromSessions = async (planId) => {
 
 // ---------- Operaciones ----------
 
-const DEFAULT_LIMIT = 10;
-
-// Resultado del listado: sin page, la lista entera; con page, la página y los datos de paginación
-const toList = ({ items, total }, page, limit) => {
-  if (!page) return { items };
-  return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
-};
 
 // "2027-10" → { from: 1/10/2027, to: 1/11/2027 } (UTC).
 // Se amplía un día por cada lado: el frontend coloca cada sesión en su día con la hora local
@@ -112,7 +106,7 @@ const getAllSessions = async ({ month, ...params } = {}) => {
     const { page, limit, ...filters } = query;
     return toList(await sessionsRepo.findAll({ ...filters, ...monthRange(month) }));
   }
-  const limit = query.page ? (query.limit ?? DEFAULT_LIMIT) : undefined;
+  const limit = listLimit(query);
   const result = await sessionsRepo.findAll({ ...query, limit });
   return toList(result, query.page, limit);
 };

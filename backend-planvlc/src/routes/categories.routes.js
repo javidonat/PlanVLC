@@ -1,11 +1,11 @@
 import { Router } from "express";
 import categoriesCtrl from "../ctrls/categories.ctrl.js";
 import validate from "../middleware/validate.js";
-import { activeSchema, createCategorySchema, idParamsSchema, updateCategorySchema } from "../schemas/categories.schema.js";
+import { listCategoriesQuerySchema, activeSchema, createCategorySchema, idParamsSchema, updateCategorySchema } from "../schemas/categories.schema.js";
 
 const router = Router();
 
-// GET    /api/categories                  → todas (activas, desactivadas y eliminadas)
+// GET    /api/categories                  → todas (activas, desactivadas y eliminadas). Opcional: ?search=&status=&group=&state=&sort=&page=&limit=
 // GET    /api/categories/active           → solo activas y no eliminadas (desplegables del formulario de planes)
 // GET    /api/categories/deleted          → solo eliminadas (soft delete)
 // GET    /api/categories/:id              → una categoría activa por su id
@@ -15,7 +15,7 @@ const router = Router();
 // PATCH  /api/categories/:id/softdelete   → borrado lógico. Si la usan planes → 409
 
 // validate(...) comprueba params y body con Zod antes de llegar al controlador
-router.get("/", categoriesCtrl.getCategories); // todas
+router.get("/", validate({ query: listCategoriesQuerySchema }), categoriesCtrl.getCategories); // todas
 router.get("/active", categoriesCtrl.getActiveCategories); // solo activas
 router.get("/deleted", categoriesCtrl.getDeletedCategories); // solo eliminadas
 router.get("/:id", validate({ params: idParamsSchema }), categoriesCtrl.getCategoryById);

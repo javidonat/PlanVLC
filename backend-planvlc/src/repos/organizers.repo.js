@@ -1,4 +1,5 @@
 import { Organizer } from "../models/index.js";
+import { STATE_FILTERS, contains, findList } from "./utils/list.util.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
@@ -16,8 +17,25 @@ const findActive = () => {
 };
 
 // TODOS: sin ningún filtro
-const findAll = () => {
-  return Organizer.find().populate(POPULATE).sort({ name: 1 }).lean();
+// Órdenes del listado (schemas/organizers.schema.js → ORGANIZER_SORTS). _id desempata para que la paginación sea estable
+const SORTS = {
+  name: { name: 1, _id: 1 },
+  name_desc: { name: -1, _id: -1 },
+  recent: { createdAt: -1, _id: -1 },
+};
+
+// Query dinámica del listado: solo añade las condiciones de los filtros que lleguen
+const buildListFilter = ({ search, state, status, type }) => {
+  const filter = { ...(state && STATE_FILTERS[state]) };
+  if (status) filter.status = status;
+  if (type) filter.type = type;
+  if (search) filter.name = contains(search);
+  return filter;
+};
+
+// TODOS (sin filtros) o los que cumplan los filtros, ordenados (los nombres, en español). Con page y limit, solo esa página
+const findAll = ({ sort = "name", page, limit, ...filters } = {}) => {
+  return findList(Organizer, buildListFilter(filters), { sort: SORTS[sort], populate: POPULATE, page, limit, collation: { locale: "es" } });
 };
 
 // SOLO ELIMINADOS (soft delete)

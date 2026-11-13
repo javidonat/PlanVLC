@@ -1,4 +1,5 @@
 import { Plan } from "../models/index.js";
+import { STATE_FILTERS, contains, findList } from "./utils/list.util.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
@@ -12,15 +13,6 @@ const POPULATE = [
   { path: "galleryImages", select: "url alt position entityId" },
 ];
 
-// Disponibilidad del listado del panel → condición de MongoDB
-const STATE_FILTERS = {
-  active: { isActive: true, deletedAt: null },
-  inactive: { isActive: false, deletedAt: null },
-  deleted: { deletedAt: { $ne: null } },
-};
-
-// Escapa los caracteres especiales para que la búsqueda sea texto literal y no una expresión regular
-const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Órdenes del listado (schemas/plans.schema.js → PLAN_SORTS). _id desempata para que la paginación sea estable
 const SORTS = {
@@ -39,18 +31,14 @@ const buildListFilter = ({ search, status, state, category, organizer, venue }) 
   if (category) filter.categoryIds = category;
   if (organizer) filter.organizerId = organizer;
   if (venue) filter.venueId = venue;
-  if (search) filter.title = { $regex: escapeRegex(search), $options: "i" };
+  if (search) filter.title = contains(search);
   return filter;
 };
 
 // TODOS (sin filtros) o los que cumplan los filtros, ordenados. Con page y limit, solo esa página
-const findAll = async ({ sort = "date", page, limit, ...filters } = {}) => {
-  const filter = buildListFilter(filters);
-  const query = Plan.find(filter).populate(POPULATE).sort(SORTS[sort]).lean();
-  if (sort === "title") query.collation({ locale: "es" }); // orden alfabético en español
-  if (!page) return { items: await query, total: null };
-  const [items, total] = await Promise.all([query.skip((page - 1) * limit).limit(limit), Plan.countDocuments(filter)]);
-  return { items, total };
+const findAll = ({ sort = "date", page, limit, ...filters } = {}) => {
+  const collation = sort === "title" ? { locale: "es" } : undefined; // orden alfabético en español
+  return findList(Plan, buildListFilter(filters), { sort: SORTS[sort], populate: POPULATE, page, limit, collation });
 };
 
 // SOLO ACTIVOS
@@ -73,7 +61,7 @@ const findBySlug = (slug) => {
 
 // _id de los planes cuyo título contiene el texto (buscador del listado de sesiones)
 const findIdsByTitle = (search) => {
-  return Plan.distinct("_id", { title: { $regex: escapeRegex(search), $options: "i" } });
+  return Plan.distinct("_id", { title: contains(search) });
 };
 
 // Crea un plan (Mongoose valida los campos según el modelo y aplica los valores por defecto)

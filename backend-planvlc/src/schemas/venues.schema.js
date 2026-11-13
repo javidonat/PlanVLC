@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { VENUE_STATUSES } from "../models/constants.js";
+import { listShape, queryEnum, querySort } from "./list.schema.js";
 
 // Esquemas de validación de las rutas de lugares (Zod).
 // Los campos que no aparecen aquí (location, isActive, deletedAt...) se descartan del body.
@@ -91,4 +92,14 @@ export const activeSchema = z.object({
 // :id de MongoDB
 export const idParamsSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, "El id del lugar no es válido"),
+});
+
+// Órdenes del listado (ver SORTS en repos/venues.repo.js). Por defecto, por nombre
+export const VENUE_SORTS = ["name", "name_desc", "recent", "capacity_desc"];
+
+// GET /api/venues?search=&status=&state=&sort=&page=&limit= (search busca en el nombre, barrio o ciudad)
+export const listVenuesQuerySchema = z.object({
+  ...listShape,
+  status: queryEnum(VENUE_STATUSES, "El estado"),
+  sort: querySort(VENUE_SORTS),
 });

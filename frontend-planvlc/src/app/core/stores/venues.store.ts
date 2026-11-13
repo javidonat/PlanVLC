@@ -1,5 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { Venue } from '../models/venue.model';
+import { EMPTY_PAGINATION, Pagination } from '../models/api.model';
+import { ListFilters, countListFilters } from '../models/list.model';
 
 // Estado compartido de los lugares. Solo guarda datos: las páginas llaman al servicio
 // y actualizan el store. Las señales privadas solo se modifican desde aquí.
@@ -16,6 +18,17 @@ export class VenuesStore {
   readonly error = this._error.asReadonly();
   readonly loaded = this._loaded.asReadonly();
   readonly busyId = this._busyId.asReadonly();
+
+  // --- Listado del panel: filtros (sincronizados con la URL) y paginación ---
+  private readonly _filters = signal<ListFilters>({ search: '', state: null, sort: 'name', page: 1 });
+  private readonly _pagination = signal<Pagination>({ ...EMPTY_PAGINATION });
+
+  readonly filters = this._filters.asReadonly();
+  readonly pagination = this._pagination.asReadonly();
+
+  // Filtros aplicados (la búsqueda y el orden van aparte)
+  readonly activeFilterCount = computed(() => countListFilters(this._filters()));
+  readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0 || !!this._filters().search);
 
   readonly count = computed(() => this._items().length);
   readonly isEmpty = computed(() => !this._loading() && this._items().length === 0);
@@ -35,6 +48,18 @@ export class VenuesStore {
   setItems(items: Venue[]): void {
     this._items.set(items);
     this._loaded.set(true);
+  }
+
+  // Una página del listado del panel. La lista deja de contar como cargada (no están todos):
+  // así el detalle o la edición piden la lista entera si entran a uno que no está en la página
+  setPage(items: Venue[], pagination: Pagination): void {
+    this._items.set(items);
+    this._pagination.set(pagination);
+    this._loaded.set(false);
+  }
+
+  setFilters(filters: ListFilters): void {
+    this._filters.set(filters);
   }
 
   // Crea o sustituye un lugar en la lista

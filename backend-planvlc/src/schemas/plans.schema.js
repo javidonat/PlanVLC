@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { STATUSES } from "../models/constants.js";
+import { listShape, queryEnum, queryId, querySort } from "./list.schema.js";
 
 // Esquemas de validación de las rutas de planes (Zod).
 // Los campos que no aparecen aquí (slug, priceFrom, nextSessionAt, isActive, deletedAt...) se descartan del body.
@@ -77,22 +78,6 @@ const optional = {
 };
 
 // POST: obligatorios + opcionales (si faltan los opcionales, usa los valores por defecto del modelo)
-// ---------- Listado del panel (GET /?search=&status=&state=&sort=&page=&limit=) ----------
-// Los query params llegan como texto. Todos son opcionales; sin page se devuelven todos (para los desplegables)
-
-const queryId = (invalid) => z.string({ error: invalid }).regex(/^[a-f\d]{24}$/i, invalid);
-const queryInt = (invalid) => z.coerce.number({ error: invalid }).int(invalid).min(1, invalid);
-
-// Disponibilidad: activos, desactivados (no eliminados) o eliminados
-export const LIST_STATES = ["active", "inactive", "deleted"];
-
-const listShape = {
-  search: z.string({ error: "La búsqueda debe ser un texto" }).trim().max(100, "La búsqueda no puede superar los 100 caracteres").optional(),
-  status: z.enum(STATUSES, { error: (issue) => `El estado '${issue.input}' no es válido` }).optional(),
-  state: z.enum(LIST_STATES, { error: `La disponibilidad debe ser una de: ${LIST_STATES.join(", ")}` }).optional(),
-  page: queryInt("La página debe ser un número mayor que 0").optional(),
-  limit: queryInt("El límite debe ser un número mayor que 0").max(100, "El límite no puede ser mayor que 100").optional(),
-};
 
 // Órdenes del listado de planes (ver SORTS en repos/plans.repo.js). Por defecto, por próxima sesión
 export const PLAN_SORTS = ["date", "recent", "title", "price_asc", "price_desc", "popular"];
@@ -100,10 +85,11 @@ export const PLAN_SORTS = ["date", "recent", "title", "price_asc", "price_desc",
 // GET /api/plans?search=&status=&state=&category=&organizer=&venue=&sort=&page=&limit=
 export const listPlansQuerySchema = z.object({
   ...listShape,
+  status: queryEnum(STATUSES, "El estado"),
   category: queryId("La categoría no es válida").optional(),
   organizer: queryId("El organizador no es válido").optional(),
   venue: queryId("El lugar no es válido").optional(),
-  sort: z.enum(PLAN_SORTS, { error: `El orden debe ser uno de: ${PLAN_SORTS.join(", ")}` }).optional(),
+  sort: querySort(PLAN_SORTS),
 });
 
 export const createPlanSchema = z.object({ ...required, ...optional });

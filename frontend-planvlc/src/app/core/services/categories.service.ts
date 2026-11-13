@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ApiListResponse, ApiResponse } from '../models/api.model';
+import { ApiListResponse, ApiPagedResponse, ApiResponse } from '../models/api.model';
+import { ListFilters, ListSpec, listQueryParams } from '../models/list.model';
 import { CategoryRef } from '../models/plan.model';
 import { Category, CategoryPayload } from '../models/category.model';
 
@@ -21,6 +22,11 @@ export class CategoriesService {
   }
 
   // Solo devuelve categorías activas (404 si está desactivada o eliminada)
+  // Listado del panel: filtros, orden y página. signal cancela la petición si llega otra más nueva
+  async getList(filters: ListFilters, spec: ListSpec, signal?: AbortSignal): Promise<ApiPagedResponse<Category>> {
+    return this.api.get<ApiPagedResponse<Category>>(this.path, { params: listQueryParams(filters, spec), signal });
+  }
+
   async getById(id: string): Promise<ApiResponse<Category>> {
     return this.api.get<ApiResponse<Category>>(`${this.path}/${encodeURIComponent(id)}`);
   }

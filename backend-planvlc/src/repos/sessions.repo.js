@@ -1,19 +1,11 @@
 import { Session } from "../models/index.js";
+import { STATE_FILTERS, contains, findList } from "./utils/list.util.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
 // Cambia el id del plan por sus datos básicos (como un JOIN de SQL)
 const POPULATE = [{ path: "planId", select: "title slug status isActive" }];
 
-// Disponibilidad del listado del panel → condición de MongoDB
-const STATE_FILTERS = {
-  active: { isActive: true, deletedAt: null },
-  inactive: { isActive: false, deletedAt: null },
-  deleted: { deletedAt: { $ne: null } },
-};
-
-// Escapa los caracteres especiales para que la búsqueda sea texto literal y no una expresión regular
-const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 // Órdenes del listado (schemas/sessions.schema.js → SESSION_SORTS). _id desempata para que la paginación sea estable
 const SORTS = {
@@ -31,18 +23,14 @@ const buildListFilter = ({ search, searchPlanIds = [], status, state, plan, from
   const filter = { ...(state && STATE_FILTERS[state]) };
   if (status) filter.status = status;
   if (plan) filter.planId = plan;
-  if (search) filter.$or = [{ sku: { $regex: escapeRegex(search), $options: "i" } }, { planId: { $in: searchPlanIds } }];
+  if (search) filter.$or = [{ sku: contains(search) }, { planId: { $in: searchPlanIds } }];
   if (from && to) filter.startDateTime = { $gte: from, $lt: to };
   return filter;
 };
 
 // TODAS (sin filtros) o las que cumplan los filtros, ordenadas. Con page y limit, solo esa página
-const findAll = async ({ sort = "date", page, limit, ...filters } = {}) => {
-  const filter = buildListFilter(filters);
-  const query = Session.find(filter).populate(POPULATE).sort(SORTS[sort]).lean();
-  if (!page) return { items: await query, total: null };
-  const [items, total] = await Promise.all([query.skip((page - 1) * limit).limit(limit), Session.countDocuments(filter)]);
-  return { items, total };
+const findAll = ({ sort = "date", page, limit, ...filters } = {}) => {
+  return findList(Session, buildListFilter(filters), { sort: SORTS[sort], populate: POPULATE, page, limit });
 };
 
 // SOLO ACTIVAS

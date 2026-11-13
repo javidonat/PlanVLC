@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ApiListResponse, ApiResponse } from '../models/api.model';
+import { ApiListResponse, ApiPagedResponse, ApiResponse } from '../models/api.model';
+import { ListFilters, ListSpec, listQueryParams } from '../models/list.model';
 import { VenueRef } from '../models/plan.model';
 import { Venue, VenuePayload } from '../models/venue.model';
 
@@ -21,6 +22,11 @@ export class VenuesService {
   }
 
   // Solo devuelve lugares activos (404 si está desactivado o eliminado)
+  // Listado del panel: filtros, orden y página. signal cancela la petición si llega otra más nueva
+  async getList(filters: ListFilters, spec: ListSpec, signal?: AbortSignal): Promise<ApiPagedResponse<Venue>> {
+    return this.api.get<ApiPagedResponse<Venue>>(this.path, { params: listQueryParams(filters, spec), signal });
+  }
+
   async getById(id: string): Promise<ApiResponse<Venue>> {
     return this.api.get<ApiResponse<Venue>>(`${this.path}/${encodeURIComponent(id)}`);
   }

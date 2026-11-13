@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { listLimit, toList } from "./utils/list.util.js";
 import categoriesRepo from "../repos/categories.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import imagesService from "./images.service.js";
@@ -82,8 +83,11 @@ const saveWithUniqueSlug = async (name, excludeId, save) => {
 
 // ---------- Operaciones ----------
 
-const getAllCategories = async () => {
-  return categoriesRepo.findAll();
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel)
+const getAllCategories = async (query = {}) => {
+  const limit = listLimit(query);
+  const result = await categoriesRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActiveCategories = async () => {

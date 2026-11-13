@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ORGANIZER_STATUSES, ORGANIZER_TYPES } from "../models/constants.js";
+import { listShape, queryEnum, querySort } from "./list.schema.js";
 
 // Esquemas de validación de las rutas de organizadores (Zod).
 // Los campos que no aparecen aquí (slug, isActive, deletedAt...) se descartan del body.
@@ -94,4 +95,15 @@ export const activeSchema = z.object({
 // :id de MongoDB
 export const idParamsSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, "El id del organizador no es válido"),
+});
+
+// Órdenes del listado (ver SORTS en repos/organizers.repo.js). Por defecto, por nombre
+export const ORGANIZER_SORTS = ["name", "name_desc", "recent"];
+
+// GET /api/organizers?search=&status=&type=&state=&sort=&page=&limit= (search busca en el nombre)
+export const listOrganizersQuerySchema = z.object({
+  ...listShape,
+  status: queryEnum(ORGANIZER_STATUSES, "El estado"),
+  type: queryEnum(ORGANIZER_TYPES, "El tipo"),
+  sort: querySort(ORGANIZER_SORTS),
 });

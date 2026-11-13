@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CATEGORY_GROUPS, CATEGORY_STATUSES } from "../models/constants.js";
+import { listShape, queryEnum, querySort } from "./list.schema.js";
 
 // Esquemas de validación de las rutas de categorías (Zod).
 // Los campos que no aparecen aquí (slug, isActive, deletedAt...) se descartan del body.
@@ -58,4 +59,15 @@ export const activeSchema = z.object({
 // :id de MongoDB
 export const idParamsSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, "El id de la categoría no es válido"),
+});
+
+// Órdenes del listado (ver SORTS en repos/categories.repo.js). Por defecto, por nombre
+export const CATEGORY_SORTS = ["name", "name_desc", "recent"];
+
+// GET /api/categories?search=&status=&group=&state=&sort=&page=&limit= (search busca en el nombre)
+export const listCategoriesQuerySchema = z.object({
+  ...listShape,
+  status: queryEnum(CATEGORY_STATUSES, "El estado"),
+  group: queryEnum(CATEGORY_GROUPS, "El grupo"),
+  sort: querySort(CATEGORY_SORTS),
 });

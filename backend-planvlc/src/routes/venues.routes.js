@@ -1,11 +1,11 @@
 import { Router } from "express";
 import venuesCtrl from "../ctrls/venues.ctrl.js";
 import validate from "../middleware/validate.js";
-import { activeSchema, createVenueSchema, idParamsSchema, updateVenueSchema } from "../schemas/venues.schema.js";
+import { listVenuesQuerySchema, activeSchema, createVenueSchema, idParamsSchema, updateVenueSchema } from "../schemas/venues.schema.js";
 
 const router = Router();
 
-// GET    /api/venues                  → obtener todos los lugares (sin filtrar)
+// GET    /api/venues                  → obtener todos los lugares (sin filtrar). Opcional: ?search=&status=&state=&sort=&page=&limit=
 // GET    /api/venues/active           → solo activos y no eliminados (desplegables del formulario de planes)
 // GET    /api/venues/deleted          → solo eliminados (soft delete)
 // GET    /api/venues/:id              → obtener un lugar activo por su id
@@ -15,7 +15,7 @@ const router = Router();
 // PATCH  /api/venues/:id/softdelete   → borrado lógico. Si hay planes en el lugar → 409
 
 // validate(...) comprueba params y body con Zod antes de llegar al controlador
-router.get("/", venuesCtrl.getVenues); // todos
+router.get("/", validate({ query: listVenuesQuerySchema }), venuesCtrl.getVenues); // todos
 router.get("/active", venuesCtrl.getActiveVenues); // solo activos
 router.get("/deleted", venuesCtrl.getDeletedVenues); // solo eliminados
 router.get("/:id", validate({ params: idParamsSchema }), venuesCtrl.getVenueById);

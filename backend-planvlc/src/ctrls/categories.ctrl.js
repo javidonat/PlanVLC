@@ -3,11 +3,11 @@ import categoriesService from "../services/categories.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/categories
+// GET /api/categories (query params ya validados: filtros, orden y página)
 const getCategories = async (req, res, next) => {
   try {
-    const categories = await categoriesService.getAllCategories();
-    res.status(200).json({ ok: true, total: categories.length, data: categories });
+    const { items, ...pagination } = await categoriesService.getAllCategories(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }

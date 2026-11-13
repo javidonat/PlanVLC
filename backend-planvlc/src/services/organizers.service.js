@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { listLimit, toList } from "./utils/list.util.js";
 import organizersRepo from "../repos/organizers.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import plansRepo from "../repos/plans.repo.js";
@@ -101,8 +102,11 @@ const saveWithUniqueSlug = async (name, excludeId, save) => {
 
 // ---------- Operaciones ----------
 
-const getAllOrganizers = async () => {
-  return organizersRepo.findAll();
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel)
+const getAllOrganizers = async (query = {}) => {
+  const limit = listLimit(query);
+  const result = await organizersRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActiveOrganizers = async () => {

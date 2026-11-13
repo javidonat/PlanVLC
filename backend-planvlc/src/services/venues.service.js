@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { listLimit, toList } from "./utils/list.util.js";
 import venuesRepo from "../repos/venues.repo.js";
 import plansRepo from "../repos/plans.repo.js";
 import imagesService from "./images.service.js";
@@ -98,8 +99,11 @@ const saveWithUniqueSlug = async (name, excludeId, save) => {
 
 // ---------- Operaciones ----------
 
-const getAllVenues = async () => {
-  return venuesRepo.findAll();
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel)
+const getAllVenues = async (query = {}) => {
+  const limit = listLimit(query);
+  const result = await venuesRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActiveVenues = async () => {

@@ -234,7 +234,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/venues` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/venues` | Todos (activos, desactivados y eliminados), por nombre. Query params opcionales (listado del panel): `search` (nombre, barrio o ciudad), `status`, `state` (`active`, `inactive`, `deleted`), `sort` (`name` por defecto, `name_desc`, `recent`, `capacity_desc`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages` |
 | GET | `/api/venues/active` | Solo activos y no eliminados (`_id`, `name`, `city`, `neighborhood`) |
 | GET | `/api/venues/deleted` | Solo eliminados |
 | GET | `/api/venues/:id` | Un lugar activo |
@@ -251,7 +251,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/organizers` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/organizers` | Todos (activos, desactivados y eliminados), por nombre. Query params opcionales (listado del panel): `search` (nombre), `status`, `type`, `state` (`active`, `inactive`, `deleted`), `sort` (`name` por defecto, `name_desc`, `recent`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages` |
 | GET | `/api/organizers/active` | Solo activos y no eliminados (`_id`, `name`, `slug`) |
 | GET | `/api/organizers/deleted` | Solo eliminados |
 | GET | `/api/organizers/:id` | Un organizador activo |
@@ -336,7 +336,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/categories` | Todas (activas, desactivadas y eliminadas), por nombre |
+| GET | `/api/categories` | Todas (activas, desactivadas y eliminadas), por nombre. Query params opcionales (listado del panel): `search` (nombre), `status`, `group`, `state` (`active`, `inactive`, `deleted`), `sort` (`name` por defecto, `name_desc`, `recent`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages` |
 | GET | `/api/categories/active` | Solo activas y no eliminadas (`_id`, `name`, `slug`) |
 | GET | `/api/categories/deleted` | Solo eliminadas |
 | GET | `/api/categories/:id` | Una categoría activa |

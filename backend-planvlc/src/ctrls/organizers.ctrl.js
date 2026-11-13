@@ -3,11 +3,11 @@ import organizersService from "../services/organizers.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/organizers
+// GET /api/organizers (query params ya validados: filtros, orden y página)
 const getOrganizers = async (req, res, next) => {
   try {
-    const organizers = await organizersService.getAllOrganizers();
-    res.status(200).json({ ok: true, total: organizers.length, data: organizers });
+    const { items, ...pagination } = await organizersService.getAllOrganizers(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }
