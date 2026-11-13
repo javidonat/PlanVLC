@@ -4,6 +4,7 @@ import organizersRepo from "../repos/organizers.repo.js";
 import profilesRepo from "../repos/profiles.repo.js";
 import refsRepo from "../repos/refs.repo.js";
 import AppError from "./utils/AppError.js";
+import { listLimit, toList } from "./utils/list.util.js";
 import { hashPassword } from "./utils/password.js";
 
 // El servicio contiene la lógica de negocio
@@ -46,8 +47,11 @@ const validateData = async (data, excludeId) => {
 
 // ---------- Operaciones ----------
 
-const getAllUsers = async () => {
-  return usersRepo.findAll();
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel)
+const getAllUsers = async (query = {}) => {
+  const limit = listLimit(query);
+  const result = await usersRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
 };
 
 const getActiveUsers = async () => {

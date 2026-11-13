@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import profilesRepo from "../repos/profiles.repo.js";
 import usersRepo from "../repos/users.repo.js";
 import AppError from "./utils/AppError.js";
+import { listLimit, toList } from "./utils/list.util.js";
 import { defaultAvatar } from "./utils/avatar.js";
 
 // Perfil del usuario (User 1 → 1 Profile). Quién puede verlo o editarlo lo decide
@@ -19,7 +20,14 @@ const validateUser = async (userId) => {
 };
 
 // GET /: todos los perfiles (solo admin)
-const getAllProfiles = () => profilesRepo.findAll();
+// GET /: todos o, con filtros, orden y página, los que se piden (listado del panel).
+// El buscador encuentra el perfil también por el nombre o el email de su usuario
+const getAllProfiles = async (params = {}) => {
+  const query = params.search ? { ...params, searchUserIds: await usersRepo.findIdsBySearch(params.search) } : params;
+  const limit = listLimit(query);
+  const result = await profilesRepo.findAll({ ...query, limit });
+  return toList(result, query.page, limit);
+};
 
 // GET /:userId. Si aún no tiene perfil, se devuelve vacío
 const getProfile = async (userId) => {

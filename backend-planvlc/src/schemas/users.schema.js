@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { USER_STATUSES } from "../models/constants.js";
+import { listShape, queryEnum, queryId, querySort } from "./list.schema.js";
 
 // Esquemas de validación de las rutas de usuarios (Zod).
 // Los campos que no aparecen aquí (passwordHash, lastLoginAt, isActive, deletedAt...) se descartan del body.
@@ -51,4 +52,15 @@ export const activeSchema = z.object({
 // :id de MongoDB
 export const idParamsSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, "El id del usuario no es válido"),
+});
+
+// Órdenes del listado (ver SORTS en repos/users.repo.js). Por defecto, por nombre
+export const USER_SORTS = ["name", "name_desc", "recent", "last_login"];
+
+// GET /api/users?search=&status=&role=&state=&sort=&page=&limit= (search busca en el nombre y el email)
+export const listUsersQuerySchema = z.object({
+  ...listShape,
+  status: queryEnum(USER_STATUSES, "El estado"),
+  role: queryId("El rol no es válido").optional(),
+  sort: querySort(USER_SORTS),
 });

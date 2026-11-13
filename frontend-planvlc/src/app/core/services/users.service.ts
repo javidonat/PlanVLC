@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
-import { ApiListResponse, ApiResponse } from '../models/api.model';
+import { ApiListResponse, ApiPagedResponse, ApiResponse } from '../models/api.model';
+import { ListFilters, ListSpec, listQueryParams } from '../models/list.model';
 import { User, UserPayload, UserRef } from '../models/user.model';
 
 // Solo habla con la API: no guarda estado (eso es cosa de UsersStore)
@@ -15,6 +16,11 @@ export class UsersService {
   }
 
   // Todos: activos, desactivados y eliminados (para el panel)
+  // Listado del panel: filtros, orden y página. signal cancela la petición si llega otra más nueva
+  async getList(filters: ListFilters, spec: ListSpec, signal?: AbortSignal): Promise<ApiPagedResponse<User>> {
+    return this.api.get<ApiPagedResponse<User>>(this.path, { params: listQueryParams(filters, spec), signal });
+  }
+
   async getAll(): Promise<ApiListResponse<User>> {
     return this.api.get<ApiListResponse<User>>(this.path);
   }

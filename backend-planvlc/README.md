@@ -296,7 +296,7 @@ Datos extendidos del usuario (`User 1 → 1 Profile`): `firstName`, `lastName`, 
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/profiles` | Solo admin. Todos los perfiles (también desactivados y eliminados), con `userId` poblado (`name`, `email`) |
+| GET | `/api/profiles` | Solo admin. Todos los perfiles (también desactivados y eliminados), con `userId` poblado (`name`, `email`), los más nuevos primero. Query params opcionales (listado del panel): `search` (nombre o email del usuario, nombre, apellidos o teléfono del perfil), `state` (`active`, `inactive`, `deleted`), `sort` (`recent` por defecto, `oldest`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages` |
 | GET | `/api/profiles/:userId` | El perfil del usuario (vacío si aún no tiene) |
 | PATCH | `/api/profiles/:userId` | Modifica los campos enviados (`null` = vaciar; en `avatar`, volver al robot). Si no tenía perfil, se crea |
 
@@ -306,7 +306,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/users` | Todos (activos, desactivados y eliminados), por nombre |
+| GET | `/api/users` | Todos (activos, desactivados y eliminados), por nombre. Query params opcionales (listado del panel): `search` (nombre o email), `status`, `role` (id), `state` (`active`, `inactive`, `deleted`), `sort` (`name` por defecto, `name_desc`, `recent`, `last_login`), `page` y `limit` (por defecto 10, máximo 100). Con `page` devuelve además `page`, `limit` y `totalPages` |
 | GET | `/api/users/active` | Solo activos y no eliminados (`_id`, `name`, `email`) |
 | GET | `/api/users/deleted` | Solo eliminados |
 | GET | `/api/users/:id` | Un usuario activo |

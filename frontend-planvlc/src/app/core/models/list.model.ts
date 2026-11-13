@@ -13,7 +13,7 @@ export interface ListFilters {
 
 // Qué filtros propios tiene cada listado (y sus valores válidos) y sus órdenes
 export interface ListSpec {
-  filters: Record<string, string[]>; // ej. { status: ['open', ...] }
+  filters: Record<string, string[] | 'id'>; // ej. { status: ['open', ...], role: 'id' } ('id' = un _id de MongoDB)
   sorts: string[];
   defaultSort: string;
 }

@@ -3,11 +3,11 @@ import usersService from "../services/users.service.js";
 // El controlador recibe la petición HTTP y devuelve la respuesta JSON
 // No contiene lógica de negocio, solo llama al servicio
 
-// GET /api/users
+// GET /api/users (query params ya validados: filtros, orden y página)
 const getUsers = async (req, res, next) => {
   try {
-    const users = await usersService.getAllUsers();
-    res.status(200).json({ ok: true, total: users.length, data: users });
+    const { items, ...pagination } = await usersService.getAllUsers(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error); // Pasa el error al middleware de errores
   }

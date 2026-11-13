@@ -16,7 +16,8 @@ export function listFiltersFromUrl(params: ParamMap, spec: ListSpec): ListFilter
   filters.page = Number.isInteger(page) && page > 1 ? page : 1;
   for (const [key, values] of Object.entries(spec.filters)) {
     const value = params.get(key) ?? '';
-    filters[key] = values.includes(value) ? value : null;
+    const valid = values === 'id' ? /^[a-f\d]{24}$/i.test(value) : values.includes(value);
+    filters[key] = valid ? value : null;
   }
   return filters;
 }

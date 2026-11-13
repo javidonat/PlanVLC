@@ -1,11 +1,30 @@
 import { Profile } from "../models/index.js";
 import { defaultAvatar } from "../services/utils/avatar.js";
+import { STATE_FILTERS, contains, findList } from "./utils/list.util.js";
 
 // El repositorio es la única capa que habla con MongoDB directamente
 
-// Todos los perfiles (también los desactivados o eliminados), con el nombre y el email de su usuario
-const findAll = () => {
-  return Profile.find().populate({ path: "userId", select: "name email" }).sort({ createdAt: -1 }).lean();
+// Órdenes del listado (schemas/profiles.schema.js → PROFILE_SORTS). _id desempata para que la paginación sea estable
+const SORTS = {
+  recent: { createdAt: -1, _id: -1 },
+  oldest: { createdAt: 1, _id: 1 },
+};
+
+// Query dinámica del listado: solo añade las condiciones de los filtros que lleguen.
+// search: el nombre, los apellidos o el teléfono contienen el texto, o el perfil es de uno de searchUserIds
+// (usuarios cuyo nombre o email lo contiene)
+const buildListFilter = ({ search, searchUserIds = [], state }) => {
+  const filter = { ...(state && STATE_FILTERS[state]) };
+  if (search) {
+    filter.$or = [{ firstName: contains(search) }, { lastName: contains(search) }, { phone: contains(search) }, { userId: { $in: searchUserIds } }];
+  }
+  return filter;
+};
+
+// Todos los perfiles (también los desactivados o eliminados) o los que cumplan los filtros, con el nombre
+// y el email de su usuario. Con page y limit, solo esa página
+const findAll = ({ sort = "recent", page, limit, ...filters } = {}) => {
+  return findList(Profile, buildListFilter(filters), { sort: SORTS[sort], populate: { path: "userId", select: "name email" }, page, limit });
 };
 
 const findByUserId = (userId) => {

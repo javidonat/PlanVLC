@@ -1,10 +1,10 @@
 import profilesService from "../services/profiles.service.js";
 
 // GET /api/profiles
-const getProfiles = async (_req, res, next) => {
+const getProfiles = async (req, res, next) => {
   try {
-    const profiles = await profilesService.getAllProfiles();
-    res.status(200).json({ ok: true, total: profiles.length, data: profiles });
+    const { items, ...pagination } = await profilesService.getAllProfiles(req.query);
+    res.status(200).json({ ok: true, total: items.length, ...pagination, data: items });
   } catch (error) {
     next(error);
   }
