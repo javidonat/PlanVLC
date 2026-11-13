@@ -217,7 +217,7 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/sessions` | Todas (activas, desactivadas y eliminadas), por `startDateTime`. Query params opcionales (listado del panel): `search` (SKU), `status`, `state` (`active`, `inactive`, `deleted`), `plan` (id), `sort` (`date` por defecto, `date_desc`, `recent`, `price_asc`, `price_desc`), `page` y `limit` (por defecto 10, máximo 100). Con `month` (`AAAA-MM`) devuelve todas las de ese mes sin paginar (vista calendario) |
+| GET | `/api/sessions` | Todas (activas, desactivadas y eliminadas), por `startDateTime`. Query params opcionales (listado del panel): `search` (título del plan o SKU), `status`, `state` (`active`, `inactive`, `deleted`), `plan` (id), `sort` (`date` por defecto, `date_desc`, `recent`, `price_asc`, `price_desc`), `page` y `limit` (por defecto 10, máximo 100). Con `month` (`AAAA-MM`) devuelve todas las de ese mes sin paginar (vista calendario) |
 | GET | `/api/sessions/active` | Solo activas |
 | GET | `/api/sessions/deleted` | Solo eliminadas |
 | GET | `/api/sessions/:id` | Una sesión activa |

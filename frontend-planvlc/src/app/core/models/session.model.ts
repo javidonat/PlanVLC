@@ -55,7 +55,7 @@ export const SESSION_SORTS: { value: SessionSort; label: string }[] = [
 export type SessionView = 'table' | 'calendar';
 
 export interface SessionListFilters {
-  search: string; // contiene el texto en el SKU
+  search: string; // contiene el texto en el título del plan o en el SKU
   status: Status | null;
   state: ListState | null;
   plan: string | null; // _id del plan

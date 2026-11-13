@@ -11,7 +11,7 @@
   <!-- Búsqueda y filtros -->
   <div class="mb-5 rounded-2xl border border-gris-200 bg-superficie p-4 shadow-xs">
     <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <app-search-bar class="w-full sm:w-80" [value]="store.filters().search" placeholder="Buscar por SKU…" (searchChange)="onSearch($event)" />
+      <app-search-bar class="w-full sm:w-80" [value]="store.filters().search" placeholder="Buscar por plan o SKU…" (searchChange)="onSearch($event)" />
       <button type="button" (click)="onClear()" [disabled]="!store.hasActiveFilters()" class="text-sm font-semibold text-marca-600 hover:text-marca-800 disabled:cursor-not-allowed disabled:text-gris-300">Quitar filtros</button>
     </div>
     <div class="grid gap-3 sm:grid-cols-3">

@@ -66,7 +66,7 @@ const listShape = {
 export const SESSION_SORTS = ["date", "date_desc", "recent", "price_asc", "price_desc"];
 
 // GET /api/sessions?search=&status=&state=&plan=&month=&sort=&page=&limit=
-// search busca en el SKU. Con month (AAAA-MM) devuelve todas las sesiones de ese mes (vista calendario)
+// search busca en el título del plan y en el SKU. Con month (AAAA-MM) devuelve todas las sesiones de ese mes (vista calendario)
 export const listSessionsQuerySchema = z.object({
   ...listShape,
   plan: queryId("El plan no es válido").optional(),

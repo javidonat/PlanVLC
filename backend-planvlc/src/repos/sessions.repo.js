@@ -25,12 +25,13 @@ const SORTS = {
 };
 
 // Query dinámica del listado: solo añade las condiciones de los filtros que lleguen.
+// search: el SKU contiene el texto o la sesión es de uno de searchPlanIds (planes cuyo título lo contiene).
 // from/to: sesiones que empiezan en ese rango (vista calendario)
-const buildListFilter = ({ search, status, state, plan, from, to }) => {
+const buildListFilter = ({ search, searchPlanIds = [], status, state, plan, from, to }) => {
   const filter = { ...(state && STATE_FILTERS[state]) };
   if (status) filter.status = status;
   if (plan) filter.planId = plan;
-  if (search) filter.sku = { $regex: escapeRegex(search), $options: "i" };
+  if (search) filter.$or = [{ sku: { $regex: escapeRegex(search), $options: "i" } }, { planId: { $in: searchPlanIds } }];
   if (from && to) filter.startDateTime = { $gte: from, $lt: to };
   return filter;
 };

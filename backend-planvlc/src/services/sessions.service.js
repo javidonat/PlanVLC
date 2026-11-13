@@ -105,7 +105,9 @@ const monthRange = (month) => {
 
 // GET /: todas o, con filtros, orden y página, las que se piden (listado del panel).
 // Con month, todas las de ese mes sin paginar (vista calendario)
-const getAllSessions = async ({ month, ...query } = {}) => {
+const getAllSessions = async ({ month, ...params } = {}) => {
+  // El buscador encuentra la sesión por el título de su plan o por su SKU
+  const query = params.search ? { ...params, searchPlanIds: await plansRepo.findIdsByTitle(params.search) } : params;
   if (month) {
     const { page, limit, ...filters } = query;
     return toList(await sessionsRepo.findAll({ ...filters, ...monthRange(month) }));

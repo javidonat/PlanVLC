@@ -71,6 +71,11 @@ const findBySlug = (slug) => {
   return Plan.findOne({ slug, isActive: true }).populate(POPULATE).lean();
 };
 
+// _id de los planes cuyo título contiene el texto (buscador del listado de sesiones)
+const findIdsByTitle = (search) => {
+  return Plan.distinct("_id", { title: { $regex: escapeRegex(search), $options: "i" } });
+};
+
 // Crea un plan (Mongoose valida los campos según el modelo y aplica los valores por defecto)
 const create = async (data) => {
   const plan = await Plan.create(data);
@@ -161,5 +166,6 @@ export default {
   findSlugById,
   findAnyById,
   updateDerived,
+  findIdsByTitle,
   findAll, findActive, findDeleted, findById, findBySlug, create, update, softDelete, setActive, existsById, slugExists,
 };

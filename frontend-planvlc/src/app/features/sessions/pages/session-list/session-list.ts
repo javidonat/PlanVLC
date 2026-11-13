@@ -27,7 +27,7 @@ import { sessionFiltersFromUrl, sessionFiltersToUrl, sessionMonthFromUrl, sessio
 
 type FilterKey = 'plan' | 'status' | 'state';
 
-// Listado de sesiones del panel con búsqueda (SKU), filtros, orden, vista (tabla o calendario) y paginación.
+// Listado de sesiones del panel con búsqueda (título del plan o SKU), filtros, orden, vista (tabla o calendario) y paginación.
 // Como en el shop, la URL es la única fuente de verdad: los componentes avisan, la página cambia la URL
 // y cada cambio de la URL guarda los filtros en el store y pide los datos de esa vista.
 @Component({
