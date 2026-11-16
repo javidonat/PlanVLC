@@ -26,7 +26,10 @@ const complete = async (messages) => {
         model: process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
         messages,
         temperature: 0.3, // respuestas más fieles a los datos y menos "creativas"
-        max_tokens: 400, // respuestas cortas (y más baratas)
+        // Muchos modelos "piensan" antes de responder y ese razonamiento también gasta tokens:
+        // que piense poco y no lo devuelva (solo queremos la respuesta). Los que no razonan lo ignoran
+        reasoning: { effort: "low", exclude: true },
+        max_tokens: 1500, // razonamiento + respuesta corta
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
@@ -44,7 +47,11 @@ const complete = async (messages) => {
   }
 
   const content = body?.choices?.[0]?.message?.content?.trim();
-  if (!content) throw new AppError("El asistente no ha podido responder. Inténtalo de nuevo", 502);
+  if (!content) {
+    // finish_reason "length": se ha quedado sin tokens (normalmente, razonando)
+    console.error("OpenRouter: respuesta vacía", { finish_reason: body?.choices?.[0]?.finish_reason, error: body?.error });
+    throw new AppError("El asistente no ha podido responder. Inténtalo de nuevo", 502);
+  }
   return content;
 };
 
