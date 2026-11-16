@@ -41,8 +41,9 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => {
   return next(request).pipe(catchError(error => {
     const failure = apiError(error);
     // Los formularios muestran los errores 400 junto a cada campo.
-    // El 401 lo gestiona authInterceptor (vuelve al login) y los errores del login los muestra su formulario
-    const handledElsewhere = failure.status === 400 || failure.status === 401 || request.url.endsWith('/auth/login');
+    // El 401 lo gestiona authInterceptor (vuelve al login) y los errores del login los muestra su formulario.
+    // Los del chatbot (/ai/) se muestran dentro del propio chat
+    const handledElsewhere = failure.status === 400 || failure.status === 401 || request.url.endsWith('/auth/login') || request.url.includes('/ai/');
     if (!handledElsewhere) alerts.error(failure.message);
     return throwError(() => failure);
   }));

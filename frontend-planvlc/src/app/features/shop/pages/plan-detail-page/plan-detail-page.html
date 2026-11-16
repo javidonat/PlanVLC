@@ -59,6 +59,10 @@
             }
           </div>
         }
+
+        <div class="mt-10">
+          <app-plan-chat [messages]="chatMessages()" [loading]="chatLoading()" [error]="chatError()" [suggestions]="chatSuggestions" (ask)="onAsk($event)" />
+        </div>
       </div>
 
       <aside class="lg:sticky lg:top-24 lg:self-start">

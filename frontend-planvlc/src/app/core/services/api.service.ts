@@ -12,6 +12,12 @@ export interface GetOptions {
   signal?: AbortSignal;
 }
 
+// Opciones de un POST: AbortSignal y un tiempo máximo distinto del normal (ej. la IA tarda más)
+export interface PostOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private readonly http = inject(HttpClient);
@@ -22,8 +28,9 @@ export class ApiService {
     return options.signal ? this.sendAbortable(request, options.signal) : this.send(request);
   }
 
-  post<T>(path: string, body: unknown): Promise<T> {
-    return this.send(this.http.post<T>(this.url(path), body));
+  post<T>(path: string, body: unknown, options: PostOptions = {}): Promise<T> {
+    const request = this.http.post<T>(this.url(path), body);
+    return options.signal ? this.sendAbortable(request, options.signal, options.timeoutMs) : this.send(request, options.timeoutMs);
   }
 
   patch<T>(path: string, body: unknown): Promise<T> {
@@ -46,11 +53,11 @@ export class ApiService {
   // Como send(), pero si se aborta el signal se cancela la petición HTTP (unsubscribe)
   // y la promesa falla con un AbortError, que la página ignora. Evita las race conditions:
   // la respuesta de una petición antigua nunca pisa a la de la nueva.
-  private sendAbortable<T>(request: Observable<T>, signal: AbortSignal): Promise<T> {
+  private sendAbortable<T>(request: Observable<T>, signal: AbortSignal, timeoutMs = environment.apiTimeoutMs): Promise<T> {
     const aborted = () => new DOMException('Petición cancelada', 'AbortError');
     if (signal.aborted) return Promise.reject(aborted());
     return new Promise<T>((resolve, reject) => {
-      const subscription = request.pipe(timeout(environment.apiTimeoutMs)).subscribe({ next: resolve, error: reject });
+      const subscription = request.pipe(timeout(timeoutMs)).subscribe({ next: resolve, error: reject });
       signal.addEventListener('abort', () => {
         subscription.unsubscribe();
         reject(aborted());
@@ -58,9 +65,9 @@ export class ApiService {
     });
   }
 
-  private async send<T>(request: Observable<T>): Promise<T> {
+  private async send<T>(request: Observable<T>, timeoutMs = environment.apiTimeoutMs): Promise<T> {
     try {
-      return await firstValueFrom(request.pipe(timeout(environment.apiTimeoutMs)));
+      return await firstValueFrom(request.pipe(timeout(timeoutMs)));
     } catch (error) {
       throw error;
     }
