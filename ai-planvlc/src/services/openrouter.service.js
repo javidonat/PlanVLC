@@ -4,7 +4,7 @@ import AppError from "./utils/AppError.js";
 // La clave (OPENROUTER_API_KEY) solo vive en el .env de este servicio: nunca llega al navegador
 
 const OPENROUTER_URL = process.env.OPENROUTER_URL || "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct:free";
+const DEFAULT_MODEL = "nvidia/nemotron-3.5-lightning:free";
 const TIMEOUT_MS = 25000;
 
 // Envía la conversación al modelo y devuelve el texto de la respuesta.
