@@ -14,6 +14,8 @@ export class AuthService {
 
   // Refresh en curso: si fallan varias peticiones a la vez con 401, todas esperan al mismo refresh
   private refreshing: Promise<boolean> | null = null;
+  // Lo mismo con el logout cuando el refresh falla: un solo /logout aunque fallen varias peticiones
+  private ending: Promise<void> | null = null;
 
   // Crea la cuenta de cliente. No inicia sesión: después se va al login
   async register(payload: RegisterPayload): Promise<void> {
@@ -59,13 +61,14 @@ export class AuthService {
     return this.refreshing;
   }
 
+  // El refresh ha fallado (el refresh token ya no vale): /logout una sola vez
+  endExpiredSession(): Promise<void> {
+    this.ending ??= this.logout().finally(() => (this.ending = null));
+    return this.ending;
+  }
+
   // Al cambiar el avatar en el perfil: actualiza el navbar
   updateAvatar(avatar: string | null): void {
     this.store.updateUser({ avatar });
-  }
-
-  // Borra el usuario de la sesión (el refresh ha fallado: las cookies ya no valen)
-  clearSession(): void {
-    this.store.clear();
   }
 }

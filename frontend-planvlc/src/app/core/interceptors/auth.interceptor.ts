@@ -13,7 +13,7 @@ const NO_REFRESH = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/log
 // 1) withCredentials: el navegador manda las cookies de la sesión (access_token y refresh_token) a la API.
 // 2) Hay dos 401:
 //    - 401 de una petición normal: el access token ha caducado → POST /auth/refresh y se repite la petición
-//    - 401 del refresh: el refresh token tampoco vale → se cierra la sesión y, si había una, al login
+//    - 401 del refresh: el refresh token tampoco vale → /logout (cierra la sesión) y, si había una, al login
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const auth = inject(AuthService);
   const store = inject(AuthStore);
@@ -29,10 +29,13 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     return from(auth.refresh()).pipe(switchMap(refreshed => {
       if (refreshed) return next(apiRequest); // cookies nuevas: se repite la petición
       const hadSession = store.isAuthenticated();
-      auth.clearSession();
-      // Al arrancar sin sesión (GET /me) no se redirige: el visitante sigue en la tienda
-      if (hadSession) void router.navigate(['/login'], { queryParams: { returnUrl: router.url } });
-      return throwError(() => error);
+      // Al arrancar sin sesión (GET /me) no hay nada que cerrar: el visitante sigue en la tienda
+      if (!hadSession) return throwError(() => error);
+      const returnUrl = router.url;
+      return from(auth.endExpiredSession()).pipe(switchMap(() => {
+        void router.navigate(['/login'], { queryParams: { returnUrl } });
+        return throwError(() => error);
+      }));
     }));
   }));
 };
