@@ -19,7 +19,8 @@ app.locals.aiServiceUrl = AI_SERVICE_URL;
 // Ojo: aquí NO va express.json(): leería el cuerpo y el proxy lo reenviaría vacío
 app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:4200" }));
+// credentials: deja que el navegador mande y reciba las cookies de la sesión (access_token y refresh_token)
+app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:4200", credentials: true }));
 
 // --- Health check ---
 app.get("/health", (_req, res) => {

@@ -1,0 +1,27 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="space-y-5">
+  <div>
+    <label for="name" class="field-label">Nombre</label>
+    <input id="name" type="text" class="field-input" formControlName="name" autocomplete="name" placeholder="Tu nombre" />
+    @if (fieldError('name'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="email" class="field-label">Email</label>
+    <input id="email" type="email" class="field-input" formControlName="email" autocomplete="email" placeholder="tu@email.com" />
+    @if (fieldError('email'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <div>
+    <label for="password" class="field-label">Contraseña</label>
+    <input id="password" type="password" class="field-input" formControlName="password" autocomplete="new-password" aria-describedby="password-help" />
+    @if (fieldError('password'); as message) {<p class="field-error">{{ message }}</p>} @else {<p id="password-help" class="mt-1 text-xs text-gris-500">Mínimo 8 caracteres, con letras y números.</p>}
+  </div>
+
+  <div>
+    <label for="confirmPassword" class="field-label">Repite la contraseña</label>
+    <input id="confirmPassword" type="password" class="field-input" formControlName="confirmPassword" autocomplete="new-password" />
+    @if (fieldError('confirmPassword'); as message) {<p class="field-error">{{ message }}</p>}
+  </div>
+
+  <button type="submit" [disabled]="submitting()" class="w-full rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white hover:bg-marca-700 disabled:opacity-60">{{ submitting() ? 'Creando cuenta…' : 'Crear cuenta' }}</button>
+</form>

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import jwt from "jsonwebtoken";
 import AppError from "./AppError.js";
 
-// Creación y verificación de los JWT.
+// Creación y verificación de los JWT (el access token, que viaja en la cookie access_token).
 // SECRET (firma) y JWT_EXPIRES_IN (caducidad) vienen del .env: nunca se escriben en el código
 
 const ALGORITHM = "HS256";
@@ -45,4 +45,11 @@ export const verifyToken = (token) => {
     throw new AppError("Autenticación requerida", 401);
   }
   return payload;
+};
+
+// Lee el payload SIN comprobar la firma (null si no es un JWT). Solo para datos que no dan acceso:
+// la fecha de caducidad al crear la cookie y el logout (que revoca el token aunque ya no sea válido)
+export const decodeToken = (token) => {
+  const payload = jwt.decode(token);
+  return payload && typeof payload === "object" ? payload : null;
 };

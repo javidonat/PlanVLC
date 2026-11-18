@@ -56,6 +56,11 @@ const existsById = async (id) => {
   return Boolean(await Role.exists({ _id: id }));
 };
 
+// Rol activo por su nombre (ej. el de los clientes al registrarse)
+const findActiveByName = (name) => {
+  return Role.findOne({ name: name.toLowerCase(), isActive: true, deletedAt: null }).lean();
+};
+
 // ¿Existe ya otro rol con ese nombre? (también los desactivados y eliminados: el índice único los incluye)
 const nameExists = async (name, excludeId) => {
   const filter = { name: name.toLowerCase() };
@@ -64,5 +69,5 @@ const nameExists = async (name, excludeId) => {
 };
 
 export default {
-  findAll, findActive, findDeleted, findById, create, update, softDelete, setActive, existsById, nameExists,
+  findAll, findActive, findDeleted, findById, findActiveByName, create, update, softDelete, setActive, existsById, nameExists,
 };

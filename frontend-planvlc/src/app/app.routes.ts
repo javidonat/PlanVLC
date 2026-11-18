@@ -3,12 +3,15 @@ import { MainLayout } from './layouts/main-layout/main-layout';
 import { ShopLayout } from './layouts/shop-layout/shop-layout';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { guestGuard } from './core/guards/guest.guard';
 
 // La parte pública (home, shop y detalle) no pide sesión.
 // canActivate: authGuard protege el perfil y el panel (hay que estar logueado)
 // y adminGuard las secciones de administración (solo rol admin)
 export const routes: Routes = [
-  { path: 'login', title: 'Iniciar sesión · PlanVLC', loadComponent: () => import('./features/auth/pages/login-page/login-page').then(m => m.LoginPage) },
+  // Login (clientes y admin) y registro (clientes): solo sin sesión iniciada (guestGuard)
+  { path: 'login', title: 'Iniciar sesión · PlanVLC', canActivate: [guestGuard], loadComponent: () => import('./features/auth/pages/login-page/login-page').then(m => m.LoginPage) },
+  { path: 'registro', title: 'Crear cuenta · PlanVLC', canActivate: [guestGuard], loadComponent: () => import('./features/auth/pages/register-page/register-page').then(m => m.RegisterPage) },
   // Tienda pública: / (home), /planes (shop) y /planes/:slug (detalle)
   { path: '', component: ShopLayout, loadChildren: () => import('./features/shop/shop.routes').then(m => m.SHOP_ROUTES) },
   {

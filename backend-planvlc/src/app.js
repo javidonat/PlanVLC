@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import cookieParser from "cookie-parser";
 import errorHandler from "./middleware/errorHandler.js";
 import AppError from "./services/utils/AppError.js";
 import plansRoutes from "./routes/plans.routes.js";
@@ -23,6 +24,7 @@ app.use(helmet());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(cors());              // Permite peticiones desde otros orígenes
 app.use(express.json());      // Parsea el body de las peticiones a JSON
+app.use(cookieParser());      // Lee las cookies (req.cookies): la sesión va en access_token y refresh_token
 
 // --- Health check (para comprobar que el servidor está vivo) ---
 app.get("/health", (_req, res) => {

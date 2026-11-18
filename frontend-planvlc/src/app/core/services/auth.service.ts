@@ -2,35 +2,61 @@ import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { AuthStore } from '../stores/auth.store';
 import { ApiResponse } from '../models/api.model';
-import { AuthUser, LoginPayload, LoginResponse } from '../models/auth.model';
+import { AuthUser, LoginPayload, RegisterPayload } from '../models/auth.model';
 
-// Clave de localStorage del token. La lee también el interceptor de autenticación.
-// Solo se guarda el token: los datos del usuario se piden al backend con GET /api/auth/me
-export const TOKEN_KEY = 'planvlc.token';
-
-// Login, logout y me: habla con la API, guarda el JWT en localStorage y actualiza AuthStore
+// Registro, login, logout, refresh y loadUser: habla con la API y actualiza AuthStore.
+// Los tokens van en cookies httpOnly: los pone y los borra el backend, y el navegador los manda solo
+// en cada petición (withCredentials, lo añade authInterceptor). Aquí nunca se ven ni se guardan
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly api = inject(ApiService);
   private readonly store = inject(AuthStore);
 
-  async login(payload: LoginPayload): Promise<AuthUser> {
-    const res = await this.api.post<ApiResponse<LoginResponse>>('auth/login', payload);
-    const { token, user } = res.data;
-    localStorage.setItem(TOKEN_KEY, token);
-    this.store.setSession(token, user);
-    return user;
+  // Refresh en curso: si fallan varias peticiones a la vez con 401, todas esperan al mismo refresh
+  private refreshing: Promise<boolean> | null = null;
+
+  // Crea la cuenta de cliente. No inicia sesión: después se va al login
+  async register(payload: RegisterPayload): Promise<void> {
+    await this.api.post<ApiResponse<AuthUser>>('auth/register', payload);
   }
 
-  // El backend invalida el token; aunque falle (sin conexión, token caducado...) la sesión se cierra igual
+  // El backend deja las cookies y devuelve el usuario
+  async login(payload: LoginPayload): Promise<AuthUser> {
+    const res = await this.api.post<ApiResponse<AuthUser>>('auth/login', payload);
+    this.store.setUser(res.data);
+    return res.data;
+  }
+
+  // El backend revoca los tokens y borra las cookies; aunque falle (sin conexión...) la sesión se cierra igual
   async logout(): Promise<void> {
     try {
-      if (this.store.token()) await this.api.post('auth/logout', {});
+      await this.api.post('auth/logout', {});
     } catch {
       // nada: se limpia la sesión de todas formas
     } finally {
-      this.clearSession();
+      this.store.clear();
     }
+  }
+
+  // Al arrancar la app (F5): pide al backend quién es el usuario de las cookies (GET /api/auth/me).
+  // Si el access token ha caducado, authInterceptor hace el refresh y repite la petición.
+  // Sin sesión (o si el refresh también falla) el usuario queda a null
+  async loadUser(): Promise<void> {
+    try {
+      const res = await this.api.get<ApiResponse<AuthUser>>('auth/me');
+      this.store.setUser(res.data);
+    } catch {
+      this.store.clear();
+    }
+  }
+
+  // Pide cookies nuevas con el refresh token (POST /api/auth/refresh). true si ha ido bien
+  refresh(): Promise<boolean> {
+    this.refreshing ??= this.api.post('auth/refresh', {})
+      .then(() => true)
+      .catch(() => false)
+      .finally(() => (this.refreshing = null));
+    return this.refreshing;
   }
 
   // Al cambiar el avatar en el perfil: actualiza el navbar
@@ -38,37 +64,8 @@ export class AuthService {
     this.store.updateUser({ avatar });
   }
 
-  // Borra el token y el usuario (logout o 401 del backend)
+  // Borra el usuario de la sesión (el refresh ha fallado: las cookies ya no valen)
   clearSession(): void {
-    localStorage.removeItem(TOKEN_KEY);
     this.store.clear();
-  }
-
-  // Al arrancar la app: si hay un token sin caducar, pide al backend quién es el usuario (GET /api/auth/me).
-  // Así el nombre y el rol vienen siempre del servidor y no de localStorage, donde se podrían modificar.
-  // Si el backend lo rechaza (logout, usuario desactivado...), se cierra la sesión
-  async restoreSession(): Promise<void> {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token || isExpired(token)) {
-      this.clearSession();
-      return;
-    }
-    try {
-      const res = await this.api.get<ApiResponse<AuthUser>>('auth/me');
-      this.store.setSession(token, res.data);
-    } catch {
-      this.clearSession();
-    }
-  }
-}
-
-// El payload del JWT es JSON en base64url; exp va en segundos
-function isExpired(token: string): boolean {
-  try {
-    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const { exp } = JSON.parse(atob(payload)) as { exp?: number };
-    return !exp || Date.now() >= exp * 1000;
-  } catch {
-    return true;
   }
 }

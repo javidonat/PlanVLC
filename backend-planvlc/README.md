@@ -27,7 +27,8 @@ El servidor arranca en `http://localhost:3000` (o el `PORT` que pongas en `.env`
 | `PORT` | Puerto del servidor | `3000` |
 | `MONGODB_URI` | Cadena de conexión a MongoDB. `planvlc` es el nombre de la base de datos | `mongodb://localhost:27017/planvlc` |
 | `SECRET` | **Obligatoria.** Clave para firmar y verificar los JWT. Larga y aleatoria; nunca se sube a git | *(vacía)* |
-| `JWT_EXPIRES_IN` | Caducidad de los tokens (`1h`, `7d`...) | `1h` |
+| `JWT_EXPIRES_IN` | Caducidad del access token (`15m`, `1h`...) | `1h` |
+| `REFRESH_TOKEN_DAYS` | Días que dura el refresh token | `7` |
 | `NODE_ENV` | (Opcional) Con `production`, Morgan usa el formato `combined` en vez de `dev` | *(no definida)* |
 
 ### Scripts
@@ -36,7 +37,7 @@ El servidor arranca en `http://localhost:3000` (o el `PORT` que pongas en `.env`
 |---|---|
 | `npm start` | Arranca el servidor con Node |
 | `npm run dev` | Arranca con nodemon |
-| `npm run seed` | **Borra** el contenido de las 9 colecciones y de la lista negra de tokens (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
+| `npm run seed` | **Borra** el contenido de las 9 colecciones y de las tablas de tokens (borrado real) y la antigua colección `eventos`, e inserta los datos de ejemplo |
 
 ## Arquitectura
 
@@ -86,7 +87,8 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `roles` | `Role` | admin, editor, organizer, user |
 | `users` | `User` | Usuarios del sistema |
 | `profiles` | `Profile` | Datos extendidos del usuario (1 a 1) |
-| `blacklistedtokens` | `BlacklistedToken` | Tokens cerrados con logout (lista negra) |
+| `refreshtokens` | `RefreshToken` | Sesiones abiertas (hash del refresh token) |
+| `revokedtokens` | `RevokedToken` | Access tokens cerrados con logout (hash) |
 
 ### Relaciones
 
@@ -262,22 +264,32 @@ Funcionan igual que los de planes (mismo formato de respuesta, soft delete y reg
 
 El logo se guarda en `images` (`entityType: "organizer"`, `type: "logo"`) y las respuestas lo traen en `logo`. `userIds` llega poblado (`{ _id, name, email }`); al enviarlo, el servidor comprueba que los usuarios existen.
 
-## Autenticación (JWT)
+## Autenticación (cookies: access token + refresh token)
 
-Solo hay **login**, **logout** y **me**: no existe registro, los usuarios los crea un admin desde `/api/users`.
+Los clientes se registran desde la web (`/register`, siempre con el rol `user`); el resto de roles los asigna un admin desde `/api/users`. El login vale para clientes y admin.
+
+La sesión va en **dos cookies `httpOnly`** que pone el backend (el JavaScript del navegador no puede leerlas):
+
+| Cookie | Qué es | Dura | Se envía a |
+|---|---|---|---|
+| `access_token` | JWT firmado con `SECRET` | `JWT_EXPIRES_IN` (1h) | `/api` (todas las rutas) |
+| `refresh_token` | Texto aleatorio de 128 caracteres | `REFRESH_TOKEN_DAYS` (7 días) | `/api/auth` (solo refresh y logout) |
+
+Las dos son `sameSite: lax` (protege de CSRF) y `secure` en producción (solo HTTPS). En la base de datos **nunca se guarda un token**, solo su hash SHA-256.
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| POST | `/api/auth/login` | Body: `email`, `password`. Devuelve `{ token, tokenType: "Bearer", expiresIn, user: { _id, name, email, role, avatar } }` (`avatar` es el del perfil) |
-| POST | `/api/auth/logout` | Con token. Mete ese token en la lista negra (`blacklistedtokens`) y deja de valer |
-| GET | `/api/auth/me` | Con token. Los datos del usuario autenticado: `{ _id, name, email, role, avatar }` (los mismos que el `user` del login) |
+| POST | `/api/auth/register` | Body: `name`, `email`, `password` (8-72 caracteres, con letras y números). Crea un cliente (rol `user`) con su perfil. **No inicia sesión**. Email repetido → `409` |
+| POST | `/api/auth/login` | Body: `email`, `password`. Pone las dos cookies y devuelve el usuario: `{ _id, name, email, role, avatar }` |
+| POST | `/api/auth/refresh` | Con la cookie `refresh_token`. Cookies nuevas (rotación: el refresh token anterior deja de valer). Si falta, no existe, está revocado o ha caducado → `401` y se borran las cookies |
+| POST | `/api/auth/logout` | Revoca los dos tokens y borra las cookies |
+| GET | `/api/auth/me` | Con la cookie `access_token`. El usuario de la sesión: `{ _id, name, email, role, avatar }` |
 
-Las rutas protegidas necesitan la cabecera `Authorization: Bearer <token>`.
-
-- **Token** (`services/utils/jwt.js`): `createToken` firma con `SECRET` (HS256) el id del usuario (`sub`), `email`, `role` y un id único (`jti`), y caduca según `JWT_EXPIRES_IN`. `verifyToken` comprueba la firma, la caducidad y que lleve `email` y `role`.
+- **Tablas**: `refreshtokens` (`tokenHash`, `userId`, `expiresAt`, `revokedAt`): las sesiones abiertas. `revokedtokens` (`tokenHash`, `userId`, `expiresAt`): access tokens cerrados con logout (el JWT sigue siendo válido hasta que caduca, así que se guarda aquí y `authenticate` ya no lo acepta). Las dos tienen un índice TTL en `expiresAt`: MongoDB borra los documentos cuando el token ya habría caducado.
+- **Rotación**: cada refresh token vale una sola vez. Si llega uno ya usado, alguien lo ha copiado: se cierran todas las sesiones de ese usuario.
+- **Token** (`services/utils/jwt.js`): `createToken` firma con `SECRET` (HS256) el id del usuario (`sub`), `email`, `role` y un id único (`jti`), y caduca según `JWT_EXPIRES_IN`. `verifyToken` comprueba la firma, la caducidad y que lleve `email` y `role`. Los refresh tokens y los hashes están en `services/utils/tokens.js`.
 - **Contraseñas** (`services/utils/password.js`): hash con Argon2id; nunca se guardan en claro.
-- **`authenticate`** (`middleware/authentication.js`): además del token, comprueba en la base de datos que el usuario sigue activo, con `status: "active"`, con su rol activo, y que su email y su rol coinciden con los del token. También rechaza los tokens de la lista negra. Si no → `401 Autenticación requerida`.
-- **Logout (lista negra)**: el JWT no se puede borrar, así que el logout lo guarda en la colección `blacklistedtokens` (`token`, `userId`, `expiresAt`) y `authenticate` ya no lo acepta (`401`). Solo deja de valer ese token: si el usuario tiene sesión en otro dispositivo, esa sigue. `expiresAt` es la caducidad del token y tiene un índice TTL, así que MongoDB borra el documento solo cuando el token ya habría caducado.
+- **`authenticate`** (`middleware/authentication.js`): lee el access token de `req.cookies.access_token` (cookie-parser) y, además de la firma y la caducidad, comprueba en la base de datos que el usuario sigue activo, con `status: "active"`, con su rol activo, y que su email y su rol coinciden con los del token. También rechaza los tokens revocados (logout). Si no → `401 Autenticación requerida` (el frontend llama entonces a `/api/auth/refresh`).
 - **`isAdmin` / `authorizeRoles(...)`** (`middleware/authorization.js`): RBAC por rol. Si el rol no está permitido → `403 No tienes permiso para acceder a este recurso`.
 - **`isOwnerOrAdmin(param)`**: ABAC. El usuario solo accede a lo suyo (`req.user.id === :userId`); un admin, a todo.
 - Login con email o contraseña incorrectos → `401` (mismo mensaje en los dos casos). Usuario desactivado, suspendido, bloqueado o con el rol desactivado → `403`.

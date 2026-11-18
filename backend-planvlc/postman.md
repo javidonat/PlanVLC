@@ -1,6 +1,6 @@
 # Probar la API con Postman
 
-Guía para probar el backend de PlanVLC (colección `plans`). Las rutas de `plans` no piden token; las de `users`, `roles` y `profiles` sí (`POST /api/auth/login` con `admin@planvlc.com` / `Admin1234` y después **Authorization → Bearer Token** con el `token` recibido). Las peticiones `POST` y `PATCH` llevan body en JSON: en Postman elige **Body → raw → JSON** (Postman añade solo la cabecera `Content-Type: application/json`).
+Guía para probar el backend de PlanVLC (colección `plans`). Las rutas de `plans` no piden token; las de `users`, `roles` y `profiles` sí (`POST /api/auth/login` con `admin@planvlc.com` / `Admin1234`: el login deja las cookies `access_token` y `refresh_token` y Postman las manda solo en las siguientes peticiones a `localhost`; cuando caduque el access token, `POST /api/auth/refresh`). Las peticiones `POST` y `PATCH` llevan body en JSON: en Postman elige **Body → raw → JSON** (Postman añade solo la cabecera `Content-Type: application/json`).
 
 ## Preparación
 

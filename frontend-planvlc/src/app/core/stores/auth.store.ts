@@ -1,18 +1,18 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { ADMIN_ROLE, AuthUser } from '../models/auth.model';
 
-// Estado de la sesión. Solo guarda datos: AuthService hace el login/logout
-// y lo actualiza. Las señales privadas solo se modifican desde aquí.
+// Estado de la sesión: el usuario y su rol. Solo guarda datos: AuthService hace el login/logout
+// y lo actualiza. La señal privada solo se modifica desde aquí. Los tokens no están aquí:
+// van en cookies httpOnly que el navegador manda solo
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
-  private readonly _token = signal<string | null>(null);
   private readonly _user = signal<AuthUser | null>(null);
 
-  readonly token = this._token.asReadonly();
   readonly user = this._user.asReadonly();
+  readonly role = computed(() => this._user()?.role ?? null);
 
-  readonly isAuthenticated = computed(() => !!this._token() && !!this._user());
-  readonly isAdmin = computed(() => this._user()?.role === ADMIN_ROLE);
+  readonly isAuthenticated = computed(() => !!this._user());
+  readonly isAdmin = computed(() => this.role() === ADMIN_ROLE);
 
   // Iniciales para el avatar (ej. "Admin PlanVLC" → "AP")
   readonly initials = computed(() =>
@@ -25,21 +25,19 @@ export class AuthStore {
   );
 
   hasRole(role: string): boolean {
-    return this._user()?.role === role;
+    return this.role() === role;
   }
 
-  setSession(token: string, user: AuthUser): void {
-    this._token.set(token);
+  setUser(user: AuthUser): void {
     this._user.set(user);
   }
 
-  // Cambia datos del usuario sin tocar el token (ej. el avatar al editar el perfil)
+  // Cambia datos del usuario (ej. el avatar al editar el perfil)
   updateUser(changes: Partial<AuthUser>): void {
     this._user.update(user => (user ? { ...user, ...changes } : user));
   }
 
   clear(): void {
-    this._token.set(null);
     this._user.set(null);
   }
 }

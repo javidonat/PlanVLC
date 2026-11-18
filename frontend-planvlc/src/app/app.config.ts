@@ -23,9 +23,9 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     // withComponentInputBinding: los parámetros de la URL (:id) llegan como input() al componente
     provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ scrollPositionRestoration: 'top' })),
-    // Al arrancar, si hay token en localStorage, pide el usuario al backend (GET /api/auth/me).
+    // Al arrancar (y con F5), pide el usuario de la sesión al backend (GET /api/auth/me) con las cookies.
     // La app espera a que termine antes de pintar las rutas (los guards ya saben si hay sesión)
-    provideAppInitializer(() => inject(AuthService).restoreSession()),
+    provideAppInitializer(() => inject(AuthService).loadUser()),
     provideHttpClient(withInterceptors([requestInterceptor, authInterceptor, loadingInterceptor, errorInterceptor])),
   ],
 };

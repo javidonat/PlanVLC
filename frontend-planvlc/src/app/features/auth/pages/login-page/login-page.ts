@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideMapPin } from '@lucide/angular';
 import { LoginPayload } from '../../../../core/models/auth.model';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -7,10 +7,10 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { apiError, fieldErrors } from '../../../../core/interceptors/error.interceptor';
 import { LoginForm } from '../../components/login-form/login-form';
 
-// Página de login (fuera del panel: sin menú lateral). No hay registro: los usuarios los crea un admin
+// Página de login (fuera del panel: sin menú lateral) para clientes y admin. Los clientes se registran en /registro
 @Component({
   selector: 'app-login-page',
-  imports: [LucideMapPin, LoginForm],
+  imports: [RouterLink, LucideMapPin, LoginForm],
   templateUrl: './login-page.html',
 })
 export class LoginPage {
@@ -22,6 +22,9 @@ export class LoginPage {
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
   readonly serverErrors = signal<Record<string, string>>({});
+
+  // Viene del registro (?registro=ok): aviso de cuenta creada
+  readonly registered = this.route.snapshot.queryParamMap.get('registro') === 'ok';
 
   async onSubmit(payload: LoginPayload): Promise<void> {
     try {

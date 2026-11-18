@@ -6,7 +6,8 @@ import { ThemeStore } from '../../core/stores/theme.store';
 import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
 
 // Layout de la parte pública (home, shop y detalle): barra superior y pie, sin menú lateral.
-// Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel
+// Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel.
+// Sin sesión, los accesos al login y al registro
 @Component({
   selector: 'app-shop-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle],
@@ -39,7 +40,8 @@ import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
             </a>
           </div>
         } @else {
-          <a routerLink="/login" class="flex items-center gap-2 rounded-xl bg-marca-600 px-4 py-2 text-sm font-semibold text-white hover:bg-marca-700"><svg lucideLogIn width="17" height="17"></svg> Iniciar sesión</a>
+          <a routerLink="/login" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-gris-700 hover:bg-gris-100"><svg lucideLogIn width="17" height="17"></svg><span class="hidden sm:inline">Iniciar sesión</span></a>
+          <a routerLink="/registro" class="rounded-xl bg-marca-600 px-4 py-2 text-sm font-semibold text-white hover:bg-marca-700">Registrarse</a>
         }
         </div>
       </div>
