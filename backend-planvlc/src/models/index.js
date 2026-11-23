@@ -9,7 +9,8 @@ import Image from "./image.model.js";
 import Role from "./role.model.js";
 import User from "./user.model.js";
 import Profile from "./profile.model.js";
+import Comment from "./comment.model.js";
 import RefreshToken from "./refreshToken.model.js";
 import RevokedToken from "./revokedToken.model.js";
 
-export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, RefreshToken, RevokedToken };
+export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, Comment, RefreshToken, RevokedToken };

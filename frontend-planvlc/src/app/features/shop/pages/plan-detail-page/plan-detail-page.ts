@@ -4,8 +4,12 @@ import { LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, Luc
 import { ImageRef } from '../../../../core/models/plan.model';
 import { ShopPlan, ShopSession } from '../../../../core/models/shop.model';
 import { ChatMessage, PlanChatRequest } from '../../../../core/models/ai.model';
+import { CommentDraft, CommentStats, PlanComment } from '../../../../core/models/comment.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { AiService } from '../../../../core/services/ai.service';
+import { CommentsService } from '../../../../core/services/comments.service';
+import { AlertService } from '../../../../core/services/alert.service';
+import { AuthStore } from '../../../../core/stores/auth.store';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { Carousel } from '../../../../shared/components/carousel/carousel';
@@ -13,21 +17,26 @@ import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/sk
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { SessionList } from '../../components/session-list/session-list';
 import { PlanChat } from '../../components/plan-chat/plan-chat';
+import { PlanComments } from '../../components/plan-comments/plan-comments';
 import { filtersToUrl } from '../../utils/shop-url';
 import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../utils/shop.utils';
 
 // Detalle de un plan (/planes/:slug): carrusel de fotos, información y sus sesiones (variantes).
 // Se puede elegir una sesión; la reserva se implementará más adelante sobre selectedSession.
-// Tiene un chat con el asistente de IA, que responde con los datos del plan que ya se ven en la página
+// Tiene un chat con el asistente de IA, que responde con los datos del plan que ya se ven en la página,
+// y las opiniones (comentarios) con un resumen hecho por el agente de IA
 @Component({
   selector: 'app-plan-detail-page',
-  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat],
+  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments],
   templateUrl: './plan-detail-page.html',
 })
 export class PlanDetailPage {
   private readonly service = inject(ShopService);
   private readonly store = inject(ShopStore);
   private readonly ai = inject(AiService);
+  private readonly commentsService = inject(CommentsService);
+  private readonly alerts = inject(AlertService);
+  readonly auth = inject(AuthStore);
 
   // :slug de la URL (withComponentInputBinding en app.config.ts)
   readonly slug = input.required<string>();
@@ -43,6 +52,22 @@ export class PlanDetailPage {
   readonly chatLoading = signal(false);
   readonly chatError = signal<string | null>(null);
   readonly chatSuggestions = ['¿Es apto para niños?', '¿Qué fecha es más barata?', '¿Cómo llego?', '¿Qué me llevo?'];
+
+  // Opiniones: se cargan de 5 en 5 ("Ver más" añade la página siguiente)
+  readonly comments = signal<PlanComment[]>([]);
+  readonly commentStats = signal<CommentStats>({ count: 0, average: null });
+  readonly commentsPage = signal(1);
+  readonly commentsTotalPages = signal(0);
+  readonly commentsLoading = signal(false);
+  readonly commentsError = signal<string | null>(null);
+  readonly commentSubmitting = signal(false);
+  readonly commentSubmitError = signal<string | null>(null);
+  readonly deletingCommentId = signal<string | null>(null);
+  // Resumen de las opiniones hecho por la IA (solo con 2 o más comentarios)
+  readonly reviewsSummary = signal<string | null>(null);
+  readonly reviewsSummaryLoading = signal(false);
+  readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
+  readonly returnUrl = computed(() => `/planes/${this.slug()}`);
 
   readonly selectedSession = computed(() => this.sessions().find(s => s._id === this.selectedSessionId()) ?? null);
 
@@ -69,6 +94,11 @@ export class PlanDetailPage {
 
   private abortController: AbortController | null = null;
   private chatAbortController: AbortController | null = null;
+  private commentsAbortController: AbortController | null = null;
+  private summaryAbortController: AbortController | null = null;
+  private static readonly COMMENTS_PER_PAGE = 5;
+  private static readonly MIN_COMMENTS_FOR_SUMMARY = 2;
+  private static readonly MAX_COMMENTS_FOR_SUMMARY = 50; // lo máximo que acepta el servicio de IA
 
   constructor() {
     // Si cambia el slug (otro plan sin salir de la página), se carga el nuevo
@@ -79,6 +109,8 @@ export class PlanDetailPage {
     inject(DestroyRef).onDestroy(() => {
       this.abortController?.abort();
       this.chatAbortController?.abort();
+      this.commentsAbortController?.abort();
+      this.summaryAbortController?.abort();
     });
   }
 
@@ -92,12 +124,15 @@ export class PlanDetailPage {
       this.error.set(null);
       this.selectedSessionId.set(null);
       this.resetChat(); // otro plan: conversación nueva
+      this.resetComments();
       const [plan, sessions] = await Promise.all([
         this.service.getPlanBySlug(slug, controller.signal),
         this.service.getPlanSessions(slug, controller.signal),
       ]);
       this.plan.set(plan.data);
       this.sessions.set(sessions.data);
+      void this.loadComments(slug, 1);
+      void this.loadReviewsSummary(slug, plan.data);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       this.error.set(apiError(error).message);
@@ -131,6 +166,107 @@ export class PlanDetailPage {
     } finally {
       if (this.chatAbortController === controller) this.chatLoading.set(false);
     }
+  }
+
+  // Una página de comentarios: la 1 sustituye la lista, las siguientes se añaden al final
+  async loadComments(slug: string, page: number): Promise<void> {
+    this.commentsAbortController?.abort();
+    const controller = new AbortController();
+    this.commentsAbortController = controller;
+    try {
+      this.commentsLoading.set(true);
+      this.commentsError.set(null);
+      const res = await this.commentsService.getByPlan(slug, page, PlanDetailPage.COMMENTS_PER_PAGE, controller.signal);
+      this.comments.update(current => (page === 1 ? res.data : [...current, ...res.data]));
+      this.commentStats.set(res.stats);
+      this.commentsPage.set(res.page);
+      this.commentsTotalPages.set(res.totalPages);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      this.commentsError.set(apiError(error).message);
+    } finally {
+      if (this.commentsAbortController === controller) this.commentsLoading.set(false);
+    }
+  }
+
+  onLoadMoreComments(): void {
+    void this.loadComments(this.slug(), this.commentsPage() + 1);
+  }
+
+  // El agente de IA resume las opiniones. Recibe los últimos comentarios que se ven en la web (no accede a la base de datos)
+  async loadReviewsSummary(slug: string, plan: ShopPlan): Promise<void> {
+    this.summaryAbortController?.abort();
+    const controller = new AbortController();
+    this.summaryAbortController = controller;
+    try {
+      this.reviewsSummaryLoading.set(true);
+      const res = await this.commentsService.getByPlan(slug, 1, PlanDetailPage.MAX_COMMENTS_FOR_SUMMARY, controller.signal);
+      if (res.data.length < PlanDetailPage.MIN_COMMENTS_FOR_SUMMARY) {
+        this.reviewsSummary.set(null);
+        return;
+      }
+      const comments = res.data.map(({ rating, text }) => ({ rating, text }));
+      const analysis = await this.ai.analyzeReviews({ plan: { title: plan.title }, comments }, controller.signal);
+      this.reviewsSummary.set(analysis.data.summary);
+    } catch {
+      // Si la IA falla no se enseña el resumen: las opiniones se siguen viendo igual
+      if (!controller.signal.aborted) this.reviewsSummary.set(null);
+    } finally {
+      if (this.summaryAbortController === controller) this.reviewsSummaryLoading.set(false);
+    }
+  }
+
+  // Publicar exige sesión (el botón solo se ve logueado y el backend lo vuelve a comprobar)
+  async onSubmitComment(draft: CommentDraft): Promise<void> {
+    const plan = this.plan();
+    if (!plan || this.commentSubmitting()) return;
+    try {
+      this.commentSubmitting.set(true);
+      this.commentSubmitError.set(null);
+      await this.commentsService.create({ planId: plan._id, ...draft });
+      await this.refreshComments(plan);
+    } catch (error) {
+      this.commentSubmitError.set(apiError(error).message);
+    } finally {
+      this.commentSubmitting.set(false);
+    }
+  }
+
+  // Cada usuario borra solo los suyos y el admin todos: si no, el backend responde 403 (lo enseña el interceptor)
+  async onDeleteComment(comment: PlanComment): Promise<void> {
+    const plan = this.plan();
+    if (!plan) return;
+    const confirmed = await this.alerts.confirm('Borrar comentario', 'Se borrará el comentario y dejará de verse en el plan.', 'Borrar');
+    if (!confirmed) return;
+    try {
+      this.deletingCommentId.set(comment._id);
+      await this.commentsService.softDelete(comment._id);
+      await this.refreshComments(plan);
+    } catch {
+      // El interceptor ya muestra el error
+    } finally {
+      this.deletingCommentId.set(null);
+    }
+  }
+
+  // Tras publicar o borrar: primera página, media nueva y resumen nuevo
+  private async refreshComments(plan: ShopPlan): Promise<void> {
+    void this.loadReviewsSummary(plan.slug, plan);
+    await this.loadComments(plan.slug, 1);
+  }
+
+  private resetComments(): void {
+    this.commentsAbortController?.abort();
+    this.summaryAbortController?.abort();
+    this.comments.set([]);
+    this.commentStats.set({ count: 0, average: null });
+    this.commentsPage.set(1);
+    this.commentsTotalPages.set(0);
+    this.commentsError.set(null);
+    this.commentSubmitError.set(null);
+    this.commentsLoading.set(false);
+    this.reviewsSummary.set(null);
+    this.reviewsSummaryLoading.set(false);
   }
 
   private resetChat(): void {

@@ -31,3 +31,21 @@ export interface PlanChatRequest {
   sessions: PlanChatSession[];
   messages: ChatMessage[];
 }
+
+// Análisis de las opiniones de un plan: POST /api/ai/reviews-analysis.
+// El mismo agente sirve para el detalle (summary) y para el panel admin (sentimiento).
+// La IA no accede a la base de datos: recibe los comentarios que ya ha cargado la página
+export interface ReviewsAnalysisRequest {
+  plan: { title: string };
+  comments: { rating: number; text: string }[]; // hasta 50
+}
+
+export type ReviewSentiment = 'positive' | 'mixed' | 'neutral' | 'negative';
+
+export interface ReviewsAnalysis {
+  summary: string; // resumen corto de lo que opina la gente
+  sentiment: ReviewSentiment;
+  score: number; // 0 (muy negativo) a 100 (muy positivo)
+  positives: string[];
+  negatives: string[];
+}

@@ -61,6 +61,14 @@
         }
 
         <div class="mt-10">
+          <app-plan-comments [comments]="comments()" [stats]="commentStats()" [loading]="commentsLoading()" [error]="commentsError()" [hasMore]="hasMoreComments()"
+            [isLoggedIn]="auth.isAuthenticated()" [currentUserId]="auth.user()?._id ?? null" [isAdmin]="auth.isAdmin()" [returnUrl]="returnUrl()"
+            [submitting]="commentSubmitting()" [submitError]="commentSubmitError()" [deletingId]="deletingCommentId()"
+            [aiSummary]="reviewsSummary()" [aiLoading]="reviewsSummaryLoading()"
+            (publish)="onSubmitComment($event)" (delete)="onDeleteComment($event)" (loadMore)="onLoadMoreComments()" />
+        </div>
+
+        <div class="mt-10">
           <app-plan-chat [messages]="chatMessages()" [loading]="chatLoading()" [error]="chatError()" [suggestions]="chatSuggestions" (ask)="onAsk($event)" />
         </div>
       </div>

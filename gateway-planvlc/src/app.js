@@ -42,7 +42,7 @@ const onProxyRes = (proxyRes) => {
 };
 
 // --- Servicio de IA: /api/ai/* ---
-// Límite de preguntas por IP: cada pregunta gasta peticiones de OpenRouter
+// Límite de peticiones por IP: cada una gasta peticiones de OpenRouter. Chatbot: 20 preguntas cada 10 minutos
 const aiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutos
   limit: 20,
@@ -51,8 +51,19 @@ const aiLimiter = rateLimit({
   message: { ok: false, message: "Has hecho muchas preguntas seguidas. Espera unos minutos y vuelve a probar" },
 });
 
+// Análisis de opiniones: se pide al abrir el detalle de un plan, así que permite más.
+// Además, el servicio de IA guarda los análisis en caché y los repetidos no llegan al modelo
+const reviewsLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutos
+  limit: 60,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: { ok: false, message: "Demasiadas peticiones al asistente. Espera unos minutos y vuelve a probar" },
+});
+
+app.use("/api/ai/plan-chat", aiLimiter);
+app.use("/api/ai/reviews-analysis", reviewsLimiter);
 // pathFilter (en vez de app.use("/api/ai", proxy)): así no se recorta la ruta al reenviarla
-app.use("/api/ai", aiLimiter);
 app.use(createProxyMiddleware({
   pathFilter: "/api/ai",
   target: AI_SERVICE_URL,

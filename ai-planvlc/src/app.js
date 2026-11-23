@@ -5,8 +5,9 @@ import fromGateway from "./middleware/fromGateway.js";
 import errorHandler from "./middleware/errorHandler.js";
 import AppError from "./services/utils/AppError.js";
 import chatRoutes from "./routes/chat.routes.js";
+import reviewsRoutes from "./routes/reviews.routes.js";
 
-// Servicio de IA: separado del backend y SIN acceso a la base de datos.
+// Servicio de IA: separado del backend y SIN acceso a la base de datos (chatbot del plan y análisis de opiniones).
 // Recibe los datos del plan en la petición y se los pasa al modelo de OpenRouter
 const app = express();
 
@@ -21,7 +22,7 @@ app.get("/health", (_req, res) => {
 });
 
 // --- Rutas (solo a través de la gateway) ---
-app.use("/api/ai", fromGateway, chatRoutes);
+app.use("/api/ai", fromGateway, chatRoutes, reviewsRoutes);
 
 // --- Ruta no encontrada (404) ---
 app.use((req, _res, next) => {

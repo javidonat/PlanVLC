@@ -89,6 +89,7 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `profiles` | `Profile` | Datos extendidos del usuario (1 a 1) |
 | `refreshtokens` | `RefreshToken` | Sesiones abiertas (hash del refresh token) |
 | `revokedtokens` | `RevokedToken` | Access tokens cerrados con logout (hash) |
+| `comments` | `Comment` | Opiniones de los planes: valoración (1-5 estrellas) y texto |
 
 ### Relaciones
 
@@ -101,6 +102,8 @@ plans.organizerId        → organizers
 plans.venueId            → venues
 organizers.userIds[]     → users
 users.roleId             → roles
+comments.planId          → plans     (un plan tiene muchos comentarios: 1 a N)
+comments.userId          → users     (un usuario escribe muchos comentarios: 1 a N)
 images.entityId          → plans | venues | categories | organizers | users (según images.entityType)
 ```
 
@@ -298,7 +301,23 @@ Las dos son `sameSite: lax` (protege de CSRF) y `secure` en producción (solo HT
 |---|---|
 | `/api/users/*`, `/api/roles/*` | Solo `admin` |
 | `/api/profiles/:userId` | El propio usuario o un `admin` |
+| `POST /api/comments` | Cualquier usuario logueado |
+| `PATCH /api/comments/:id/softdelete` | El autor del comentario o un `admin` |
+| `GET /api/comments/summary` | Solo `admin` |
 | Resto | Abiertas (sin cambios por ahora) |
+
+## Endpoints (`comments`): opiniones de los planes
+
+Cada comentario tiene `planId`, `userId` (el autor), `rating` (entero de 1 a 5), `text` (3 a 1000 caracteres), `isActive`, `deletedAt` y fechas. Un usuario puede dejar varios comentarios en el mismo plan.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/comments?plan=<slug>&page=&limit=` | Público. Comentarios visibles del plan, los más nuevos primero, con el autor (`userId: { _id, name, profile: { avatar } }`) y `stats: { count, average }` |
+| POST | `/api/comments` | Logueado (`authenticate`). Body `{ planId, rating, text }`. El autor es siempre el usuario de la sesión. El plan tiene que estar publicado → si no, `404` |
+| PATCH | `/api/comments/:id/softdelete` | Logueado. Borrado lógico. Solo el autor o un admin: si no → `403 Solo puedes borrar tus propios comentarios` |
+| GET | `/api/comments/summary` | Solo admin. Por cada plan con comentarios: `{ planId, title, slug, count, average, lastCommentAt }` |
+
+El resumen y el sentimiento de las opiniones los hace el servicio de IA (`POST /api/ai/reviews-analysis`, a través de la API Gateway). La IA no accede a la base de datos: el frontend le pasa los comentarios que ya ha cargado.
 
 ## Endpoints (`profiles`)
 

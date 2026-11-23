@@ -21,6 +21,7 @@ export const routes: Routes = [
       { path: 'admin/sesiones', canActivate: [adminGuard], loadChildren: () => import('./features/sessions/sessions.routes').then(m => m.SESSIONS_ROUTES) },
       { path: 'admin/lugares', canActivate: [adminGuard], loadChildren: () => import('./features/venues/venues.routes').then(m => m.VENUES_ROUTES) },
       { path: 'admin/organizadores', canActivate: [adminGuard], loadChildren: () => import('./features/organizers/organizers.routes').then(m => m.ORGANIZERS_ROUTES) },
+      { path: 'admin/opiniones', canActivate: [adminGuard], loadChildren: () => import('./features/reviews/reviews.routes').then(m => m.REVIEWS_ROUTES) },
       { path: 'admin/categorias', canActivate: [adminGuard], loadChildren: () => import('./features/categories/categories.routes').then(m => m.CATEGORIES_ROUTES) },
       { path: 'admin/usuarios', canActivate: [adminGuard], loadChildren: () => import('./features/users/users.routes').then(m => m.USERS_ROUTES) },
       { path: 'admin/perfiles', canActivate: [adminGuard], loadChildren: () => import('./features/profiles/profiles.routes').then(m => m.PROFILES_ROUTES) },
