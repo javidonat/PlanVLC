@@ -17,6 +17,8 @@ import authRoutes from "./routes/auth.routes.js";
 import profilesRoutes from "./routes/profiles.routes.js";
 import shopRoutes from "./routes/shop.routes.js";
 import commentsRoutes from "./routes/comments.routes.js";
+import likesRoutes from "./routes/likes.routes.js";
+import wishlistRoutes from "./routes/wishlist.routes.js";
 
 const app = express();
 
@@ -39,6 +41,8 @@ app.use("/api/profiles", profilesRoutes);
 app.use("/api/shop", shopRoutes);
 // Comentarios de los planes: leer es público; escribir y borrar, con sesión
 app.use("/api/comments", commentsRoutes);
+app.use("/api/likes", likesRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/plans", plansRoutes);
 app.use("/api/categories", categoriesRoutes);
 app.use("/api/sessions", sessionsRoutes);

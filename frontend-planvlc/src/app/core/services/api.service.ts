@@ -37,6 +37,10 @@ export class ApiService {
     return this.send(this.http.patch<T>(this.url(path), body));
   }
 
+  delete<T>(path: string): Promise<T> {
+    return this.send(this.http.delete<T>(this.url(path)));
+  }
+
   // Construye los query params sin los vacíos (ej. { search: '', page: 2 } → ?page=2)
   private params(params: QueryParams = {}): HttpParams {
     let httpParams = new HttpParams();

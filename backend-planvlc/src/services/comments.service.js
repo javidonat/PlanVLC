@@ -24,7 +24,7 @@ const getSummary = () => commentsRepo.summaryByPlan();
 
 // POST /api/comments: el autor es siempre el usuario de la sesión (no se puede comentar en nombre de otro)
 const createComment = async (user, { planId, rating, text }) => {
-  if (!(await commentsRepo.planIsVisible(planId))) {
+  if (!(await shopRepo.planIsVisible(planId))) {
     throw new AppError("Plan no encontrado", 404);
   }
   return commentsRepo.create({ planId, rating, text, userId: user.id });

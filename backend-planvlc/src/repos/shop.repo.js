@@ -149,6 +149,9 @@ const findPlanIdBySlug = async (slug) => {
   return plan?._id ?? null;
 };
 
+// ¿Existe el plan y se ve en la tienda? (solo se puede comentar, dar like o guardar en la lista de deseos esos)
+const planIsVisible = async (planId) => Boolean(await Plan.exists({ _id: planId, ...VISIBLE_PLAN }));
+
 // Sesiones (variantes) que se pueden elegir: publicadas, activas y que todavía no han empezado
 const findUpcomingSessions = (planId) => {
   return Session.find({ ...UPCOMING_SESSION(), planId })
@@ -161,5 +164,5 @@ export default {
   findCategories, findOrganizers, findVenues,
   findCategoryIdsBySlugs, findOrganizerIdsBySlugs, findVenueIdsBySlugs,
   findPlans, findPlanIds, findSessionsBetween, findFirstUpcomingDate,
-  findPlanBySlugAndCountView, findPlanIdBySlug, findUpcomingSessions,
+  findPlanBySlugAndCountView, findPlanIdBySlug, planIsVisible, findUpcomingSessions,
 };

@@ -90,6 +90,8 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `refreshtokens` | `RefreshToken` | Sesiones abiertas (hash del refresh token) |
 | `revokedtokens` | `RevokedToken` | Access tokens cerrados con logout (hash) |
 | `comments` | `Comment` | Opiniones de los planes: valoración (1-5 estrellas) y texto |
+| `likes` | `Like` | Likes de los usuarios a los planes (uno por usuario y plan) |
+| `wishlists` | `Wishlist` | Lista de deseos: planes guardados por cada usuario (uno por usuario y plan) |
 
 ### Relaciones
 
@@ -104,6 +106,8 @@ organizers.userIds[]     → users
 users.roleId             → roles
 comments.planId          → plans     (un plan tiene muchos comentarios: 1 a N)
 comments.userId          → users     (un usuario escribe muchos comentarios: 1 a N)
+likes.userId + planId    → users, plans (N a N entre usuarios y planes; índice único userId + planId)
+wishlists.userId + planId → users, plans (N a N entre usuarios y planes; índice único userId + planId)
 images.entityId          → plans | venues | categories | organizers | users (según images.entityType)
 ```
 
@@ -304,6 +308,8 @@ Las dos son `sameSite: lax` (protege de CSRF) y `secure` en producción (solo HT
 | `POST /api/comments` | Cualquier usuario logueado |
 | `PATCH /api/comments/:id/softdelete` | El autor del comentario o un `admin` |
 | `GET /api/comments/summary` | Solo `admin` |
+| `POST/DELETE /api/likes`, `GET /api/likes/me` | Cualquier usuario logueado (sobre sus propios likes) |
+| `/api/wishlist/*` | Cualquier usuario logueado (solo su propia lista) |
 | Resto | Abiertas (sin cambios por ahora) |
 
 ## Endpoints (`comments`): opiniones de los planes
@@ -318,6 +324,22 @@ Cada comentario tiene `planId`, `userId` (el autor), `rating` (entero de 1 a 5),
 | GET | `/api/comments/summary` | Solo admin. Por cada plan con comentarios: `{ planId, title, slug, count, average, lastCommentAt }` |
 
 El resumen y el sentimiento de las opiniones los hace el servicio de IA (`POST /api/ai/reviews-analysis`, a través de la API Gateway). La IA no accede a la base de datos: el frontend le pasa los comentarios que ya ha cargado.
+
+## Endpoints (`likes`) y (`wishlist`)
+
+Las dos son tablas intermedias usuario ↔ plan con un índice único `{ userId, planId }`: un usuario no puede dar dos likes al mismo plan ni guardarlo dos veces, aunque lleguen dos peticiones a la vez. El usuario sale siempre de la sesión (cookie), nunca del body ni de la URL. Quitar un like o un plan de la lista borra el documento.
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/likes/:planId` | Público. `{ planId, count }` |
+| GET | `/api/likes/me` | Logueado. Ids de los planes a los que has dado like |
+| POST | `/api/likes` | Logueado. Body `{ planId }` → `201 { planId, liked: true, count }`. Si ya le habías dado like → `409` |
+| DELETE | `/api/likes/:planId` | Logueado. Quita tu like → `{ planId, liked: false, count }`. Si no lo habías dado → `404` |
+| GET | `/api/wishlist` | Logueado. Tu lista, lo último primero, con `planId: { _id, title, slug, shortDescription, priceFrom }` |
+| POST | `/api/wishlist` | Logueado. Body `{ planId }` → `201`. Si ya estaba → `409` |
+| DELETE | `/api/wishlist/:planId` | Logueado. Lo quita de tu lista. Si no estaba → `404` |
+
+Sin sesión → `401`. El plan tiene que estar publicado → si no, `404`.
 
 ## Endpoints (`profiles`)
 

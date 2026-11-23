@@ -1,5 +1,5 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers } from '@lucide/angular';
 import { ImageRef } from '../../../../core/models/plan.model';
 import { ShopPlan, ShopSession } from '../../../../core/models/shop.model';
@@ -8,6 +8,8 @@ import { CommentDraft, CommentStats, PlanComment } from '../../../../core/models
 import { ShopService } from '../../../../core/services/shop.service';
 import { AiService } from '../../../../core/services/ai.service';
 import { CommentsService } from '../../../../core/services/comments.service';
+import { LikesService } from '../../../../core/services/likes.service';
+import { WishlistService } from '../../../../core/services/wishlist.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ShopStore } from '../../../../core/stores/shop.store';
@@ -18,16 +20,19 @@ import { ErrorState } from '../../../../shared/components/error-state/error-stat
 import { SessionList } from '../../components/session-list/session-list';
 import { PlanChat } from '../../components/plan-chat/plan-chat';
 import { PlanComments } from '../../components/plan-comments/plan-comments';
+import { PlanLikeButton } from '../../components/plan-like-button/plan-like-button';
+import { PlanWishlistButton } from '../../components/plan-wishlist-button/plan-wishlist-button';
 import { filtersToUrl } from '../../utils/shop-url';
 import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../utils/shop.utils';
 
 // Detalle de un plan (/planes/:slug): carrusel de fotos, información y sus sesiones (variantes).
 // Se puede elegir una sesión; la reserva se implementará más adelante sobre selectedSession.
 // Tiene un chat con el asistente de IA, que responde con los datos del plan que ya se ven en la página,
-// y las opiniones (comentarios) con un resumen hecho por el agente de IA
+// y las opiniones (comentarios) con un resumen hecho por el agente de IA.
+// Like y lista de deseos: sin sesión, el botón lleva al login y vuelve al plan
 @Component({
   selector: 'app-plan-detail-page',
-  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments],
+  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, PlanLikeButton, PlanWishlistButton],
   templateUrl: './plan-detail-page.html',
 })
 export class PlanDetailPage {
@@ -36,6 +41,9 @@ export class PlanDetailPage {
   private readonly ai = inject(AiService);
   private readonly commentsService = inject(CommentsService);
   private readonly alerts = inject(AlertService);
+  private readonly likesService = inject(LikesService);
+  private readonly wishlistService = inject(WishlistService);
+  private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
 
   // :slug de la URL (withComponentInputBinding en app.config.ts)
@@ -69,6 +77,13 @@ export class PlanDetailPage {
   readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
   readonly returnUrl = computed(() => `/planes/${this.slug()}`);
 
+  // Like y lista de deseos del usuario de la sesión
+  readonly liked = signal(false);
+  readonly likesCount = signal(0);
+  readonly likeBusy = signal(false);
+  readonly inWishlist = signal(false);
+  readonly wishlistBusy = signal(false);
+
   readonly selectedSession = computed(() => this.sessions().find(s => s._id === this.selectedSessionId()) ?? null);
 
   // Portada y galería en el carrusel
@@ -96,6 +111,7 @@ export class PlanDetailPage {
   private chatAbortController: AbortController | null = null;
   private commentsAbortController: AbortController | null = null;
   private summaryAbortController: AbortController | null = null;
+  private reactionsAbortController: AbortController | null = null;
   private static readonly COMMENTS_PER_PAGE = 5;
   private static readonly MIN_COMMENTS_FOR_SUMMARY = 2;
   private static readonly MAX_COMMENTS_FOR_SUMMARY = 50; // lo máximo que acepta el servicio de IA
@@ -111,6 +127,7 @@ export class PlanDetailPage {
       this.chatAbortController?.abort();
       this.commentsAbortController?.abort();
       this.summaryAbortController?.abort();
+      this.reactionsAbortController?.abort();
     });
   }
 
@@ -133,6 +150,7 @@ export class PlanDetailPage {
       this.sessions.set(sessions.data);
       void this.loadComments(slug, 1);
       void this.loadReviewsSummary(slug, plan.data);
+      void this.loadReactions(plan.data._id);
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       this.error.set(apiError(error).message);
@@ -166,6 +184,66 @@ export class PlanDetailPage {
     } finally {
       if (this.chatAbortController === controller) this.chatLoading.set(false);
     }
+  }
+
+  // Likes del plan (público) y, con sesión, si el usuario le ha dado like y si lo tiene en su lista de deseos
+  async loadReactions(planId: string): Promise<void> {
+    this.reactionsAbortController?.abort();
+    const controller = new AbortController();
+    this.reactionsAbortController = controller;
+    this.liked.set(false);
+    this.inWishlist.set(false);
+    try {
+      const loggedIn = this.auth.isAuthenticated();
+      const [count, myLikes, wishlist] = await Promise.all([
+        this.likesService.getCount(planId, controller.signal),
+        loggedIn ? this.likesService.getMine(controller.signal) : null,
+        loggedIn ? this.wishlistService.getMine(controller.signal) : null,
+      ]);
+      this.likesCount.set(count.data.count);
+      this.liked.set(myLikes?.data.includes(planId) ?? false);
+      this.inWishlist.set(wishlist?.data.some(item => item.planId._id === planId) ?? false);
+    } catch {
+      // Si falla, los botones se quedan sin marcar: el resto de la página sigue funcionando
+    }
+  }
+
+  // Like / quitar like. Sin sesión → login (y vuelta a este plan)
+  async onToggleLike(): Promise<void> {
+    const plan = this.plan();
+    if (!plan || this.likeBusy()) return;
+    if (!this.auth.isAuthenticated()) return this.goToLogin();
+    try {
+      this.likeBusy.set(true);
+      const res = this.liked() ? await this.likesService.unlike(plan._id) : await this.likesService.like(plan._id);
+      this.liked.set(res.data.liked);
+      this.likesCount.set(res.data.count);
+    } catch {
+      // El interceptor ya muestra el error (409 si ya le habías dado like, 404 si no). Se vuelve a leer el estado real
+      await this.loadReactions(plan._id);
+    } finally {
+      this.likeBusy.set(false);
+    }
+  }
+
+  // Guardar / quitar de la lista de deseos. Sin sesión → login (y vuelta a este plan)
+  async onToggleWishlist(): Promise<void> {
+    const plan = this.plan();
+    if (!plan || this.wishlistBusy()) return;
+    if (!this.auth.isAuthenticated()) return this.goToLogin();
+    try {
+      this.wishlistBusy.set(true);
+      const res = this.inWishlist() ? await this.wishlistService.remove(plan._id) : await this.wishlistService.add(plan._id);
+      this.inWishlist.set(res.data.inWishlist);
+    } catch {
+      await this.loadReactions(plan._id);
+    } finally {
+      this.wishlistBusy.set(false);
+    }
+  }
+
+  private goToLogin(): void {
+    void this.router.navigate(['/login'], { queryParams: { returnUrl: this.returnUrl() } });
   }
 
   // Una página de comentarios: la 1 sustituye la lista, las siguientes se añaden al final

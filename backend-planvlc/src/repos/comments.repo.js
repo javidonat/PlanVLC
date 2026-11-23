@@ -1,15 +1,12 @@
 import mongoose from "mongoose";
-import { Comment, Plan } from "../models/index.js";
+import { Comment } from "../models/index.js";
 
 // Consultas de comentarios. Solo cuentan los visibles: activos y no eliminados
 const VISIBLE = { isActive: true, deletedAt: null };
-const VISIBLE_PLAN = { status: "published", isActive: true, deletedAt: null };
 
 // Autor del comentario: su nombre y el avatar de su perfil
 const AUTHOR = { path: "userId", select: "name", populate: { path: "profile", select: "avatar" } };
 
-// ¿Existe el plan y se ve en la tienda? (solo se puede comentar en esos)
-const planIsVisible = async (planId) => Boolean(await Plan.exists({ _id: planId, ...VISIBLE_PLAN }));
 
 // Comentarios de un plan, los más nuevos primero. Con page y limit, solo esa página
 const findByPlan = async (planId, { page, limit }) => {
@@ -63,4 +60,4 @@ const softDelete = (id) => {
   return Comment.updateOne({ _id: id, ...VISIBLE }, { isActive: false, deletedAt: new Date() });
 };
 
-export default { planIsVisible, findByPlan, statsByPlan, summaryByPlan, create, findById, softDelete };
+export default { findByPlan, statsByPlan, summaryByPlan, create, findById, softDelete };

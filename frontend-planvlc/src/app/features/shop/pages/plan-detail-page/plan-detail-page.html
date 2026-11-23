@@ -25,6 +25,10 @@
         @if (current.shortDescription) {
           <p class="mt-3 text-lg text-gris-600">{{ current.shortDescription }}</p>
         }
+        <div class="mt-4 flex flex-wrap gap-2">
+          <app-plan-like-button [liked]="liked()" [count]="likesCount()" [busy]="likeBusy()" (toggle)="onToggleLike()" />
+          <app-plan-wishlist-button [saved]="inWishlist()" [busy]="wishlistBusy()" (toggle)="onToggleWishlist()" />
+        </div>
 
         <dl class="mt-6 grid gap-4 rounded-2xl border border-gris-200 bg-superficie p-5 text-sm sm:grid-cols-2">
           <div>
