@@ -7,7 +7,7 @@ import { planBodySchema, planParamsSchema } from "../schemas/planRef.schema.js";
 const router = Router();
 
 // Todo con sesión: cada usuario solo ve y cambia su propia lista (el usuario sale de la cookie, no de la URL)
-// GET    /api/wishlist            → tu lista, lo último guardado primero, con { title, slug, shortDescription, priceFrom } del plan
+// GET    /api/wishlist            → tu lista, lo último guardado primero, con { title, slug, shortDescription, priceFrom, coverImage } del plan
 // POST   /api/wishlist            → Body: planId. Si ya estaba → 409
 // DELETE /api/wishlist/:planId    → lo quita de tu lista. Si no estaba → 404
 

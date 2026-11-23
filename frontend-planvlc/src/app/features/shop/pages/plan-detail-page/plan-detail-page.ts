@@ -12,6 +12,8 @@ import { LikesService } from '../../../../core/services/likes.service';
 import { WishlistService } from '../../../../core/services/wishlist.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { SavedPlansStore } from '../../../../core/stores/saved-plans.store';
+import { SavedPlan } from '../../../../core/models/saved-plan.model';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { Carousel } from '../../../../shared/components/carousel/carousel';
@@ -45,6 +47,7 @@ export class PlanDetailPage {
   private readonly wishlistService = inject(WishlistService);
   private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
+  private readonly savedPlans = inject(SavedPlansStore);
 
   // :slug de la URL (withComponentInputBinding en app.config.ts)
   readonly slug = input.required<string>();
@@ -77,11 +80,11 @@ export class PlanDetailPage {
   readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
   readonly returnUrl = computed(() => `/planes/${this.slug()}`);
 
-  // Like y lista de deseos del usuario de la sesión
-  readonly liked = signal(false);
+  // Like y lista de deseos del usuario de la sesión: salen de SavedPlansStore (lo mismo que el header)
+  readonly liked = computed(() => this.savedPlans.likedIds().has(this.plan()?._id ?? ''));
+  readonly inWishlist = computed(() => this.savedPlans.wishlistIds().has(this.plan()?._id ?? ''));
   readonly likesCount = signal(0);
   readonly likeBusy = signal(false);
-  readonly inWishlist = signal(false);
   readonly wishlistBusy = signal(false);
 
   readonly selectedSession = computed(() => this.sessions().find(s => s._id === this.selectedSessionId()) ?? null);
@@ -186,26 +189,35 @@ export class PlanDetailPage {
     }
   }
 
-  // Likes del plan (público) y, con sesión, si el usuario le ha dado like y si lo tiene en su lista de deseos
+  // Número de likes del plan (público). Si el usuario le ha dado like lo dice SavedPlansStore
   async loadReactions(planId: string): Promise<void> {
     this.reactionsAbortController?.abort();
     const controller = new AbortController();
     this.reactionsAbortController = controller;
-    this.liked.set(false);
-    this.inWishlist.set(false);
     try {
-      const loggedIn = this.auth.isAuthenticated();
-      const [count, myLikes, wishlist] = await Promise.all([
-        this.likesService.getCount(planId, controller.signal),
-        loggedIn ? this.likesService.getMine(controller.signal) : null,
-        loggedIn ? this.wishlistService.getMine(controller.signal) : null,
-      ]);
+      const count = await this.likesService.getCount(planId, controller.signal);
       this.likesCount.set(count.data.count);
-      this.liked.set(myLikes?.data.includes(planId) ?? false);
-      this.inWishlist.set(wishlist?.data.some(item => item.planId._id === planId) ?? false);
     } catch {
-      // Si falla, los botones se quedan sin marcar: el resto de la página sigue funcionando
+      // Si falla, el contador se queda como estaba: el resto de la página sigue funcionando
     }
+  }
+
+  // Tras un 409/404 (p. ej. se cambió en otra pestaña): se vuelve a leer el estado real
+  private async resyncSavedPlans(planId: string): Promise<void> {
+    try {
+      const [likes, wishlist] = await Promise.all([this.likesService.getMine(), this.wishlistService.getMine()]);
+      this.savedPlans.setLikes(likes.data);
+      this.savedPlans.setWishlist(wishlist.data);
+    } catch {
+      // nada: se queda como estaba
+    }
+    await this.loadReactions(planId);
+  }
+
+  // Datos del plan que se guardan en el store para el desplegable del header
+  private savedPlan(plan: ShopPlan): SavedPlan {
+    const { _id, title, slug, shortDescription, priceFrom, coverImage } = plan;
+    return { _id, title, slug, shortDescription, priceFrom, coverImage };
   }
 
   // Like / quitar like. Sin sesión → login (y vuelta a este plan)
@@ -216,11 +228,12 @@ export class PlanDetailPage {
     try {
       this.likeBusy.set(true);
       const res = this.liked() ? await this.likesService.unlike(plan._id) : await this.likesService.like(plan._id);
-      this.liked.set(res.data.liked);
+      if (res.data.liked) this.savedPlans.addLike(this.savedPlan(plan));
+      else this.savedPlans.removeLike(plan._id);
       this.likesCount.set(res.data.count);
     } catch {
       // El interceptor ya muestra el error (409 si ya le habías dado like, 404 si no). Se vuelve a leer el estado real
-      await this.loadReactions(plan._id);
+      await this.resyncSavedPlans(plan._id);
     } finally {
       this.likeBusy.set(false);
     }
@@ -234,9 +247,10 @@ export class PlanDetailPage {
     try {
       this.wishlistBusy.set(true);
       const res = this.inWishlist() ? await this.wishlistService.remove(plan._id) : await this.wishlistService.add(plan._id);
-      this.inWishlist.set(res.data.inWishlist);
+      if (res.data.inWishlist) this.savedPlans.addToWishlist(this.savedPlan(plan));
+      else this.savedPlans.removeFromWishlist(plan._id);
     } catch {
-      await this.loadReactions(plan._id);
+      await this.resyncSavedPlans(plan._id);
     } finally {
       this.wishlistBusy.set(false);
     }

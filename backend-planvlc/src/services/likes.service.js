@@ -16,7 +16,7 @@ const getPlanLikes = async (planId) => {
 };
 
 // GET /api/likes/me
-const getMyLikes = (user) => likesRepo.findPlanIdsByUser(user.id);
+const getMyLikes = (user) => likesRepo.findByUser(user.id);
 
 // POST /api/likes
 const like = async (user, planId) => {

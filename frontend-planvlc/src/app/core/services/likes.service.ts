@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { ApiService } from './api.service';
 import { ApiListResponse, ApiResponse } from '../models/api.model';
 import { LikeState, PlanLikes } from '../models/like.model';
+import { SavedPlanItem } from '../models/saved-plan.model';
 
 // Solo habla con la API de likes (/api/likes)
 @Injectable({ providedIn: 'root' })
@@ -14,9 +15,9 @@ export class LikesService {
     return this.api.get<ApiResponse<PlanLikes>>(`${this.path}/${planId}`, { signal });
   }
 
-  // Ids de los planes a los que el usuario de la sesión ha dado like
-  async getMine(signal?: AbortSignal): Promise<ApiListResponse<string>> {
-    return this.api.get<ApiListResponse<string>>(`${this.path}/me`, { signal });
+  // Planes a los que el usuario de la sesión ha dado like
+  async getMine(signal?: AbortSignal): Promise<ApiListResponse<SavedPlanItem>> {
+    return this.api.get<ApiListResponse<SavedPlanItem>>(`${this.path}/me`, { signal });
   }
 
   async like(planId: string): Promise<ApiResponse<LikeState>> {

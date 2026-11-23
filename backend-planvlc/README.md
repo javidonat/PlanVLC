@@ -332,10 +332,10 @@ Las dos son tablas intermedias usuario ↔ plan con un índice único `{ userId,
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/likes/:planId` | Público. `{ planId, count }` |
-| GET | `/api/likes/me` | Logueado. Ids de los planes a los que has dado like |
+| GET | `/api/likes/me` | Logueado. Planes a los que has dado like, el último primero, con `planId: { _id, title, slug, shortDescription, priceFrom, coverImage }` |
 | POST | `/api/likes` | Logueado. Body `{ planId }` → `201 { planId, liked: true, count }`. Si ya le habías dado like → `409` |
 | DELETE | `/api/likes/:planId` | Logueado. Quita tu like → `{ planId, liked: false, count }`. Si no lo habías dado → `404` |
-| GET | `/api/wishlist` | Logueado. Tu lista, lo último primero, con `planId: { _id, title, slug, shortDescription, priceFrom }` |
+| GET | `/api/wishlist` | Logueado. Tu lista, lo último primero, con `planId: { _id, title, slug, shortDescription, priceFrom, coverImage }` |
 | POST | `/api/wishlist` | Logueado. Body `{ planId }` → `201`. Si ya estaba → `409` |
 | DELETE | `/api/wishlist/:planId` | Logueado. Lo quita de tu lista. Si no estaba → `404` |
 
