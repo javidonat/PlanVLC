@@ -3,4 +3,5 @@ export const environment = {
   apiUrl: 'http://localhost:4000/api',
   apiTimeoutMs: 10000,
   aiTimeoutMs: 30000, // el modelo de IA tarda más en responder
+  aiAnalysisTimeoutMs: 50000, // el análisis de opiniones es una respuesta más larga
 };

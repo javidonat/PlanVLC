@@ -9,7 +9,8 @@ const TIMEOUT_MS = 25000;
 
 // Envía la conversación al modelo y devuelve el texto de la respuesta.
 // messages: [{ role: "system" | "user" | "assistant", content }]
-const complete = async (messages) => {
+// maxTokens: tope de tokens (razonamiento + respuesta) y timeoutMs: tiempo máximo. El análisis de opiniones necesita más que el chat
+const complete = async (messages, { maxTokens = 1500, timeoutMs = TIMEOUT_MS } = {}) => {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new AppError("El asistente no está configurado (falta la clave de OpenRouter)", 503);
 
@@ -29,9 +30,9 @@ const complete = async (messages) => {
         // Muchos modelos "piensan" antes de responder y ese razonamiento también gasta tokens:
         // que piense poco y no lo devuelva (solo queremos la respuesta). Los que no razonan lo ignoran
         reasoning: { effort: "low", exclude: true },
-        max_tokens: 1500, // razonamiento + respuesta corta
+        max_tokens: maxTokens,
       }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
     if (error.name === "TimeoutError") throw new AppError("El asistente ha tardado demasiado en responder. Inténtalo de nuevo", 504);

@@ -17,6 +17,6 @@ export class AiService {
 
   // Resumen y sentimiento de las opiniones de un plan (a partir de sus comentarios)
   async analyzeReviews(request: ReviewsAnalysisRequest, signal?: AbortSignal): Promise<ApiResponse<ReviewsAnalysis>> {
-    return this.api.post<ApiResponse<ReviewsAnalysis>>(`${this.path}/reviews-analysis`, request, { signal, timeoutMs: environment.aiTimeoutMs });
+    return this.api.post<ApiResponse<ReviewsAnalysis>>(`${this.path}/reviews-analysis`, request, { signal, timeoutMs: environment.aiAnalysisTimeoutMs });
   }
 }

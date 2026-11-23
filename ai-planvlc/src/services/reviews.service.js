@@ -66,7 +66,7 @@ const analyzeReviews = async ({ plan, comments }) => {
   const answer = await openrouterService.complete([
     { role: "system", content: systemPrompt },
     { role: "user", content: `Plan: ${plan.title}\n\n<comentarios>\n${commentsText(comments)}\n</comentarios>` },
-  ]);
+  ], { maxTokens: 4000, timeoutMs: 45000 }); // el JSON es más largo que una respuesta del chat: con 1500 el modelo se quedaba sin tokens
   const analysis = parseAnalysis(answer);
 
   if (cache.size >= CACHE_MAX) cache.delete(cache.keys().next().value); // fuera el más antiguo
