@@ -93,6 +93,17 @@
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; }
 }
 
+/* Barras de scroll finas y redondeadas en toda la web (tablas, chat, menús...) en vez de la gris del navegador.
+   Los carruseles la ocultan del todo y llevan sus propios puntos
+   (en @layer base para que las clases de Tailwind, como la que la oculta en el carrusel, puedan cambiarlo) */
+@layer base {
+  * { scrollbar-width: thin; scrollbar-color: var(--color-gris-300) transparent; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--color-gris-300); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--color-gris-400); }
+}
+
 @layer components {
   .field-label { display: block; margin-bottom: .5rem; font-size: .875rem; font-weight: 600; color: var(--color-gris-700); }
   .field-input { display: block; width: 100%; min-height: 2.75rem; border: 1px solid var(--color-gris-300); border-radius: .75rem; background: var(--color-superficie); padding: .65rem .85rem; color: var(--color-gris-900); outline: none; transition: border-color .15s, box-shadow .15s; }

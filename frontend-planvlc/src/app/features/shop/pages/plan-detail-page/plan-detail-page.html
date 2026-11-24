@@ -9,7 +9,7 @@
     <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
       <div class="min-w-0">
         @if (images().length) {
-          <app-carousel label="Fotos del plan">
+          <app-carousel label="Fotos del plan" [fade]="false">
             @for (image of images(); track image._id) {
               <img [src]="image.url" [alt]="image.alt || current.title" class="aspect-[16/10] w-full shrink-0 snap-start rounded-2xl bg-gris-100 object-cover" />
             }
