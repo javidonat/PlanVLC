@@ -2,7 +2,7 @@ import { Component, ElementRef, afterNextRender, computed, input, signal, viewCh
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
 
 // Carrusel reutilizable (solo UI): una fila con scroll horizontal, sin la barra gris del navegador.
-// Debajo lleva puntos (pocas "pantallas") o una barra de progreso (muchas) que dicen por dónde vas,
+// Debajo lleva una barra de scroll propia con los colores de la web (se arrastra o se pulsa),
 // flechas al pasar el ratón y un difuminado en el borde cuando hay más contenido.
 // Lo que se pinta dentro lo decide el padre (<ng-content>): cada elemento necesita
 // un ancho fijo y "shrink-0 snap-start", por ejemplo:
@@ -19,7 +19,8 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
   template: `
     <div class="group relative">
       <div #track (scroll)="updateArrows()" role="region" [attr.aria-label]="label()" tabindex="0"
-        class="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth rounded-2xl outline-none [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-marca-400 [&::-webkit-scrollbar]:hidden">
+        [class.snap-x]="!dragging()" [class.snap-mandatory]="!dragging()" [class.scroll-smooth]="!dragging()"
+        class="flex gap-4 overflow-x-auto rounded-2xl outline-none [scrollbar-width:none] focus-visible:ring-2 focus-visible:ring-marca-400 [&::-webkit-scrollbar]:hidden">
         <ng-content />
       </div>
 
@@ -43,21 +44,15 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
       }
     </div>
 
-    <!-- Por dónde vas: puntos si hay pocas pantallas, barra si hay muchas. Sin scroll, nada -->
-    @if (pages() > 1) {
-      @if (pages() <= maxDots) {
-        <div class="mt-4 flex justify-center gap-1.5">
-          @for (page of pageList(); track page) {
-            <button type="button" (click)="goTo(page)" [attr.aria-label]="'Ir a la pantalla ' + (page + 1)" [attr.aria-current]="page === current() ? 'true' : null"
-              class="h-2 rounded-full transition-all duration-300"
-              [class]="page === current() ? 'w-6 bg-marca-600' : 'w-2 bg-gris-300 hover:bg-gris-400'"></button>
-          }
-        </div>
-      } @else {
-        <div class="mx-auto mt-4 h-1.5 w-32 overflow-hidden rounded-full bg-gris-200" aria-hidden="true">
-          <div class="h-full rounded-full bg-marca-600 transition-[margin] duration-150" [style.width.%]="thumbWidth()" [style.margin-left.%]="thumbOffset()"></div>
-        </div>
-      }
+    <!-- Barra de scroll propia, larga como el carrusel y con los colores de la web (la del navegador va oculta).
+         Se puede arrastrar el violeta o pulsar en la barra para saltar a ese punto. Sin scroll, no sale -->
+    @if (scrollable()) {
+      <div #bar (pointerdown)="onBarDown($event)" aria-hidden="true"
+        class="group/bar relative mt-4 h-2 cursor-pointer touch-none rounded-full bg-gris-200">
+        <div class="absolute inset-y-0 rounded-full bg-gradient-to-r from-marca-500 to-marca-600 transition-[height,top] group-hover/bar:-inset-y-0.5"
+          [class.cursor-grab]="!dragging()" [class.cursor-grabbing]="dragging()"
+          [style.width.%]="thumbWidth()" [style.left.%]="thumbOffset()"></div>
+      </div>
     }
   `,
 })
@@ -65,17 +60,16 @@ export class Carousel {
   label = input(''); // para lectores de pantalla
   fade = input(true); // difuminar los bordes (sin él para fotos a todo el ancho)
 
-  readonly maxDots = 8;
   private readonly track = viewChild.required<ElementRef<HTMLElement>>('track');
   readonly canPrev = signal(false);
   readonly canNext = signal(false);
-  readonly pages = signal(1); // cuántas "pantallas" de ancho tiene el contenido
-  readonly current = signal(0);
+  readonly scrollable = signal(false);
+  readonly dragging = signal(false);
+  private readonly bar = viewChild<ElementRef<HTMLElement>>('bar');
   private readonly progress = signal(0); // 0 al principio, 1 al final
   private readonly visible = signal(1); // parte visible del total (0-1)
 
-  readonly pageList = computed(() => Array.from({ length: this.pages() }, (_, index) => index));
-  readonly thumbWidth = computed(() => Math.max(this.visible() * 100, 15));
+  readonly thumbWidth = computed(() => Math.max(this.visible() * 100, 8));
   readonly thumbOffset = computed(() => this.progress() * (100 - this.thumbWidth()));
 
   constructor() {
@@ -89,9 +83,31 @@ export class Carousel {
     el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' });
   }
 
-  goTo(page: number): void {
+  // Pulsar o arrastrar la barra: el carrusel se mueve a esa posición (el centro del violeta sigue al dedo/ratón)
+  onBarDown(event: PointerEvent): void {
+    const bar = this.bar()?.nativeElement;
+    if (!bar) return;
+    event.preventDefault();
+    bar.setPointerCapture(event.pointerId);
+    this.dragging.set(true);
     const el = this.track().nativeElement;
-    el.scrollTo({ left: page * el.clientWidth, behavior: 'smooth' });
+    const moveTo = (clientX: number) => {
+      const rect = bar.getBoundingClientRect();
+      const thumb = (this.thumbWidth() / 100) * rect.width;
+      const ratio = (clientX - rect.left - thumb / 2) / (rect.width - thumb);
+      el.scrollTo({ left: Math.min(Math.max(ratio, 0), 1) * (el.scrollWidth - el.clientWidth), behavior: 'instant' });
+    };
+    moveTo(event.clientX);
+    const onMove = (move: PointerEvent) => moveTo(move.clientX);
+    const onUp = () => {
+      this.dragging.set(false);
+      bar.removeEventListener('pointermove', onMove);
+      bar.removeEventListener('pointerup', onUp);
+      bar.removeEventListener('pointercancel', onUp);
+    };
+    bar.addEventListener('pointermove', onMove);
+    bar.addEventListener('pointerup', onUp);
+    bar.addEventListener('pointercancel', onUp);
   }
 
   updateArrows(): void {
@@ -99,8 +115,7 @@ export class Carousel {
     const max = el.scrollWidth - el.clientWidth;
     this.canPrev.set(el.scrollLeft > 4);
     this.canNext.set(el.scrollLeft < max - 4);
-    this.pages.set(max > 4 ? Math.ceil(el.scrollWidth / el.clientWidth - 0.05) : 1);
-    this.current.set(this.canNext() ? Math.round(el.scrollLeft / el.clientWidth) : this.pages() - 1);
+    this.scrollable.set(max > 4);
     this.progress.set(max > 0 ? el.scrollLeft / max : 0);
     this.visible.set(el.scrollWidth ? el.clientWidth / el.scrollWidth : 1);
   }
