@@ -19,11 +19,15 @@ export interface PlanComment {
   createdAt: string;
 }
 
-// Media de valoraciones del plan (average null si aún no hay comentarios)
+// Resumen de valoraciones del plan (average y recommendPercent son null si aún no hay comentarios)
 export interface CommentStats {
   count: number;
   average: number | null;
+  distribution: Record<1 | 2 | 3 | 4 | 5, number>; // cuántas opiniones hay de cada estrella
+  recommendPercent: number | null; // % de opiniones con 4 o 5 estrellas
 }
+
+export const EMPTY_COMMENT_STATS: CommentStats = { count: 0, average: null, distribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }, recommendPercent: null };
 
 // GET /api/comments?plan=<slug>&page=&limit= → lista paginada + stats
 export interface CommentsResponse extends ApiPagedResponse<PlanComment> {

@@ -17,13 +17,24 @@ const findByPlan = async (planId, { page, limit }) => {
   return { items, total };
 };
 
-// Media de valoraciones y número de comentarios de un plan
+// Resumen de valoraciones de un plan: número, media, cuántas hay de cada estrella (5 a 1)
+// y el porcentaje que lo recomienda (4 o 5 estrellas)
 const statsByPlan = async (planId) => {
-  const [stats] = await Comment.aggregate([
+  const groups = await Comment.aggregate([
     { $match: { planId: new mongoose.Types.ObjectId(String(planId)), ...VISIBLE } },
-    { $group: { _id: null, count: { $sum: 1 }, average: { $avg: "$rating" } } },
+    { $group: { _id: "$rating", count: { $sum: 1 } } },
   ]);
-  return { count: stats?.count ?? 0, average: stats ? Math.round(stats.average * 10) / 10 : null };
+  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  for (const group of groups) distribution[group._id] = group.count;
+  const count = groups.reduce((total, group) => total + group.count, 0);
+  if (!count) return { count, average: null, distribution, recommendPercent: null };
+  const sum = groups.reduce((total, group) => total + group._id * group.count, 0);
+  return {
+    count,
+    average: Math.round((sum / count) * 10) / 10,
+    distribution,
+    recommendPercent: Math.round(((distribution[5] + distribution[4]) / count) * 100),
+  };
 };
 
 // Panel admin: por cada plan con comentarios, cuántos tiene, su media y el último. Los que más tienen primero

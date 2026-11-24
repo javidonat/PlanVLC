@@ -318,7 +318,7 @@ Cada comentario tiene `planId`, `userId` (el autor), `rating` (entero de 1 a 5),
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/comments?plan=<slug>&page=&limit=` | Público. Comentarios visibles del plan, los más nuevos primero, con el autor (`userId: { _id, name, profile: { avatar } }`) y `stats: { count, average }` |
+| GET | `/api/comments?plan=<slug>&page=&limit=` | Público. Comentarios visibles del plan, los más nuevos primero, con el autor (`userId: { _id, name, profile: { avatar } }`) y `stats: { count, average, distribution: { 5, 4, 3, 2, 1 }, recommendPercent }` (`recommendPercent`: % de opiniones con 4 o 5 estrellas) |
 | POST | `/api/comments` | Logueado (`authenticate`). Body `{ planId, rating, text }`. El autor es siempre el usuario de la sesión. El plan tiene que estar publicado → si no, `404` |
 | PATCH | `/api/comments/:id/softdelete` | Logueado. Borrado lógico. Solo el autor o un admin: si no → `403 Solo puedes borrar tus propios comentarios` |
 | GET | `/api/comments/summary` | Solo admin. Por cada plan con comentarios: `{ planId, title, slug, count, average, lastCommentAt }` |

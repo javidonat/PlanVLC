@@ -3,8 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers } from '@lucide/angular';
 import { ImageRef } from '../../../../core/models/plan.model';
 import { ShopPlan, ShopSession } from '../../../../core/models/shop.model';
-import { ChatMessage, PlanChatRequest } from '../../../../core/models/ai.model';
-import { CommentDraft, CommentStats, PlanComment } from '../../../../core/models/comment.model';
+import { ChatMessage, PlanChatRequest, ReviewsAnalysis } from '../../../../core/models/ai.model';
+import { CommentDraft, CommentStats, EMPTY_COMMENT_STATS, PlanComment } from '../../../../core/models/comment.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { AiService } from '../../../../core/services/ai.service';
 import { CommentsService } from '../../../../core/services/comments.service';
@@ -22,6 +22,8 @@ import { ErrorState } from '../../../../shared/components/error-state/error-stat
 import { SessionList } from '../../components/session-list/session-list';
 import { PlanChat } from '../../components/plan-chat/plan-chat';
 import { PlanComments } from '../../components/plan-comments/plan-comments';
+import { ReviewsOverview } from '../../components/reviews-overview/reviews-overview';
+import { ReviewsAiSummary } from '../../components/reviews-ai-summary/reviews-ai-summary';
 import { PlanLikeButton } from '../../components/plan-like-button/plan-like-button';
 import { PlanWishlistButton } from '../../components/plan-wishlist-button/plan-wishlist-button';
 import { filtersToUrl } from '../../utils/shop-url';
@@ -34,7 +36,7 @@ import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../util
 // Like y lista de deseos: sin sesión, el botón lleva al login y vuelve al plan
 @Component({
   selector: 'app-plan-detail-page',
-  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, PlanLikeButton, PlanWishlistButton],
+  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, PlanWishlistButton],
   templateUrl: './plan-detail-page.html',
 })
 export class PlanDetailPage {
@@ -66,7 +68,7 @@ export class PlanDetailPage {
 
   // Opiniones: se cargan de 5 en 5 ("Ver más" añade la página siguiente)
   readonly comments = signal<PlanComment[]>([]);
-  readonly commentStats = signal<CommentStats>({ count: 0, average: null });
+  readonly commentStats = signal<CommentStats>(EMPTY_COMMENT_STATS);
   readonly commentsPage = signal(1);
   readonly commentsTotalPages = signal(0);
   readonly commentsLoading = signal(false);
@@ -74,8 +76,8 @@ export class PlanDetailPage {
   readonly commentSubmitting = signal(false);
   readonly commentSubmitError = signal<string | null>(null);
   readonly deletingCommentId = signal<string | null>(null);
-  // Resumen de las opiniones hecho por la IA (solo con 2 o más comentarios)
-  readonly reviewsSummary = signal<string | null>(null);
+  // Resumen de las opiniones hecho por la IA, con aspectos destacados y mejorables (solo con 2 o más comentarios)
+  readonly reviewsAnalysis = signal<ReviewsAnalysis | null>(null);
   readonly reviewsSummaryLoading = signal(false);
   readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
   readonly returnUrl = computed(() => `/planes/${this.slug()}`);
@@ -294,15 +296,15 @@ export class PlanDetailPage {
       this.reviewsSummaryLoading.set(true);
       const res = await this.commentsService.getByPlan(slug, 1, PlanDetailPage.MAX_COMMENTS_FOR_SUMMARY, controller.signal);
       if (res.data.length < PlanDetailPage.MIN_COMMENTS_FOR_SUMMARY) {
-        this.reviewsSummary.set(null);
+        this.reviewsAnalysis.set(null);
         return;
       }
       const comments = res.data.map(({ rating, text }) => ({ rating, text }));
       const analysis = await this.ai.analyzeReviews({ plan: { title: plan.title }, comments }, controller.signal);
-      this.reviewsSummary.set(analysis.data.summary);
+      this.reviewsAnalysis.set(analysis.data);
     } catch {
       // Si la IA falla no se enseña el resumen: las opiniones se siguen viendo igual
-      if (!controller.signal.aborted) this.reviewsSummary.set(null);
+      if (!controller.signal.aborted) this.reviewsAnalysis.set(null);
     } finally {
       if (this.summaryAbortController === controller) this.reviewsSummaryLoading.set(false);
     }
@@ -351,13 +353,13 @@ export class PlanDetailPage {
     this.commentsAbortController?.abort();
     this.summaryAbortController?.abort();
     this.comments.set([]);
-    this.commentStats.set({ count: 0, average: null });
+    this.commentStats.set(EMPTY_COMMENT_STATS);
     this.commentsPage.set(1);
     this.commentsTotalPages.set(0);
     this.commentsError.set(null);
     this.commentSubmitError.set(null);
     this.commentsLoading.set(false);
-    this.reviewsSummary.set(null);
+    this.reviewsAnalysis.set(null);
     this.reviewsSummaryLoading.set(false);
   }
 
