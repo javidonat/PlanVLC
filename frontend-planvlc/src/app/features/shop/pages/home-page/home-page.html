@@ -1,14 +1,15 @@
-<app-image-slideshow [images]="heroImages()" overlayClass="bg-gradient-to-r from-marca-900/90 via-marca-800/70 to-marca-700/30"
-  class="bg-gradient-to-br from-marca-700 via-marca-600 to-marca-500 text-white">
-  <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-    <p class="text-sm font-semibold uppercase tracking-widest text-marca-100">PlanVLC</p>
-    <h1 class="mt-3 max-w-2xl text-4xl font-extrabold tracking-tight sm:text-5xl">Planes y eventos en Valencia</h1>
-    <p class="mt-4 max-w-xl text-lg text-marca-100">Fiestas, conciertos, tardeos, deporte y actividades. Elige el plan y la fecha que mejor te vaya.</p>
-    <a routerLink="/planes" class="mt-8 inline-flex items-center gap-2 rounded-xl bg-superficie px-6 py-3 font-semibold text-marca-700 shadow-sm hover:bg-marca-50"><svg lucideTicket width="18" height="18"></svg> Ver todos los planes</a>
+<!-- Portada tipo cartel: titular grande abajo a la izquierda sobre las fotos oscurecidas -->
+<app-image-slideshow [images]="heroImages()" overlayClass="bg-gradient-to-t from-noche via-noche/60 to-marca-900/20"
+  class="bg-noche text-white">
+  <div class="mx-auto flex min-h-[32rem] max-w-7xl flex-col justify-end px-4 pb-14 pt-24 sm:min-h-[36rem] sm:px-6 sm:pb-16 lg:min-h-[40rem] lg:px-8">
+    <h1 class="max-w-4xl text-[clamp(2.75rem,8vw,6.25rem)] font-extrabold leading-[0.92] tracking-[-0.035em]">Planes y eventos en Valencia</h1>
+    <p class="mt-6 max-w-lg text-lg leading-relaxed text-white/80">Fiestas, conciertos, tardeos, deporte y actividades. Elige el plan y la fecha que mejor te vaya.</p>
+    <!-- Colores fijos (no de la paleta) para que el hover se vea igual en modo claro y oscuro -->
+    <a routerLink="/planes" class="mt-8 inline-flex items-center gap-2 self-start rounded-full bg-white px-6 py-3.5 font-semibold text-noche transition-colors hover:bg-[#ebe7ff]"><svg lucideTicket width="18" height="18"></svg> Ver todos los planes</a>
   </div>
 </app-image-slideshow>
 
-<div class="mx-auto max-w-7xl space-y-14 px-4 py-12 sm:px-6 lg:px-8">
+<div class="mx-auto max-w-7xl space-y-16 px-4 py-14 sm:px-6 lg:px-8">
   @if (store.catalogLoading()) {
     <app-skeleton-loader [count]="3" label="Cargando categorías, organizadores y lugares" />
   } @else if (store.catalogError(); as message) {
@@ -16,7 +17,7 @@
   } @else {
     @if (store.categories().length) {
       <section>
-        <h2 class="mb-5 text-2xl font-bold text-gris-900">Explora por categoría</h2>
+        <h2 class="mb-6 text-3xl font-extrabold text-gris-900 sm:text-4xl">Explora por categoría</h2>
         <app-carousel label="Categorías">
           @for (category of store.categories(); track category._id) {
             <app-category-card class="w-44 shrink-0 snap-start sm:w-52" [category]="category" (selected)="onCategory($event)" />
@@ -27,7 +28,7 @@
 
     @if (store.organizers().length) {
       <section>
-        <h2 class="mb-5 text-2xl font-bold text-gris-900">Organizadores</h2>
+        <h2 class="mb-6 text-3xl font-extrabold text-gris-900 sm:text-4xl">Organizadores</h2>
         <app-carousel label="Organizadores">
           @for (organizer of store.organizers(); track organizer._id) {
             <app-organizer-card class="w-44 shrink-0 snap-start sm:w-52" [organizer]="organizer" (selected)="onOrganizer($event)" />
@@ -38,7 +39,7 @@
 
     @if (store.venues().length) {
       <section>
-        <h2 class="mb-5 text-2xl font-bold text-gris-900">Lugares</h2>
+        <h2 class="mb-6 text-3xl font-extrabold text-gris-900 sm:text-4xl">Lugares</h2>
         <app-carousel label="Lugares">
           @for (venue of store.venues(); track venue._id) {
             <app-venue-card class="w-44 shrink-0 snap-start sm:w-52" [venue]="venue" (selected)="onVenue($event)" />

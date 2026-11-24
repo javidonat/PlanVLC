@@ -14,9 +14,9 @@ import { AuthStore } from '../../core/stores/auth.store';
   template: `
     <app-navbar /><app-loader />
     <aside class="sticky top-16 z-30 flex flex-col border-b border-gris-200 bg-superficie md:fixed md:inset-y-0 md:left-0 md:top-0 md:w-64 md:border-b-0 md:border-r">
-      <a routerLink="/" class="hidden h-16 shrink-0 items-center gap-2.5 px-6 text-xl font-extrabold tracking-tight text-gris-900 md:flex" aria-label="PlanVLC, ir al inicio">
-        <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-marca-500 to-marca-700 text-white shadow-sm" aria-hidden="true"><svg lucideMapPin width="18" height="18"></svg></span>
-        <span>Plan<span class="text-marca-600">VLC</span></span>
+      <a routerLink="/" class="hidden h-16 shrink-0 items-center gap-2 px-6 font-display text-2xl font-extrabold text-gris-900 md:flex" aria-label="PlanVLC, ir al inicio">
+        <span class="flex h-9 w-9 items-center justify-center rounded-full bg-marca-600 text-white" aria-hidden="true"><svg lucideMapPin width="18" height="18"></svg></span>
+        <span>PlanVLC</span>
       </a>
       <nav class="flex gap-1 overflow-x-auto px-3 py-2 md:flex-1 md:flex-col md:overflow-y-auto md:px-4 md:pb-4 md:pt-0" aria-label="Navegación lateral">
         <!-- Las secciones del panel solo las ve un admin (adminGuard protege además las rutas) -->

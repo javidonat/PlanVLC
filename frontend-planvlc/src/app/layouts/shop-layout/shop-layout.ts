@@ -16,15 +16,15 @@ import { WishlistService } from '../../core/services/wishlist.service';
   selector: 'app-shop-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, SavedPlansMenu],
   template: `
-    <header class="sticky top-0 z-40 border-b border-gris-200 bg-superficie/90 backdrop-blur-md">
+    <header class="sticky top-0 z-40 border-b border-gris-200/80 bg-superficie/85 backdrop-blur-md">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-6">
-          <a routerLink="/" class="flex items-center gap-2.5 text-xl font-extrabold tracking-tight text-gris-900" aria-label="PlanVLC, ir al inicio">
-            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-marca-500 to-marca-700 text-white shadow-sm" aria-hidden="true"><svg lucideMapPin width="18" height="18"></svg></span>
-            <span class="hidden sm:inline">Plan<span class="text-marca-600">VLC</span></span>
+          <a routerLink="/" class="font-display flex items-center gap-2 text-2xl font-extrabold text-gris-900" aria-label="PlanVLC, ir al inicio">
+            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-marca-600 text-white" aria-hidden="true"><svg lucideMapPin width="18" height="18"></svg></span>
+            <span class="hidden sm:inline">PlanVLC</span>
           </a>
           <nav class="flex items-center gap-1 text-sm font-semibold" aria-label="Navegación principal">
-            <a routerLink="/planes" routerLinkActive="bg-marca-50 text-marca-700" class="rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100">Planes</a>
+            <a routerLink="/planes" routerLinkActive="bg-marca-50 text-marca-700" class="rounded-full px-4 py-2 text-gris-600 hover:bg-gris-100">Planes</a>
           </nav>
         </div>
         <div class="flex items-center gap-1">
@@ -47,19 +47,35 @@ import { WishlistService } from '../../core/services/wishlist.service';
           </div>
         } @else {
           <a routerLink="/login" class="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-gris-700 hover:bg-gris-100"><svg lucideLogIn width="17" height="17"></svg><span class="hidden sm:inline">Iniciar sesión</span></a>
-          <a routerLink="/registro" class="rounded-xl bg-marca-600 px-4 py-2 text-sm font-semibold text-white hover:bg-marca-700">Registrarse</a>
+          <a routerLink="/registro" class="rounded-full bg-marca-600 px-4 py-2 text-sm font-semibold text-white hover:bg-marca-700">Registrarse</a>
         }
         </div>
       </div>
     </header>
     <main class="min-h-[calc(100vh-8rem)]"><router-outlet /></main>
-    <footer class="border-t border-gris-200 py-6 text-center text-sm text-gris-500">PlanVLC · Planes y eventos en Valencia</footer>
+    <footer class="mt-8 bg-noche text-sm text-white/60">
+      <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <div class="flex items-center gap-3">
+          <a routerLink="/" class="font-display flex items-center gap-2 text-xl font-extrabold text-white" aria-label="PlanVLC, ir al inicio">
+            <span class="flex h-7 w-7 items-center justify-center rounded-full bg-marca-600" aria-hidden="true"><svg lucideMapPin width="14" height="14"></svg></span>
+            PlanVLC
+          </a>
+          <span class="hidden h-4 w-px bg-white/20 sm:block" aria-hidden="true"></span>
+          <span class="hidden sm:inline">Planes y eventos en Valencia</span>
+        </div>
+        <nav class="flex items-center gap-5" aria-label="Pie de página">
+          <a routerLink="/planes" class="hover:text-white">Ver planes</a>
+          <span>© {{ year }} PlanVLC</span>
+        </nav>
+      </div>
+    </footer>
   `,
 })
 export class ShopLayout {
   readonly auth = inject(AuthStore);
   readonly theme = inject(ThemeStore);
   readonly savedPlans = inject(SavedPlansStore);
+  readonly year = new Date().getFullYear();
   private readonly likesService = inject(LikesService);
   private readonly wishlistService = inject(WishlistService);
 

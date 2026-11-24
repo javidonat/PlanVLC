@@ -6,13 +6,15 @@ import { initial } from '../../utils/shop.utils';
 @Component({
   selector: 'app-category-card',
   template: `
-    <button type="button" (click)="selected.emit(category())" class="group block w-full overflow-hidden rounded-2xl border border-gris-200 bg-superficie text-left shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <!-- Tarjeta tipo cartel: la foto ocupa todo y el nombre va encima, abajo -->
+    <button type="button" (click)="selected.emit(category())" class="group/card relative block aspect-[4/5] w-full overflow-hidden rounded-2xl bg-noche text-left">
       @if (category().coverImage; as image) {
-        <img [src]="image.url" [alt]="image.alt || category().name" class="h-28 w-full object-cover" loading="lazy" />
+        <img [src]="image.url" [alt]="image.alt || category().name" class="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover/card:scale-105" loading="lazy" />
       } @else {
-        <span class="flex h-28 w-full items-center justify-center bg-gradient-to-br from-marca-100 to-marca-200 text-4xl font-extrabold text-marca-700" aria-hidden="true">{{ category().icon || initial(category().name) }}</span>
+        <span class="absolute inset-0 flex items-center justify-center bg-marca-700 text-6xl font-extrabold text-white/30" aria-hidden="true">{{ category().icon || initial(category().name) }}</span>
       }
-      <span class="block px-4 py-3 font-semibold text-gris-900 group-hover:text-marca-700">{{ category().name }}</span>
+      <span class="absolute inset-0 bg-gradient-to-t from-noche/90 via-noche/10 to-transparent" aria-hidden="true"></span>
+      <span class="font-display absolute inset-x-0 bottom-0 p-4 text-2xl font-extrabold leading-tight text-white transition-colors group-hover/card:text-marca-300">{{ category().name }}</span>
     </button>
   `,
 })

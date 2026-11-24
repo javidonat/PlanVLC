@@ -8,11 +8,11 @@ import { nextDateText, planPriceText, venueText } from '../../utils/shop.utils';
   selector: 'app-plan-row',
   imports: [LucideCalendarDays, LucideMapPin, LucideTicket],
   template: `
-    <button type="button" (click)="selected.emit(plan())" class="group flex w-full gap-4 overflow-hidden rounded-2xl border border-gris-200 bg-superficie p-3 text-left shadow-xs transition hover:shadow-md sm:p-4">
+    <button type="button" (click)="selected.emit(plan())" class="group/card flex w-full gap-4 overflow-hidden rounded-2xl border border-gris-200 bg-superficie p-3 text-left transition-colors hover:border-marca-300 sm:p-4">
       @if (plan().coverImage; as image) {
         <img [src]="image.url" [alt]="image.alt || plan().title" class="h-24 w-28 shrink-0 rounded-xl bg-gris-100 object-cover sm:h-28 sm:w-44" loading="lazy" />
       } @else {
-        <span class="flex h-24 w-28 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-marca-100 to-marca-200 text-marca-500 sm:h-28 sm:w-44" aria-hidden="true"><svg lucideTicket width="32" height="32"></svg></span>
+        <span class="flex h-24 w-28 shrink-0 items-center justify-center rounded-xl bg-marca-100 text-marca-500 sm:h-28 sm:w-44" aria-hidden="true"><svg lucideTicket width="32" height="32"></svg></span>
       }
       <span class="flex min-w-0 flex-1 flex-col">
         <span class="flex items-start justify-between gap-3">
@@ -22,7 +22,7 @@ import { nextDateText, planPriceText, venueText } from '../../utils/shop.utils';
                 <span class="rounded-full bg-marca-50 px-2 py-0.5 text-xs font-semibold text-marca-700">{{ category.name }}</span>
               }
             </span>
-            <span class="mt-1.5 block truncate text-base font-bold text-gris-900 group-hover:text-marca-700 sm:text-lg">{{ plan().title }}</span>
+            <span class="font-display mt-1.5 block truncate text-lg font-bold text-gris-900 group-hover/card:text-marca-700 sm:text-xl">{{ plan().title }}</span>
           </span>
           <span class="shrink-0 text-sm font-bold text-marca-700 sm:text-base">{{ planPriceText(plan()) }}</span>
         </span>

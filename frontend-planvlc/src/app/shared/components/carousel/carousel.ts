@@ -48,7 +48,7 @@ import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
          Se puede arrastrar el violeta o pulsar en la barra para saltar a ese punto. Sin scroll, no sale -->
     @if (scrollable()) {
       <div #bar (pointerdown)="onBarDown($event)" aria-hidden="true"
-        class="group/bar relative mt-4 h-2 cursor-pointer touch-none rounded-full bg-gris-200">
+        class="group/bar relative mt-4 h-1.5 cursor-pointer touch-none rounded-full bg-gris-200">
         <div class="absolute inset-y-0 rounded-full bg-gradient-to-r from-marca-500 to-marca-600 transition-[height,top] group-hover/bar:-inset-y-0.5"
           [class.cursor-grab]="!dragging()" [class.cursor-grabbing]="dragging()"
           [style.width.%]="thumbWidth()" [style.left.%]="thumbOffset()"></div>

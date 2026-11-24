@@ -6,13 +6,13 @@ import { initial, organizerTypeText } from '../../utils/shop.utils';
 @Component({
   selector: 'app-organizer-card',
   template: `
-    <button type="button" (click)="selected.emit(organizer())" class="group flex h-full w-full flex-col items-center rounded-2xl border border-gris-200 bg-superficie p-5 text-center shadow-xs transition hover:-translate-y-0.5 hover:shadow-md">
+    <button type="button" (click)="selected.emit(organizer())" class="group/card flex h-full w-full flex-col items-center rounded-2xl border border-gris-200 bg-superficie px-5 py-6 text-center transition-colors hover:border-marca-300">
       @if (organizer().logo; as logo) {
-        <img [src]="logo.url" [alt]="logo.alt || organizer().name" class="h-16 w-16 rounded-full border border-gris-200 object-cover" loading="lazy" />
+        <img [src]="logo.url" [alt]="logo.alt || organizer().name" class="h-20 w-20 rounded-full object-cover ring-4 ring-gris-100 transition group-hover/card:ring-marca-100" loading="lazy" />
       } @else {
-        <span class="flex h-16 w-16 items-center justify-center rounded-full bg-marca-100 text-2xl font-bold text-marca-700" aria-hidden="true">{{ initial(organizer().name) }}</span>
+        <span class="font-display flex h-20 w-20 items-center justify-center rounded-full bg-marca-100 text-3xl font-extrabold text-marca-700" aria-hidden="true">{{ initial(organizer().name) }}</span>
       }
-      <span class="mt-3 font-semibold text-gris-900 group-hover:text-marca-700">{{ organizer().name }}</span>
+      <span class="font-display mt-4 text-lg font-bold leading-snug text-gris-900 group-hover/card:text-marca-700">{{ organizer().name }}</span>
       <span class="mt-1 text-xs text-gris-500">{{ organizerTypeText(organizer().type) }}</span>
     </button>
   `,

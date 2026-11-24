@@ -9,7 +9,7 @@
    Para cambiar el color de la web basta con cambiar la escala "marca". */
 @theme {
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
 
   --color-marca-50: #f4f2ff;
   --color-marca-100: #ebe7ff;
@@ -32,6 +32,9 @@
   --color-gris-700: #3f3f4c;
   --color-gris-800: #2a2a35;
   --color-gris-900: #18181f;
+
+  /* Violeta casi negro de la noche valenciana: portada y pie (bg-noche). No cambia en modo oscuro */
+  --color-noche: #1a1230;
 
   /* Fondo de cards, paneles, cabeceras y campos (bg-superficie). En modo oscuro cambia */
   --color-superficie: #ffffff;
@@ -81,7 +84,7 @@
 
 /* Los textos violetas oscuros no se leen sobre fondo oscuro: se aclaran (los botones violetas no cambian) */
 .dark :is(.text-marca-600, .text-marca-700) { color: var(--color-marca-300); }
-.dark :is(.hover\:text-marca-700:hover, .hover\:text-marca-800:hover, .group:hover .group-hover\:text-marca-700) { color: #d9d1ff; }
+.dark :is(.hover\:text-marca-700:hover, .hover\:text-marca-800:hover, .group:hover .group-hover\:text-marca-700, .group\/card:hover .group-hover\/card\:text-marca-700) { color: #d9d1ff; }
 .dark .menu-link.activo { color: var(--color-marca-300); }
 /* Botones de texto desactivados (ej. "Quitar filtros" sin filtros): grises también en oscuro */
 .dark .disabled\:text-gris-300:disabled { color: var(--color-gris-300); }
@@ -90,7 +93,15 @@
 .dark .text-marca-100 { color: #ebe7ff; }
 
 @layer base {
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; }
+  /* Títulos con Bricolage Grotesque: algo estrecha y apretada, como un cartel de evento */
+  h1, h2, h3, .font-display { font-family: var(--font-display); font-optical-sizing: auto; font-stretch: 92%; letter-spacing: -0.02em; }
+  h1 { text-wrap: balance; }
+  ::selection { background: var(--color-marca-200); color: var(--color-gris-900); }
+}
+
+/* Con "reducir movimiento" en el sistema, sin transiciones ni zooms */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; scroll-behavior: auto !important; }
 }
 
 /* Barras de scroll finas y redondeadas en toda la web (tablas, chat, menús...) en vez de la gris del navegador.
