@@ -1,24 +1,28 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { LucideArrowLeft, LucideShoppingCart } from '@lucide/angular';
+import { LucideArrowLeft, LucideHeart, LucideShoppingCart } from '@lucide/angular';
 import { CartItem as CartLine, UpdateCartItemPayload } from '../../../../core/models/cart.model';
 import { ShopSession } from '../../../../core/models/shop.model';
 import { CartService } from '../../../../core/services/cart.service';
 import { ShopService } from '../../../../core/services/shop.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { CartStore } from '../../../../core/stores/cart.store';
+import { SavedPlansStore } from '../../../../core/stores/saved-plans.store';
+import { LikesService } from '../../../../core/services/likes.service';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { SkeletonLoader } from '../../../../shared/components/skeleton-loader/skeleton-loader';
 import { ErrorState } from '../../../../shared/components/error-state/error-state';
 import { CartItem } from '../../components/cart-item/cart-item';
 import { CartSummary } from '../../components/cart-summary/cart-summary';
+import { WishlistItem } from '../../components/wishlist-item/wishlist-item';
 
 // Página del carrito (/carrito, solo con sesión: authGuard). Pinta lo que hay en CartStore y guarda
 // cada cambio en el backend, que devuelve el carrito ya recalculado (subtotales, total y entradas).
-// Para cambiar la fecha de una línea carga las próximas fechas de cada plan del carrito
+// Para cambiar la fecha de una línea carga las próximas fechas de cada plan del carrito.
+// Tiene dos pestañas: Cesta (el carrito) y Wishlist (los planes con like, de SavedPlansStore)
 @Component({
   selector: 'app-cart-page',
-  imports: [RouterLink, LucideArrowLeft, LucideShoppingCart, SkeletonLoader, ErrorState, CartItem, CartSummary],
+  imports: [RouterLink, LucideArrowLeft, LucideHeart, LucideShoppingCart, SkeletonLoader, ErrorState, CartItem, CartSummary, WishlistItem],
   templateUrl: './cart-page.html',
 })
 export class CartPage implements OnInit {
@@ -26,6 +30,12 @@ export class CartPage implements OnInit {
   private readonly shopService = inject(ShopService);
   private readonly alerts = inject(AlertService);
   readonly store = inject(CartStore);
+  readonly savedPlans = inject(SavedPlansStore);
+  private readonly likesService = inject(LikesService);
+
+  // Pestaña que se ve: la cesta o la wishlist
+  readonly tab = signal<'cesta' | 'wishlist'>('cesta');
+  readonly unlikingId = signal<string | null>(null); // plan de la wishlist que se está quitando
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -103,6 +113,25 @@ export class CartPage implements OnInit {
       await this.load();
     } finally {
       this.busyId.set(null);
+    }
+  }
+
+  // Quitar un plan de la wishlist = quitarle el like
+  async onUnlike(planId: string): Promise<void> {
+    if (this.unlikingId()) return;
+    try {
+      this.unlikingId.set(planId);
+      await this.likesService.unlike(planId);
+      this.savedPlans.removeLike(planId);
+    } catch {
+      // El interceptor ya muestra el error. Se vuelve a leer la lista real
+      try {
+        this.savedPlans.setLikes((await this.likesService.getMine()).data);
+      } catch {
+        // nada: se queda como estaba
+      }
+    } finally {
+      this.unlikingId.set(null);
     }
   }
 

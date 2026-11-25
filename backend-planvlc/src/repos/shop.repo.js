@@ -149,7 +149,7 @@ const findPlanIdBySlug = async (slug) => {
   return plan?._id ?? null;
 };
 
-// ¿Existe el plan y se ve en la tienda? (solo se puede comentar, dar like o guardar en la lista de deseos esos)
+// ¿Existe el plan y se ve en la tienda? (solo se puede comentar o dar like a esos)
 const planIsVisible = async (planId) => Boolean(await Plan.exists({ _id: planId, ...VISIBLE_PLAN }));
 
 // Sesiones (variantes) que se pueden elegir: publicadas, activas y que todavía no han empezado

@@ -1,7 +1,6 @@
 import { ImageRef } from './plan.model';
 
-// Planes guardados por el usuario: los que tienen su like (GET /api/likes/me)
-// y los de su lista de deseos (GET /api/wishlist). Las dos listas traen el mismo formato
+// Planes guardados por el usuario: los que tienen su like (GET /api/likes/me). Son su wishlist
 
 export interface SavedPlan {
   _id: string;

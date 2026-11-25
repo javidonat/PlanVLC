@@ -4,20 +4,18 @@ import { LucideLayoutDashboard, LucideLogIn, LucideMapPin } from '@lucide/angula
 import { AuthStore } from '../../core/stores/auth.store';
 import { ThemeStore } from '../../core/stores/theme.store';
 import { ThemeToggle } from '../../shared/components/theme-toggle/theme-toggle';
-import { SavedPlansMenu } from '../../shared/components/saved-plans-menu/saved-plans-menu';
 import { SavedPlansStore } from '../../core/stores/saved-plans.store';
 import { LikesService } from '../../core/services/likes.service';
-import { WishlistService } from '../../core/services/wishlist.service';
 import { CartIcon } from '../../shared/components/cart-icon/cart-icon';
 import { CartStore } from '../../core/stores/cart.store';
 import { CartService } from '../../core/services/cart.service';
 
 // Layout de la parte pública (home, shop y detalle): barra superior y pie, sin menú lateral.
 // Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel.
-// sus planes con like y su lista de deseos (desplegables) y el carrito con el número de entradas. Sin sesión, los accesos al login y al registro
+// el carrito con el número de entradas (dentro, la cesta y la wishlist con los planes con like). Sin sesión, los accesos al login y al registro
 @Component({
   selector: 'app-shop-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, SavedPlansMenu, CartIcon],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, CartIcon],
   template: `
     <header class="sticky top-0 z-40 border-b border-gris-200/80 bg-superficie/85 backdrop-blur-md">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
@@ -34,8 +32,6 @@ import { CartService } from '../../core/services/cart.service';
         <app-theme-toggle [dark]="theme.theme() === 'dark'" (toggle)="theme.toggle()" />
         @if (auth.user(); as user) {
           <div class="flex items-center gap-1 text-sm font-semibold">
-            <app-saved-plans-menu kind="likes" title="Planes que te gustan" [items]="savedPlans.likes()" emptyText="Dale al corazón en un plan y aparecerá aquí." />
-            <app-saved-plans-menu kind="wishlist" title="Tu lista de deseos" [items]="savedPlans.wishlist()" emptyText="Guarda planes en tu lista de deseos y los tendrás aquí." />
             <app-cart-icon [count]="cart.totalItems()" />
             @if (auth.isAdmin()) {
               <a routerLink="/admin/planes" class="flex items-center gap-2 rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100"><svg lucideLayoutDashboard width="17" height="17"></svg><span class="hidden sm:inline">Panel</span></a>
@@ -81,12 +77,11 @@ export class ShopLayout {
   readonly savedPlans = inject(SavedPlansStore);
   readonly year = new Date().getFullYear();
   private readonly likesService = inject(LikesService);
-  private readonly wishlistService = inject(WishlistService);
   readonly cart = inject(CartStore);
   private readonly cartService = inject(CartService);
 
   constructor() {
-    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes, la lista de deseos y el carrito del usuario
+    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes (la wishlist) y el carrito del usuario
     effect(() => {
       const userId = this.auth.user()?._id;
       untracked(() => {
@@ -103,11 +98,9 @@ export class ShopLayout {
 
   private async loadSavedPlans(): Promise<void> {
     try {
-      const [likes, wishlist] = await Promise.all([this.likesService.getMine(), this.wishlistService.getMine()]);
-      this.savedPlans.setLikes(likes.data);
-      this.savedPlans.setWishlist(wishlist.data);
+      this.savedPlans.setLikes((await this.likesService.getMine()).data);
     } catch {
-      // Sin las listas, los iconos salen vacíos: el resto de la web sigue funcionando
+      // Sin likes, la wishlist sale vacía: el resto de la web sigue funcionando
     }
   }
 

@@ -9,7 +9,6 @@ import { ShopService } from '../../../../core/services/shop.service';
 import { AiService } from '../../../../core/services/ai.service';
 import { CommentsService } from '../../../../core/services/comments.service';
 import { LikesService } from '../../../../core/services/likes.service';
-import { WishlistService } from '../../../../core/services/wishlist.service';
 import { AlertService } from '../../../../core/services/alert.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { SavedPlansStore } from '../../../../core/stores/saved-plans.store';
@@ -28,7 +27,6 @@ import { PlanComments } from '../../components/plan-comments/plan-comments';
 import { ReviewsOverview } from '../../components/reviews-overview/reviews-overview';
 import { ReviewsAiSummary } from '../../components/reviews-ai-summary/reviews-ai-summary';
 import { PlanLikeButton } from '../../components/plan-like-button/plan-like-button';
-import { PlanWishlistButton } from '../../components/plan-wishlist-button/plan-wishlist-button';
 import { filtersToUrl } from '../../utils/shop-url';
 import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../utils/shop.utils';
 
@@ -36,10 +34,10 @@ import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../util
 // Se puede elegir una sesión; la reserva se implementará más adelante sobre selectedSession.
 // Tiene un chat con el asistente de IA, que responde con los datos del plan que ya se ven en la página,
 // y las opiniones (comentarios) con un resumen hecho por el agente de IA.
-// Like y lista de deseos: sin sesión, el botón lleva al login y vuelve al plan
+// Like (los planes con like son la wishlist del carrito): sin sesión, el botón lleva al login y vuelve al plan
 @Component({
   selector: 'app-plan-detail-page',
-  imports: [RouterLink, LucideLoaderCircle, LucideShoppingCart, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, PlanWishlistButton, QuantityStepper],
+  imports: [RouterLink, LucideLoaderCircle, LucideShoppingCart, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, QuantityStepper],
   templateUrl: './plan-detail-page.html',
 })
 export class PlanDetailPage {
@@ -49,7 +47,6 @@ export class PlanDetailPage {
   private readonly commentsService = inject(CommentsService);
   private readonly alerts = inject(AlertService);
   private readonly likesService = inject(LikesService);
-  private readonly wishlistService = inject(WishlistService);
   private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   private readonly savedPlans = inject(SavedPlansStore);
@@ -87,12 +84,10 @@ export class PlanDetailPage {
   readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
   readonly returnUrl = computed(() => `/planes/${this.slug()}`);
 
-  // Like y lista de deseos del usuario de la sesión: salen de SavedPlansStore (lo mismo que el header)
+  // Likes del usuario de la sesión: salen de SavedPlansStore (lo mismo que la wishlist del carrito)
   readonly liked = computed(() => this.savedPlans.likedIds().has(this.plan()?._id ?? ''));
-  readonly inWishlist = computed(() => this.savedPlans.wishlistIds().has(this.plan()?._id ?? ''));
   readonly likesCount = signal(0);
   readonly likeBusy = signal(false);
-  readonly wishlistBusy = signal(false);
 
   // Carrito: cuántas entradas de la fecha elegida se añaden
   readonly quantity = signal(1);
@@ -222,16 +217,14 @@ export class PlanDetailPage {
   // Tras un 409/404 (p. ej. se cambió en otra pestaña): se vuelve a leer el estado real
   private async resyncSavedPlans(planId: string): Promise<void> {
     try {
-      const [likes, wishlist] = await Promise.all([this.likesService.getMine(), this.wishlistService.getMine()]);
-      this.savedPlans.setLikes(likes.data);
-      this.savedPlans.setWishlist(wishlist.data);
+      this.savedPlans.setLikes((await this.likesService.getMine()).data);
     } catch {
       // nada: se queda como estaba
     }
     await this.loadReactions(planId);
   }
 
-  // Datos del plan que se guardan en el store para el desplegable del header
+  // Datos del plan que se guardan en el store para la wishlist del carrito
   private savedPlan(plan: ShopPlan): SavedPlan {
     const { _id, title, slug, shortDescription, priceFrom, coverImage } = plan;
     return { _id, title, slug, shortDescription, priceFrom, coverImage };
@@ -253,23 +246,6 @@ export class PlanDetailPage {
       await this.resyncSavedPlans(plan._id);
     } finally {
       this.likeBusy.set(false);
-    }
-  }
-
-  // Guardar / quitar de la lista de deseos. Sin sesión → login (y vuelta a este plan)
-  async onToggleWishlist(): Promise<void> {
-    const plan = this.plan();
-    if (!plan || this.wishlistBusy()) return;
-    if (!this.auth.isAuthenticated()) return this.goToLogin();
-    try {
-      this.wishlistBusy.set(true);
-      const res = this.inWishlist() ? await this.wishlistService.remove(plan._id) : await this.wishlistService.add(plan._id);
-      if (res.data.inWishlist) this.savedPlans.addToWishlist(this.savedPlan(plan));
-      else this.savedPlans.removeFromWishlist(plan._id);
-    } catch {
-      await this.resyncSavedPlans(plan._id);
-    } finally {
-      this.wishlistBusy.set(false);
     }
   }
 

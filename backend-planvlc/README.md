@@ -93,7 +93,6 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `likes` | `Like` | Likes de los usuarios a los planes (uno por usuario y plan) |
 | `carts` | `Cart` | Carrito de cada usuario (uno por usuario, persistente) |
 | `cartitems` | `CartItem` | Líneas del carrito: sesión (fecha) de un plan y cantidad |
-| `wishlists` | `Wishlist` | Lista de deseos: planes guardados por cada usuario (uno por usuario y plan) |
 
 ### Relaciones
 
@@ -109,7 +108,6 @@ users.roleId             → roles
 comments.planId          → plans     (un plan tiene muchos comentarios: 1 a N)
 comments.userId          → users     (un usuario escribe muchos comentarios: 1 a N)
 likes.userId + planId    → users, plans (N a N entre usuarios y planes; índice único userId + planId)
-wishlists.userId + planId → users, plans (N a N entre usuarios y planes; índice único userId + planId)
 carts.userId             → users     (1 a 1: un carrito por usuario)
 cartitems.cartId         → carts     (un carrito tiene muchas líneas: 1 a N)
 cartitems.sessionId      → sessions  (la variante: fecha, precio y stock; índice único cartId + sessionId)
@@ -315,7 +313,6 @@ Las dos son `sameSite: lax` (protege de CSRF) y `secure` en producción (solo HT
 | `PATCH /api/comments/:id/softdelete` | El autor del comentario o un `admin` |
 | `GET /api/comments/summary` | Solo `admin` |
 | `POST/DELETE /api/likes`, `GET /api/likes/me` | Cualquier usuario logueado (sobre sus propios likes) |
-| `/api/wishlist/*` | Cualquier usuario logueado (solo su propia lista) |
 | `/api/cart/*` | Cualquier usuario logueado (solo su propio carrito) |
 | Resto | Abiertas (sin cambios por ahora) |
 
@@ -332,9 +329,9 @@ Cada comentario tiene `planId`, `userId` (el autor), `rating` (entero de 1 a 5),
 
 El resumen y el sentimiento de las opiniones los hace el servicio de IA (`POST /api/ai/reviews-analysis`, a través de la API Gateway). La IA no accede a la base de datos: el frontend le pasa los comentarios que ya ha cargado.
 
-## Endpoints (`likes`) y (`wishlist`)
+## Endpoints (`likes`): la wishlist
 
-Las dos son tablas intermedias usuario ↔ plan con un índice único `{ userId, planId }`: un usuario no puede dar dos likes al mismo plan ni guardarlo dos veces, aunque lleguen dos peticiones a la vez. El usuario sale siempre de la sesión (cookie), nunca del body ni de la URL. Quitar un like o un plan de la lista borra el documento.
+Los planes a los que el usuario da like son su wishlist (en el frontend, pestaña "Wishlist" del carrito). Es una tabla intermedia usuario ↔ plan con un índice único `{ userId, planId }`: un usuario no puede dar dos likes al mismo plan, aunque lleguen dos peticiones a la vez. El usuario sale siempre de la sesión (cookie), nunca del body ni de la URL. Quitar un like borra el documento.
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -342,9 +339,6 @@ Las dos son tablas intermedias usuario ↔ plan con un índice único `{ userId,
 | GET | `/api/likes/me` | Logueado. Planes a los que has dado like, el último primero, con `planId: { _id, title, slug, shortDescription, priceFrom, coverImage }` |
 | POST | `/api/likes` | Logueado. Body `{ planId }` → `201 { planId, liked: true, count }`. Si ya le habías dado like → `409` |
 | DELETE | `/api/likes/:planId` | Logueado. Quita tu like → `{ planId, liked: false, count }`. Si no lo habías dado → `404` |
-| GET | `/api/wishlist` | Logueado. Tu lista, lo último primero, con `planId: { _id, title, slug, shortDescription, priceFrom, coverImage }` |
-| POST | `/api/wishlist` | Logueado. Body `{ planId }` → `201`. Si ya estaba → `409` |
-| DELETE | `/api/wishlist/:planId` | Logueado. Lo quita de tu lista. Si no estaba → `404` |
 
 Sin sesión → `401`. El plan tiene que estar publicado → si no, `404`.
 

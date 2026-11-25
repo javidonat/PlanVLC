@@ -1,7 +1,16 @@
 import { Like } from "../models/index.js";
-import { SAVED_PLAN_POPULATE } from "./wishlist.repo.js";
 
-// Consultas de likes (usuario ↔ plan)
+// Consultas de likes (usuario ↔ plan). Los planes con like son la wishlist del usuario
+const VISIBLE_PLAN = { status: "published", isActive: true, deletedAt: null };
+
+// Datos del plan para pintar la lista
+const SAVED_PLAN_POPULATE = {
+  path: "planId",
+  match: VISIBLE_PLAN,
+  select: "title slug shortDescription priceFrom",
+  populate: { path: "coverImage", select: "url alt" },
+};
+
 const countByPlan = (planId) => Like.countDocuments({ planId });
 
 const exists = async (userId, planId) => Boolean(await Like.exists({ userId, planId }));
