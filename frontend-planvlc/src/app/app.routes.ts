@@ -12,6 +12,8 @@ export const routes: Routes = [
   // Login (clientes y admin) y registro (clientes): solo sin sesión iniciada (guestGuard)
   { path: 'login', title: 'Iniciar sesión · PlanVLC', canActivate: [guestGuard], loadComponent: () => import('./features/auth/pages/login-page/login-page').then(m => m.LoginPage) },
   { path: 'registro', title: 'Crear cuenta · PlanVLC', canActivate: [guestGuard], loadComponent: () => import('./features/auth/pages/register-page/register-page').then(m => m.RegisterPage) },
+  // Carrito: con el layout de la tienda, pero solo con sesión iniciada (authGuard)
+  { path: 'carrito', component: ShopLayout, canActivate: [authGuard], loadChildren: () => import('./features/cart/cart.routes').then(m => m.CART_ROUTES) },
   // Tienda pública: / (home), /planes (shop) y /planes/:slug (detalle)
   { path: '', component: ShopLayout, loadChildren: () => import('./features/shop/shop.routes').then(m => m.SHOP_ROUTES) },
   {
