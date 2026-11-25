@@ -79,8 +79,15 @@
             <p class="text-sm font-semibold text-marca-700">Fecha elegida</p>
             <p class="mt-1 font-semibold text-gris-900">{{ sessionTimeText(session) }}</p>
             <p class="font-display mt-1 text-3xl font-extrabold text-marca-700">{{ priceText(session.price) }}</p>
-            <!-- La reserva llegará en otra fase: ya tiene la sesión elegida (selectedSession) -->
-            <button type="button" disabled class="mt-4 w-full cursor-not-allowed rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white opacity-60">Reservar (próximamente)</button>
+            <div class="mt-4 flex items-center justify-between gap-3">
+              <span class="text-sm font-semibold text-gris-700">Entradas</span>
+              <app-quantity-stepper [value]="quantity()" [max]="maxQuantity()" [disabled]="addingToCart()" label="Número de entradas" (valueChange)="quantity.set($event)" />
+            </div>
+            <button type="button" (click)="onAddToCart()" [disabled]="addingToCart()"
+              class="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-marca-600 px-5 py-3 font-semibold text-white transition hover:bg-marca-700 disabled:cursor-wait disabled:opacity-70">
+              @if (addingToCart()) { <svg lucideLoaderCircle width="18" height="18" class="animate-spin"></svg> Añadiendo... }
+              @else { <svg lucideShoppingCart width="18" height="18"></svg> {{ auth.isAuthenticated() ? 'Añadir al carrito' : 'Inicia sesión para comprar' }} }
+            </button>
           </div>
         }
       </aside>

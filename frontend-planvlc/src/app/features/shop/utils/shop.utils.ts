@@ -30,7 +30,7 @@ const dayKey = (iso: string) => new Intl.DateTimeFormat('es-ES', { timeZone: 'Eu
 const timeText = (iso: string) => new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit' }).format(new Date(iso));
 
 // Fecha y hora de una sesión: "05 oct 2027, 17:00 – 23:00" (si acaba otro día, también su fecha)
-export function sessionTimeText(session: ShopSession): string {
+export function sessionTimeText(session: Pick<ShopSession, 'startDateTime' | 'endDateTime'>): string {
   const start = sessionDateText(session.startDateTime);
   if (!session.endDateTime) return start;
   const sameDay = dayKey(session.startDateTime) === dayKey(session.endDateTime);

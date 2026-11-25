@@ -91,6 +91,8 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `revokedtokens` | `RevokedToken` | Access tokens cerrados con logout (hash) |
 | `comments` | `Comment` | Opiniones de los planes: valoración (1-5 estrellas) y texto |
 | `likes` | `Like` | Likes de los usuarios a los planes (uno por usuario y plan) |
+| `carts` | `Cart` | Carrito de cada usuario (uno por usuario, persistente) |
+| `cartitems` | `CartItem` | Líneas del carrito: sesión (fecha) de un plan y cantidad |
 | `wishlists` | `Wishlist` | Lista de deseos: planes guardados por cada usuario (uno por usuario y plan) |
 
 ### Relaciones
@@ -108,6 +110,10 @@ comments.planId          → plans     (un plan tiene muchos comentarios: 1 a N)
 comments.userId          → users     (un usuario escribe muchos comentarios: 1 a N)
 likes.userId + planId    → users, plans (N a N entre usuarios y planes; índice único userId + planId)
 wishlists.userId + planId → users, plans (N a N entre usuarios y planes; índice único userId + planId)
+carts.userId             → users     (1 a 1: un carrito por usuario)
+cartitems.cartId         → carts     (un carrito tiene muchas líneas: 1 a N)
+cartitems.sessionId      → sessions  (la variante: fecha, precio y stock; índice único cartId + sessionId)
+cartitems.planId         → plans
 images.entityId          → plans | venues | categories | organizers | users (según images.entityType)
 ```
 
@@ -310,6 +316,7 @@ Las dos son `sameSite: lax` (protege de CSRF) y `secure` en producción (solo HT
 | `GET /api/comments/summary` | Solo `admin` |
 | `POST/DELETE /api/likes`, `GET /api/likes/me` | Cualquier usuario logueado (sobre sus propios likes) |
 | `/api/wishlist/*` | Cualquier usuario logueado (solo su propia lista) |
+| `/api/cart/*` | Cualquier usuario logueado (solo su propio carrito) |
 | Resto | Abiertas (sin cambios por ahora) |
 
 ## Endpoints (`comments`): opiniones de los planes
@@ -340,6 +347,28 @@ Las dos son tablas intermedias usuario ↔ plan con un índice único `{ userId,
 | DELETE | `/api/wishlist/:planId` | Logueado. Lo quita de tu lista. Si no estaba → `404` |
 
 Sin sesión → `401`. El plan tiene que estar publicado → si no, `404`.
+
+## Endpoints (`cart`): carrito
+
+Un carrito por usuario (`carts`) con sus líneas (`cartitems`). Cada línea es una **sesión** (la variante del plan: fecha, precio y stock) y una cantidad. El usuario sale siempre de la cookie. Todas las rutas responden con el carrito completo y recalculado:
+
+`{ _id, items: [{ _id, plan, session, quantity, unitPrice, subtotal, available, issue }], totalItems, total, currency, hasIssues, maxQuantity }`
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/cart` | Tu carrito |
+| POST | `/api/cart/items` | Body `{ sessionId, quantity? }` (1 por defecto). Si esa sesión ya está, **no se duplica**: se suma la cantidad (`201` línea nueva, `200` cantidad sumada) |
+| PUT | `/api/cart/items/:id` | Body `{ quantity?, sessionId? }`: cambia la cantidad y/o la fecha (otra sesión **del mismo plan**; si esa fecha ya estaba, se juntan las dos líneas) |
+| DELETE | `/api/cart/items/:id` | Quita la línea |
+| DELETE | `/api/cart/clear` | Vacía el carrito |
+
+Reglas (`services/cart.service.js`):
+- **Precios y totales** se calculan siempre en el backend con el precio actual de cada sesión: el frontend solo manda sesión y cantidad (si manda un precio, se ignora). `subtotal = precio × cantidad`, `total` y `totalItems` solo cuentan las líneas disponibles.
+- **Disponibilidad**: solo se pueden añadir sesiones publicadas, activas, que no han empezado y de un plan publicado (si no → `404 Esta fecha ya no está disponible`).
+- **Overbooking**: no se pueden pedir más entradas de las plazas que quedan (`stock`; `null` = sin límite) ni más de 10 por fecha → `409`. El stock no se descuenta al añadir: se descontará en el checkout. Si después baja el stock o la fecha pasa, `GET` marca la línea con `available: false` e `issue` (y no cuenta en el total).
+- Una línea de otro usuario → `404 Esta línea no está en tu carrito`. Sin sesión → `401`.
+
+**Fase futura (checkout)**: el carrito se convertirá en `orders` + `order_items` (con el precio pagado), se procesará el `payment`, se crearán los `bookings`, se descontará el `stock` de cada sesión (comprobándolo otra vez) y se vaciará el carrito. Por eso el carrito va separado de los pedidos y no guarda precios.
 
 ## Endpoints (`profiles`)
 

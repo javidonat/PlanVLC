@@ -37,6 +37,10 @@ export class ApiService {
     return this.send(this.http.patch<T>(this.url(path), body));
   }
 
+  put<T>(path: string, body: unknown): Promise<T> {
+    return this.send(this.http.put<T>(this.url(path), body));
+  }
+
   delete<T>(path: string): Promise<T> {
     return this.send(this.http.delete<T>(this.url(path)));
   }

@@ -7,6 +7,11 @@ export class AlertService {
     void Swal.fire({ icon: 'error', title: 'No se pudo completar la operación', text: message, confirmButtonColor: '#6a3de8' });
   }
 
+  // Aviso corto que desaparece solo (ej. "Añadido al carrito")
+  success(message: string): void {
+    void Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: message, showConfirmButton: false, timer: 2200, timerProgressBar: true });
+  }
+
   // Confirmación genérica: sirve para cualquier entidad (planes, sesiones...)
   async confirm(title: string, text: string, confirmText = 'Confirmar'): Promise<boolean> {
     const result = await Swal.fire({

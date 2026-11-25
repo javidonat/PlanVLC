@@ -1,6 +1,6 @@
 import { Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers } from '@lucide/angular';
+import { LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, LucideLoaderCircle, LucideShoppingCart } from '@lucide/angular';
 import { ImageRef } from '../../../../core/models/plan.model';
 import { ShopPlan, ShopSession } from '../../../../core/models/shop.model';
 import { ChatMessage, PlanChatRequest, ReviewsAnalysis } from '../../../../core/models/ai.model';
@@ -14,6 +14,9 @@ import { AlertService } from '../../../../core/services/alert.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { SavedPlansStore } from '../../../../core/stores/saved-plans.store';
 import { SavedPlan } from '../../../../core/models/saved-plan.model';
+import { CartService } from '../../../../core/services/cart.service';
+import { CartStore } from '../../../../core/stores/cart.store';
+import { QuantityStepper } from '../../../../shared/components/quantity-stepper/quantity-stepper';
 import { ShopStore } from '../../../../core/stores/shop.store';
 import { apiError } from '../../../../core/interceptors/error.interceptor';
 import { Carousel } from '../../../../shared/components/carousel/carousel';
@@ -36,7 +39,7 @@ import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../util
 // Like y lista de deseos: sin sesión, el botón lleva al login y vuelve al plan
 @Component({
   selector: 'app-plan-detail-page',
-  imports: [RouterLink, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, PlanWishlistButton],
+  imports: [RouterLink, LucideLoaderCircle, LucideShoppingCart, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, PlanWishlistButton, QuantityStepper],
   templateUrl: './plan-detail-page.html',
 })
 export class PlanDetailPage {
@@ -50,6 +53,8 @@ export class PlanDetailPage {
   private readonly router = inject(Router);
   readonly auth = inject(AuthStore);
   private readonly savedPlans = inject(SavedPlansStore);
+  private readonly cartService = inject(CartService);
+  private readonly cartStore = inject(CartStore);
 
   // :slug de la URL (withComponentInputBinding en app.config.ts)
   readonly slug = input.required<string>();
@@ -88,6 +93,15 @@ export class PlanDetailPage {
   readonly likesCount = signal(0);
   readonly likeBusy = signal(false);
   readonly wishlistBusy = signal(false);
+
+  // Carrito: cuántas entradas de la fecha elegida se añaden
+  readonly quantity = signal(1);
+  readonly addingToCart = signal(false);
+  // Máximo que se puede pedir: 10 por fecha y nunca más plazas de las que quedan
+  readonly maxQuantity = computed(() => {
+    const stock = this.selectedSession()?.stock;
+    return Math.max(1, Math.min(this.cartStore.cart().maxQuantity, stock ?? Infinity));
+  });
 
   readonly selectedSession = computed(() => this.sessions().find(s => s._id === this.selectedSessionId()) ?? null);
 
@@ -167,6 +181,7 @@ export class PlanDetailPage {
   onSession(session: ShopSession): void {
     if (isSoldOut(session)) return;
     this.selectedSessionId.set(session._id);
+    this.quantity.set(1);
   }
 
   // Envía la pregunta al asistente con los datos del plan y los últimos mensajes de la conversación
@@ -255,6 +270,25 @@ export class PlanDetailPage {
       await this.resyncSavedPlans(plan._id);
     } finally {
       this.wishlistBusy.set(false);
+    }
+  }
+
+  // Añadir al carrito la fecha elegida. Sin sesión → login (y vuelta a este plan).
+  // El backend comprueba plazas y, si esa fecha ya estaba, suma la cantidad en vez de repetirla
+  async onAddToCart(): Promise<void> {
+    const session = this.selectedSession();
+    if (!session || this.addingToCart()) return;
+    if (!this.auth.isAuthenticated()) return this.goToLogin();
+    try {
+      this.addingToCart.set(true);
+      const res = await this.cartService.addItem({ sessionId: session._id, quantity: this.quantity() });
+      this.cartStore.setCart(res.data);
+      this.alerts.success(res.message ?? 'Añadido al carrito');
+      this.quantity.set(1);
+    } catch {
+      // El interceptor ya muestra el error (sin plazas, máximo por fecha...)
+    } finally {
+      this.addingToCart.set(false);
     }
   }
 

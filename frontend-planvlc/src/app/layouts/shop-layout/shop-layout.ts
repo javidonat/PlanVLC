@@ -8,13 +8,16 @@ import { SavedPlansMenu } from '../../shared/components/saved-plans-menu/saved-p
 import { SavedPlansStore } from '../../core/stores/saved-plans.store';
 import { LikesService } from '../../core/services/likes.service';
 import { WishlistService } from '../../core/services/wishlist.service';
+import { CartIcon } from '../../shared/components/cart-icon/cart-icon';
+import { CartStore } from '../../core/stores/cart.store';
+import { CartService } from '../../core/services/cart.service';
 
 // Layout de la parte pública (home, shop y detalle): barra superior y pie, sin menú lateral.
 // Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel.
-// y sus planes con like y su lista de deseos (desplegables). Sin sesión, los accesos al login y al registro
+// sus planes con like y su lista de deseos (desplegables) y el carrito con el número de entradas. Sin sesión, los accesos al login y al registro
 @Component({
   selector: 'app-shop-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, SavedPlansMenu],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, SavedPlansMenu, CartIcon],
   template: `
     <header class="sticky top-0 z-40 border-b border-gris-200/80 bg-superficie/85 backdrop-blur-md">
       <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
@@ -33,6 +36,7 @@ import { WishlistService } from '../../core/services/wishlist.service';
           <div class="flex items-center gap-1 text-sm font-semibold">
             <app-saved-plans-menu kind="likes" title="Planes que te gustan" [items]="savedPlans.likes()" emptyText="Dale al corazón en un plan y aparecerá aquí." />
             <app-saved-plans-menu kind="wishlist" title="Tu lista de deseos" [items]="savedPlans.wishlist()" emptyText="Guarda planes en tu lista de deseos y los tendrás aquí." />
+            <app-cart-icon [count]="cart.totalItems()" />
             @if (auth.isAdmin()) {
               <a routerLink="/admin/planes" class="flex items-center gap-2 rounded-xl px-3 py-2 text-gris-600 hover:bg-gris-100"><svg lucideLayoutDashboard width="17" height="17"></svg><span class="hidden sm:inline">Panel</span></a>
             }
@@ -78,12 +82,22 @@ export class ShopLayout {
   readonly year = new Date().getFullYear();
   private readonly likesService = inject(LikesService);
   private readonly wishlistService = inject(WishlistService);
+  readonly cart = inject(CartStore);
+  private readonly cartService = inject(CartService);
 
   constructor() {
-    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes y la lista de deseos del usuario
+    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes, la lista de deseos y el carrito del usuario
     effect(() => {
       const userId = this.auth.user()?._id;
-      untracked(() => (userId ? void this.loadSavedPlans() : this.savedPlans.clear()));
+      untracked(() => {
+        if (userId) {
+          void this.loadSavedPlans();
+          void this.loadCart();
+        } else {
+          this.savedPlans.clear();
+          this.cart.clear();
+        }
+      });
     });
   }
 
@@ -94,6 +108,14 @@ export class ShopLayout {
       this.savedPlans.setWishlist(wishlist.data);
     } catch {
       // Sin las listas, los iconos salen vacíos: el resto de la web sigue funcionando
+    }
+  }
+
+  private async loadCart(): Promise<void> {
+    try {
+      this.cart.setCart((await this.cartService.get()).data);
+    } catch {
+      // Sin carrito, el icono sale a 0: el resto de la web sigue funcionando
     }
   }
 }

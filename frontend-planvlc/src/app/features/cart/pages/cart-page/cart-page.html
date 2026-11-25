@@ -1,0 +1,32 @@
+<section class="mx-auto max-w-6xl px-4 py-9 sm:px-6 lg:px-8">
+  <a routerLink="/planes" class="inline-flex items-center gap-1.5 text-sm font-semibold text-marca-700 hover:underline"><svg lucideArrowLeft width="16" height="16"></svg> Seguir viendo planes</a>
+  <h1 class="mt-4 text-3xl font-extrabold text-gris-900 sm:text-4xl">Tu carrito</h1>
+
+  @if (loading() && !store.loaded()) {
+    <div class="mt-6"><app-skeleton-loader [count]="3" label="Cargando carrito" /></div>
+  } @else if (error(); as message) {
+    <div class="mt-6"><app-error-state [message]="message" (retry)="load()" /></div>
+  } @else if (store.isEmpty()) {
+    <div class="mt-8 flex flex-col items-center rounded-2xl border border-dashed border-gris-300 bg-superficie px-6 py-16 text-center">
+      <span class="flex size-16 items-center justify-center rounded-full bg-marca-50 text-marca-600"><svg lucideShoppingCart width="28" height="28"></svg></span>
+      <p class="mt-4 text-lg font-bold text-gris-900">Tu carrito está vacío</p>
+      <p class="mt-1 text-sm text-gris-500">Elige un plan y una fecha, y añade tus entradas.</p>
+      <a routerLink="/planes" class="mt-6 rounded-full bg-marca-600 px-6 py-3 font-semibold text-white hover:bg-marca-700">Ver planes</a>
+    </div>
+  } @else {
+    <p class="mt-1 text-gris-500">{{ store.totalItems() }} {{ store.totalItems() === 1 ? 'entrada' : 'entradas' }} de {{ planCount() }} {{ planCount() === 1 ? 'plan' : 'planes' }}</p>
+    <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <ul class="space-y-4">
+        @for (item of store.items(); track item._id) {
+          <li>
+            <app-cart-item [item]="item" [sessions]="sessionsFor(item)" [limit]="store.cart().maxQuantity" [busy]="busyId() === item._id || clearing()"
+              (quantityChange)="onQuantity(item, $event)" (sessionChange)="onSession(item, $event)" (remove)="onRemove(item)" />
+          </li>
+        }
+      </ul>
+      <div class="lg:sticky lg:top-24 lg:self-start">
+        <app-cart-summary [totalItems]="store.totalItems()" [total]="store.total()" [hasIssues]="store.cart().hasIssues" [busy]="clearing() || !!busyId()" (clear)="onClear()" />
+      </div>
+    </div>
+  }
+</section>
