@@ -1,9 +1,9 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { SavedPlan, SavedPlanItem } from '../models/saved-plan.model';
 
-// Planes con like del usuario de la sesión: son su wishlist (pestaña "Wishlist" del carrito). Solo guarda datos:
+// Planes con like del usuario de la sesión. Solo guarda datos:
 // los carga ShopLayout al iniciar sesión (y los borra al cerrarla) y el detalle del plan
-// y la wishlist los actualizan al dar/quitar like. Así todo está siempre al día
+// los actualiza al dar/quitar like. Así el corazón sale marcado en los planes que te gustan
 @Injectable({ providedIn: 'root' })
 export class SavedPlansStore {
   private readonly _likes = signal<SavedPlanItem[]>([]);

@@ -17,7 +17,7 @@ const slugList = (invalid) => z.preprocess(
 const positiveInt = (invalid) => z.coerce.number({ error: invalid }).int(invalid).min(1, invalid);
 
 // Órdenes del listado (ver SORTS en repos/shop.repo.js). Por defecto, los más visitados
-export const SHOP_SORTS = ["popular", "recent", "date", "price_asc", "price_desc", "name"];
+export const SHOP_SORTS = ["popular", "likes", "recent", "date", "price_asc", "price_desc", "name"];
 
 // Precio en euros que llega como texto en la URL (?minPrice=10)
 const price = (invalid) => z.coerce.number({ error: invalid }).min(0, invalid).max(100000, invalid);

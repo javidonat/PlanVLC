@@ -12,7 +12,7 @@ import { CartService } from '../../core/services/cart.service';
 
 // Layout de la parte pública (home, shop y detalle): barra superior y pie, sin menú lateral.
 // Con sesión iniciada muestra el avatar (enlace al perfil) y, si es admin, el acceso al panel.
-// el carrito con el número de entradas (dentro, la cesta y la wishlist con los planes con like). Sin sesión, los accesos al login y al registro
+// el carrito con el número de entradas. Sin sesión, los accesos al login y al registro
 @Component({
   selector: 'app-shop-layout',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideLayoutDashboard, LucideLogIn, LucideMapPin, ThemeToggle, CartIcon],
@@ -81,7 +81,7 @@ export class ShopLayout {
   private readonly cartService = inject(CartService);
 
   constructor() {
-    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes (la wishlist) y el carrito del usuario
+    // Al iniciar o cerrar sesión: se cargan (o se vacían) los likes y el carrito del usuario
     effect(() => {
       const userId = this.auth.user()?._id;
       untracked(() => {
@@ -100,7 +100,7 @@ export class ShopLayout {
     try {
       this.savedPlans.setLikes((await this.likesService.getMine()).data);
     } catch {
-      // Sin likes, la wishlist sale vacía: el resto de la web sigue funcionando
+      // Sin likes, los corazones salen sin marcar: el resto de la web sigue funcionando
     }
   }
 

@@ -64,10 +64,11 @@ export interface ShopSession {
 }
 
 // Orden del listado (backend: SHOP_SORTS). Por defecto, los más visitados
-export type ShopSort = 'popular' | 'recent' | 'date' | 'price_asc' | 'price_desc' | 'name';
+export type ShopSort = 'popular' | 'likes' | 'recent' | 'date' | 'price_asc' | 'price_desc' | 'name';
 
 export const SHOP_SORTS: { value: ShopSort; label: string }[] = [
   { value: 'popular', label: 'Más visitados' },
+  { value: 'likes', label: 'Más gustados' },
   { value: 'date', label: 'Fecha más próxima' },
   { value: 'recent', label: 'Más nuevos' },
   { value: 'price_asc', label: 'Precio: de menor a mayor' },

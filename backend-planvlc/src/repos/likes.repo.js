@@ -1,6 +1,6 @@
-import { Like } from "../models/index.js";
+import { Like, Plan } from "../models/index.js";
 
-// Consultas de likes (usuario ↔ plan). Los planes con like son la wishlist del usuario
+// Consultas de likes (usuario ↔ plan)
 const VISIBLE_PLAN = { status: "published", isActive: true, deletedAt: null };
 
 // Datos del plan para pintar la lista
@@ -27,4 +27,7 @@ const create = (userId, planId) => Like.create({ userId, planId });
 // Devuelve true si había like y se ha quitado
 const remove = async (userId, planId) => (await Like.deleteOne({ userId, planId })).deletedCount > 0;
 
-export default { countByPlan, exists, findByUser, create, remove };
+// Guarda en el plan su número de likes (para ordenar por "más gustados" sin contar cada vez)
+const saveCount = (planId, count) => Plan.updateOne({ _id: planId }, { likesCount: count });
+
+export default { countByPlan, exists, findByUser, create, remove, saveCount };

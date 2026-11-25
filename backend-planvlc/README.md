@@ -196,7 +196,7 @@ Lo que usan el home y el shop del frontend. **No piden token** y solo devuelven 
 | GET | `/api/shop/categories` | Categorías (carrusel del home y filtro) |
 | GET | `/api/shop/organizers` | Organizadores (carrusel del home y filtro) |
 | GET | `/api/shop/venues` | Lugares (carrusel del home y filtro) |
-| GET | `/api/shop/plans` | Planes paginados. Query params opcionales y combinables: `category`, `organizer`, `venue` (slugs; se pueden poner varios separados por comas, `?category=tardeo,concierto`, y vale cualquiera de ellos), `minPrice` y `maxPrice` (precio "desde" del plan, en euros), `search` (contiene el texto en el título, sin distinguir mayúsculas), `sort` (`popular` = más visitados, por defecto; `recent`, `date`, `price_asc`, `price_desc`, `name`), `page` (por defecto 1) y `limit` (por defecto 6, máximo 50). Devuelve `{ ok, total, page, limit, totalPages, data }` |
+| GET | `/api/shop/plans` | Planes paginados. Query params opcionales y combinables: `category`, `organizer`, `venue` (slugs; se pueden poner varios separados por comas, `?category=tardeo,concierto`, y vale cualquiera de ellos), `minPrice` y `maxPrice` (precio "desde" del plan, en euros), `search` (contiene el texto en el título, sin distinguir mayúsculas), `sort` (`popular` = más visitados, por defecto; `likes` = más gustados; `recent`, `date`, `price_asc`, `price_desc`, `name`), `page` (por defecto 1) y `limit` (por defecto 6, máximo 50). Devuelve `{ ok, total, page, limit, totalPages, data }` |
 | GET | `/api/shop/sessions` | Sesiones de un mes para la vista calendario: `month` (`AAAA-MM`; sin él, el mes de la primera sesión que viene) y los mismos filtros que `/plans`. Devuelve `{ ok, month, total, data }` |
 | GET | `/api/shop/plans/:slug` | Detalle del plan, con sus categorías, organizador, lugar, portada y galería. Cada consulta suma una visita (`views`, para el orden "más visitados") |
 | GET | `/api/shop/plans/:slug/sessions` | Sus próximas sesiones (variantes) publicadas: fechas de inicio y fin, aforo, plazas libres y precio |
@@ -329,9 +329,9 @@ Cada comentario tiene `planId`, `userId` (el autor), `rating` (entero de 1 a 5),
 
 El resumen y el sentimiento de las opiniones los hace el servicio de IA (`POST /api/ai/reviews-analysis`, a través de la API Gateway). La IA no accede a la base de datos: el frontend le pasa los comentarios que ya ha cargado.
 
-## Endpoints (`likes`): la wishlist
+## Endpoints (`likes`)
 
-Los planes a los que el usuario da like son su wishlist (en el frontend, pestaña "Wishlist" del carrito). Es una tabla intermedia usuario ↔ plan con un índice único `{ userId, planId }`: un usuario no puede dar dos likes al mismo plan, aunque lleguen dos peticiones a la vez. El usuario sale siempre de la sesión (cookie), nunca del body ni de la URL. Quitar un like borra el documento.
+Es una tabla intermedia usuario ↔ plan con un índice único `{ userId, planId }`: un usuario no puede dar dos likes al mismo plan, aunque lleguen dos peticiones a la vez. El usuario sale siempre de la sesión (cookie), nunca del body ni de la URL. Quitar un like borra el documento. Al dar o quitar un like se guarda el total en el plan (`likesCount`), que es lo que usa el orden `likes` ("más gustados") de la tienda.
 
 | Método | Ruta | Descripción |
 |---|---|---|

@@ -53,6 +53,7 @@ const planSchema = new Schema(
     priceFrom: { type: Number, min: 0, default: 0 }, // precio mínimo; 0 = gratis
     nextSessionAt: { type: Date, default: null }, // fecha de la próxima sesión
     views: { type: Number, min: 0, default: 0 }, // visitas al detalle en la tienda (orden "más visitados")
+    likesCount: { type: Number, min: 0, default: 0 }, // nº de likes (orden "más gustados"); lo actualiza likes.service.js
 
     minAge: {
       type: Number,
@@ -91,6 +92,7 @@ planSchema.index({ organizerId: 1, status: 1, isActive: 1, deletedAt: 1 });
 planSchema.index({ venueId: 1, status: 1, isActive: 1, deletedAt: 1 });
 planSchema.index({ status: 1, isActive: 1, deletedAt: 1, priceFrom: 1 });
 planSchema.index({ status: 1, isActive: 1, deletedAt: 1, views: -1 });
+planSchema.index({ status: 1, isActive: 1, deletedAt: 1, likesCount: -1 });
 planSchema.index({ status: 1, isActive: 1, deletedAt: 1, nextSessionAt: 1 });
 
 // Imágenes del plan (relación inversa: images.entityId → plans._id). Solo las activas y no eliminadas.

@@ -34,7 +34,7 @@ import { isSoldOut, planPriceText, priceText, sessionTimeText } from '../../util
 // Se puede elegir una sesión; la reserva se implementará más adelante sobre selectedSession.
 // Tiene un chat con el asistente de IA, que responde con los datos del plan que ya se ven en la página,
 // y las opiniones (comentarios) con un resumen hecho por el agente de IA.
-// Like (los planes con like son la wishlist del carrito): sin sesión, el botón lleva al login y vuelve al plan
+// Like: sin sesión, el botón lleva al login y vuelve al plan
 @Component({
   selector: 'app-plan-detail-page',
   imports: [RouterLink, LucideLoaderCircle, LucideShoppingCart, LucideArrowLeft, LucideBuilding2, LucideCalendarDays, LucideMapPin, LucideTicket, LucideUsers, Carousel, SkeletonLoader, ErrorState, SessionList, PlanChat, PlanComments, ReviewsOverview, ReviewsAiSummary, PlanLikeButton, QuantityStepper],
@@ -84,7 +84,7 @@ export class PlanDetailPage {
   readonly hasMoreComments = computed(() => this.commentsPage() < this.commentsTotalPages());
   readonly returnUrl = computed(() => `/planes/${this.slug()}`);
 
-  // Likes del usuario de la sesión: salen de SavedPlansStore (lo mismo que la wishlist del carrito)
+  // Likes del usuario de la sesión: salen de SavedPlansStore (los carga ShopLayout al iniciar sesión)
   readonly liked = computed(() => this.savedPlans.likedIds().has(this.plan()?._id ?? ''));
   readonly likesCount = signal(0);
   readonly likeBusy = signal(false);
@@ -224,7 +224,7 @@ export class PlanDetailPage {
     await this.loadReactions(planId);
   }
 
-  // Datos del plan que se guardan en el store para la wishlist del carrito
+  // Datos del plan que se guardan en el store (SavedPlansStore)
   private savedPlan(plan: ShopPlan): SavedPlan {
     const { _id, title, slug, shortDescription, priceFrom, coverImage } = plan;
     return { _id, title, slug, shortDescription, priceFrom, coverImage };
@@ -249,7 +249,7 @@ export class PlanDetailPage {
     }
   }
 
-  // Añadir al carrito la fecha elegida. Sin sesión → login (y vuelta a este plan).
+  // Añadir al carrito la fecha elegida y llevar al carrito. Sin sesión → login (y vuelta a este plan).
   // El backend comprueba plazas y, si esa fecha ya estaba, suma la cantidad en vez de repetirla
   async onAddToCart(): Promise<void> {
     const session = this.selectedSession();
@@ -261,6 +261,7 @@ export class PlanDetailPage {
       this.cartStore.setCart(res.data);
       this.alerts.success(res.message ?? 'Añadido al carrito');
       this.quantity.set(1);
+      void this.router.navigate(['/carrito']);
     } catch {
       // El interceptor ya muestra el error (sin plazas, máximo por fecha...)
     } finally {

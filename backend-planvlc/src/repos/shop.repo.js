@@ -83,6 +83,7 @@ const buildPlansFilter = ({ category, organizer, venue, minPrice, maxPrice, sear
 // Órdenes del listado. _id al final para que el orden sea siempre el mismo (la paginación no repite ni salta planes)
 const SORTS = {
   popular: { views: -1, createdAt: -1, _id: -1 }, // más visitados
+  likes: { likesCount: -1, views: -1, _id: -1 }, // más gustados (con más likes)
   recent: { createdAt: -1, _id: -1 }, // más nuevos
   date: { nextSessionAt: 1, _id: 1 }, // fecha más próxima
   price_asc: { priceFrom: 1, _id: 1 },
