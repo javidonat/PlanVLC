@@ -93,6 +93,7 @@ MongoDB no necesita crear tablas: la base de datos y las colecciones se crean so
 | `likes` | `Like` | Likes de los usuarios a los planes (uno por usuario y plan) |
 | `carts` | `Cart` | Carrito de cada usuario (uno por usuario, persistente) |
 | `cartitems` | `CartItem` | Líneas del carrito: sesión (fecha) de un plan y cantidad |
+| `idempotency_keys` | `IdempotencyKey` | Claves de idempotencia: la respuesta de cada `POST /api/cart/items` por usuario y clave (caducan a las 24 h) |
 
 ### Relaciones
 
@@ -112,6 +113,7 @@ carts.userId             → users     (1 a 1: un carrito por usuario)
 cartitems.cartId         → carts     (un carrito tiene muchas líneas: 1 a N)
 cartitems.sessionId      → sessions  (la variante: fecha, precio y stock; índice único cartId + sessionId)
 cartitems.planId         → plans
+idempotency_keys.userId  → users     (índice único userId + key; índice TTL en expiresAt)
 images.entityId          → plans | venues | categories | organizers | users (según images.entityType)
 ```
 
@@ -346,21 +348,30 @@ Sin sesión → `401`. El plan tiene que estar publicado → si no, `404`.
 
 Un carrito por usuario (`carts`) con sus líneas (`cartitems`). Cada línea es una **sesión** (la variante del plan: fecha, precio y stock) y una cantidad. El usuario sale siempre de la cookie. Todas las rutas responden con el carrito completo y recalculado:
 
-`{ _id, items: [{ _id, plan, session, quantity, unitPrice, subtotal, available, issue }], totalItems, total, currency, hasIssues, maxQuantity }`
+`{ _id, items: [{ _id, plan, session, quantity, unitPrice, subtotal, available, issue }], totalItems, total, currency, hasIssues, maxQuantity, version }`
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/cart` | Tu carrito |
-| POST | `/api/cart/items` | Body `{ sessionId, quantity? }` (1 por defecto). Si esa sesión ya está, **no se duplica**: se suma la cantidad (`201` línea nueva, `200` cantidad sumada) |
-| PUT | `/api/cart/items/:id` | Body `{ quantity?, sessionId? }`: cambia la cantidad y/o la fecha (otra sesión **del mismo plan**; si esa fecha ya estaba, se juntan las dos líneas) |
-| DELETE | `/api/cart/items/:id` | Quita la línea |
-| DELETE | `/api/cart/clear` | Vacía el carrito |
+| POST | `/api/cart/items` | Body `{ sessionId, quantity? }` (1 por defecto). Cabecera **`Idempotency-Key`** obligatoria (un UUID por cada "añadir"). Si esa sesión ya está, **no se duplica**: se suma la cantidad (`201` línea nueva, `200` cantidad sumada) |
+| PUT | `/api/cart/items/:id` | Body `{ quantity?, sessionId? }`: cambia la cantidad y/o la fecha (otra sesión **del mismo plan**; si esa fecha ya estaba, se juntan las dos líneas). Cabecera opcional `If-Match: <version>` |
+| DELETE | `/api/cart/items/:id` | Quita la línea. Cabecera opcional `If-Match: <version>` |
+| DELETE | `/api/cart/clear` | Vacía el carrito. Cabecera opcional `If-Match: <version>` |
 
 Reglas (`services/cart.service.js`):
 - **Precios y totales** se calculan siempre en el backend con el precio actual de cada sesión: el frontend solo manda sesión y cantidad (si manda un precio, se ignora). `subtotal = precio × cantidad`, `total` y `totalItems` solo cuentan las líneas disponibles.
 - **Disponibilidad**: solo se pueden añadir sesiones publicadas, activas, que no han empezado y de un plan publicado (si no → `404 Esta fecha ya no está disponible`).
 - **Overbooking**: no se pueden pedir más entradas de las plazas que quedan (`stock`; `null` = sin límite) ni más de 10 por fecha → `409`. El stock no se descuenta al añadir: se descontará en el checkout. Si después baja el stock o la fecha pasa, `GET` marca la línea con `available: false` e `issue` (y no cuenta en el total).
 - Una línea de otro usuario → `404 Esta línea no está en tu carrito`. Sin sesión → `401`.
+
+**Concurrencia (bloqueo optimista, `carts.version`)**. Cada cambio del carrito sube `version` en 1. Antes de escribir, el servicio "reclama" la versión con una sola operación atómica: `updateOne({ _id, version: esperada }, { $inc: { version: 1 } })`. Si no modifica nada, otra petición ha cambiado el carrito entretanto:
+- `PUT` y `DELETE` comparan con la versión que manda el cliente en `If-Match` (la del carrito que está viendo). Si ya no es la actual (lo has cambiado en otra pestaña o dispositivo) → `409 Tu carrito ha cambiado...` y el frontend recarga el carrito. Sin `If-Match` se compara con la versión que se acaba de leer.
+- `POST` no depende de lo que se ve (solo suma), así que si choca con otra petición se reintenta solo (hasta 3 veces). La suma es atómica (`$inc` con tope: `quantity ≤ máximo − cantidad`), así que dos sumas a la vez nunca pisan una a la otra ni pasan del máximo, y el índice único `cartId + sessionId` evita líneas repetidas.
+
+**Idempotencia (`idempotency_keys`, `middleware/idempotency.js`)**. `POST /api/cart/items` es la única ruta del carrito que no es idempotente (suma). El frontend manda en `Idempotency-Key` un UUID por cada "Añadir al carrito" y lo reutiliza si tiene que repetir la petición (corte de red, timeout):
+- Primera vez: se guarda `{ userId, key, method, path, requestHash, status: "processing" }`. Si va bien, se guarda también la respuesta (`status: "completed"`, `statusCode`, `response`); si falla, se borra la clave para poder reintentar.
+- Misma clave otra vez: se devuelve la respuesta guardada **sin volver a sumar** (cabecera `Idempotent-Replayed: true`). Si la primera aún no ha terminado → `409`; si la clave llega con otro body → `422`. Sin cabecera o con formato no válido → `400`.
+- Las claves son de cada usuario (índice único `userId + key`) y MongoDB las borra solas a las 24 h (índice TTL en `expiresAt`).
 
 **Fase futura (checkout)**: el carrito se convertirá en `orders` + `order_items` (con el precio pagado), se procesará el `payment`, se crearán los `bookings`, se descontará el `stock` de cada sesión (comprobándolo otra vez) y se vaciará el carrito. Por eso el carrito va separado de los pedidos y no guarda precios.
 

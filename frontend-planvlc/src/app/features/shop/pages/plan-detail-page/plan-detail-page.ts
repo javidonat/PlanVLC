@@ -92,6 +92,9 @@ export class PlanDetailPage {
   // Carrito: cuántas entradas de la fecha elegida se añaden
   readonly quantity = signal(1);
   readonly addingToCart = signal(false);
+  // Idempotencia: clave del "añadir" en curso. Si la petición se corta (red, timeout) y se vuelve a pulsar
+  // con la misma fecha y cantidad, se reutiliza: si la primera llegó, el backend no suma otra vez
+  private pendingAdd: { key: string; sessionId: string; quantity: number } | null = null;
   // Máximo que se puede pedir: 10 por fecha y nunca más plazas de las que quedan
   readonly maxQuantity = computed(() => {
     const stock = this.selectedSession()?.stock;
@@ -257,16 +260,28 @@ export class PlanDetailPage {
     if (!this.auth.isAuthenticated()) return this.goToLogin();
     try {
       this.addingToCart.set(true);
-      const res = await this.cartService.addItem({ sessionId: session._id, quantity: this.quantity() });
+      const payload = { sessionId: session._id, quantity: this.quantity() };
+      const res = await this.cartService.addItem(payload, this.idempotencyKey(payload.sessionId, payload.quantity));
+      this.pendingAdd = null;
       this.cartStore.setCart(res.data);
       this.alerts.success(res.message ?? 'Añadido al carrito');
       this.quantity.set(1);
       void this.router.navigate(['/carrito']);
-    } catch {
-      // El interceptor ya muestra el error (sin plazas, máximo por fecha...)
+    } catch (error) {
+      // El interceptor ya muestra el error (sin plazas, máximo por fecha...). Si el backend ha respondido
+      // (hay status), la clave ya no sirve; si no (red o timeout) se guarda para el reintento
+      if (apiError(error).status) this.pendingAdd = null;
     } finally {
       this.addingToCart.set(false);
     }
+  }
+
+  // Clave nueva (UUID) por cada "añadir", salvo que sea el reintento del mismo que no obtuvo respuesta
+  private idempotencyKey(sessionId: string, quantity: number): string {
+    const pending = this.pendingAdd;
+    if (pending && pending.sessionId === sessionId && pending.quantity === quantity) return pending.key;
+    this.pendingAdd = { key: crypto.randomUUID(), sessionId, quantity };
+    return this.pendingAdd.key;
   }
 
   private goToLogin(): void {

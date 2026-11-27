@@ -23,6 +23,11 @@ const findCartByUser = (userId) => Cart.findOne({ userId }).lean();
 const findOrCreateCart = (userId) =>
   Cart.findOneAndUpdate({ userId }, { $setOnInsert: { userId } }, { upsert: true, new: true }).lean();
 
+// Bloqueo optimista: sube la versión solo si el carrito sigue en la que se espera (una sola operación
+// atómica en MongoDB). Devuelve false si otra petición lo ha cambiado antes
+const bumpVersion = async (cartId, expectedVersion) =>
+  (await Cart.updateOne({ _id: cartId, version: expectedVersion }, { $inc: { version: 1 } })).modifiedCount === 1;
+
 const findItems = (cartId) => CartItem.find({ cartId }).populate(ITEM_POPULATE).sort({ createdAt: 1 }).lean();
 
 // "find": ¿ya está esta sesión en el carrito?
@@ -37,11 +42,16 @@ const createItem = (data) => CartItem.create(data);
 // "update": cambia la cantidad (y la fecha, si llega)
 const updateItem = (itemId, changes) => CartItem.updateOne({ _id: itemId }, { $set: changes });
 
+// "qty++" atómico ($inc): suma en la base de datos, no "leer, sumar y escribir", así no se pierde ninguna suma.
+// Solo si el resultado no pasa del máximo (maxQuantity). Devuelve false si no se ha sumado
+const incrementItem = async (itemId, quantity, maxQuantity) =>
+  (await CartItem.updateOne({ _id: itemId, quantity: { $lte: maxQuantity - quantity } }, { $inc: { quantity } })).modifiedCount === 1;
+
 const deleteItem = (cartId, itemId) => CartItem.deleteOne({ _id: itemId, cartId });
 
 const clearItems = (cartId) => CartItem.deleteMany({ cartId });
 
 export default {
-  findBookableSession, findCartByUser, findOrCreateCart, findItems, findItemBySession, findItem,
-  createItem, updateItem, deleteItem, clearItems,
+  findBookableSession, findCartByUser, findOrCreateCart, bumpVersion, findItems, findItemBySession, findItem,
+  createItem, updateItem, incrementItem, deleteItem, clearItems,
 };

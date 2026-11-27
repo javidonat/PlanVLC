@@ -13,7 +13,8 @@ import Comment from "./comment.model.js";
 import Like from "./like.model.js";
 import Cart from "./cart.model.js";
 import CartItem from "./cartItem.model.js";
+import IdempotencyKey from "./idempotencyKey.model.js";
 import RefreshToken from "./refreshToken.model.js";
 import RevokedToken from "./revokedToken.model.js";
 
-export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, Comment, Like, Cart, CartItem, RefreshToken, RevokedToken };
+export { Plan, Session, Organizer, Category, Venue, Image, Role, User, Profile, Comment, Like, Cart, CartItem, IdempotencyKey, RefreshToken, RevokedToken };

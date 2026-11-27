@@ -10,6 +10,10 @@ const { Schema } = mongoose;
 const cartSchema = new Schema(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: [true, "El usuario es obligatorio"], unique: true },
+    // Concurrencia (bloqueo optimista): sube en 1 con cada cambio del carrito. Un cambio solo se aplica si el
+    // carrito sigue en la versión que se leyó (o la que manda el cliente en If-Match); si no → 409.
+    // Ver claimVersion en services/cart.service.js
+    version: { type: Number, min: 0, default: 0 },
   },
   { timestamps: true }
 );

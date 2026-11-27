@@ -5,9 +5,18 @@ import AppError from "./utils/AppError.js";
 // Precios, subtotales, total y número de entradas se calculan SIEMPRE aquí con el precio actual de cada sesión:
 // el frontend solo envía qué sesión y cuántas entradas.
 // El stock no se descuenta al añadir al carrito (eso será en el checkout), pero no se deja pedir más de las plazas
-// que quedan, y GET /api/cart avisa si una línea ya no se puede comprar (fecha pasada, plan retirado o sin plazas)
+// que quedan, y GET /api/cart avisa si una línea ya no se puede comprar (fecha pasada, plan retirado o sin plazas).
+//
+// Concurrencia (bloqueo optimista con carts.version): cada cambio lee el carrito, comprueba las reglas y, antes de
+// escribir, "reclama" la versión (claimVersion): solo sigue si nadie lo ha cambiado entretanto, y la sube en 1.
+// - Editar, quitar o vaciar: el cliente manda en If-Match la versión que está viendo. Si ya no es la actual
+//   (lo has cambiado en otra pestaña o dispositivo) → 409 y el frontend recarga el carrito.
+// - Añadir: no depende de lo que se ve (solo suma), así que si choca con otra petición se reintenta solo
+//   (hasta MAX_RETRIES veces) con el carrito ya actualizado. Además la suma es atómica ($inc)
+// La idempotencia (no repetir un POST) la hace middleware/idempotency.js
 
 export const MAX_QUANTITY = 10; // entradas por línea
+const MAX_RETRIES = 3; // intentos de "añadir" si otra petición cambia el carrito a la vez
 
 const round2 = (value) => Math.round(value * 100) / 100;
 const placesText = (stock) => (stock === 1 ? "Solo queda 1 plaza" : `Solo quedan ${stock} plazas`);
@@ -22,6 +31,25 @@ const ensureQuantity = (session, quantity) => {
     throw new AppError(message, 409);
   }
 };
+
+// Máximo de entradas de una sesión en una línea: 10 y nunca más plazas de las que quedan
+const maxFor = (session) =>
+  session.stock !== null && session.stock !== undefined ? Math.min(MAX_QUANTITY, session.stock) : MAX_QUANTITY;
+
+// Conflicto de versión: otra petición ha cambiado el carrito entre que se leyó y se iba a escribir
+const versionConflict = () => {
+  const error = new AppError("Tu carrito ha cambiado en otra pestaña o dispositivo. Revisa cómo ha quedado y vuelve a intentarlo", 409);
+  error.versionConflict = true;
+  return error;
+};
+
+// Bloqueo optimista: si el carrito ya no está en expectedVersion → 409; si lo está, pasa a la siguiente
+const claimVersion = async (cart, expectedVersion) => {
+  if (!(await cartRepo.bumpVersion(cart._id, expectedVersion))) throw versionConflict();
+};
+
+// Versión que hay que respetar: la que manda el cliente (If-Match) o, si no manda ninguna, la que se acaba de leer
+const expectedVersion = (cart, clientVersion) => clientVersion ?? cart.version;
 
 const getBookableSession = async (sessionId) => {
   const session = await cartRepo.findBookableSession(sessionId);
@@ -79,39 +107,50 @@ const buildCart = async (userId) => {
     currency: "EUR",
     hasIssues: valid.length !== items.length,
     maxQuantity: MAX_QUANTITY,
+    version: cart?.version ?? 0, // el cliente la devuelve en If-Match al editar, quitar o vaciar
   };
 };
 
 // GET /api/cart
 const getCart = (user) => buildCart(user.id);
 
-// POST /api/cart/items. Si la sesión ya está en el carrito no se duplica: se suma la cantidad (qty++)
+// POST /api/cart/items. Si la sesión ya está en el carrito no se duplica: se suma la cantidad (qty++).
+// Si otra petición cambia el carrito a la vez (conflicto de versión), se vuelve a intentar con lo que haya ahora
 const addItem = async (user, { sessionId, quantity }) => {
   const session = await getBookableSession(sessionId);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await tryAddItem(user, session, quantity);
+    } catch (error) {
+      if (!error.versionConflict || attempt === MAX_RETRIES) throw error;
+    }
+  }
+};
+
+const tryAddItem = async (user, session, quantity) => {
   const cart = await cartRepo.findOrCreateCart(user.id);
-  const existing = await cartRepo.findItemBySession(cart._id, sessionId);
-  const newQuantity = (existing?.quantity ?? 0) + quantity;
-  ensureQuantity(session, newQuantity);
+  const existing = await cartRepo.findItemBySession(cart._id, session._id);
+  ensureQuantity(session, (existing?.quantity ?? 0) + quantity);
+  await claimVersion(cart, cart.version);
 
   if (existing) {
-    await cartRepo.updateItem(existing._id, { quantity: newQuantity });
+    // $inc con tope: si entretanto otra petición ha sumado y ya no cabe, se reintenta y ensureQuantity da el 409
+    if (!(await cartRepo.incrementItem(existing._id, quantity, maxFor(session)))) throw versionConflict();
   } else {
     try {
-      await cartRepo.createItem({ cartId: cart._id, planId: session.planId, sessionId, quantity });
+      await cartRepo.createItem({ cartId: cart._id, planId: session.planId, sessionId: session._id, quantity });
     } catch (error) {
-      // Dos clics a la vez: el índice único rechaza el segundo insert → se suma a la línea que ya existe
-      if (error.code !== 11000) throw error;
-      const item = await cartRepo.findItemBySession(cart._id, sessionId);
-      ensureQuantity(session, item.quantity + quantity);
-      await cartRepo.updateItem(item._id, { quantity: item.quantity + quantity });
+      // Otra petición ha creado la misma línea a la vez (índice único cartId + sessionId) → se reintenta y suma
+      if (error.code === 11000) throw versionConflict();
+      throw error;
     }
   }
   return { created: !existing, cart: await buildCart(user.id) };
 };
 
 // PUT /api/cart/items/:id. Cambia la cantidad y/o la fecha (otra sesión del mismo plan).
-// Si la nueva fecha ya estaba en el carrito, se juntan las dos líneas en una
-const updateItem = async (user, itemId, { quantity, sessionId }) => {
+// Si la nueva fecha ya estaba en el carrito, se juntan las dos líneas en una. version = If-Match del cliente
+const updateItem = async (user, itemId, { quantity, sessionId }, version) => {
   const cart = await cartRepo.findCartByUser(user.id);
   const item = cart && (await cartRepo.findItem(cart._id, itemId));
   if (!item) throw new AppError("Esta línea no está en tu carrito", 404);
@@ -125,29 +164,35 @@ const updateItem = async (user, itemId, { quantity, sessionId }) => {
 
   const changesSession = String(targetSessionId) !== String(item.sessionId);
   const other = changesSession ? await cartRepo.findItemBySession(cart._id, targetSessionId) : null;
+  ensureQuantity(session, (other?.quantity ?? 0) + newQuantity);
+  await claimVersion(cart, expectedVersion(cart, version));
+
   if (other) {
-    ensureQuantity(session, other.quantity + newQuantity);
-    await cartRepo.updateItem(other._id, { quantity: other.quantity + newQuantity });
+    if (!(await cartRepo.incrementItem(other._id, newQuantity, maxFor(session)))) throw versionConflict();
     await cartRepo.deleteItem(cart._id, item._id);
   } else {
-    ensureQuantity(session, newQuantity);
     await cartRepo.updateItem(item._id, { quantity: newQuantity, sessionId: targetSessionId });
   }
   return buildCart(user.id);
 };
 
 // DELETE /api/cart/items/:id
-const removeItem = async (user, itemId) => {
+const removeItem = async (user, itemId, version) => {
   const cart = await cartRepo.findCartByUser(user.id);
-  const { deletedCount } = cart ? await cartRepo.deleteItem(cart._id, itemId) : { deletedCount: 0 };
-  if (!deletedCount) throw new AppError("Esta línea no está en tu carrito", 404);
+  const item = cart && (await cartRepo.findItem(cart._id, itemId));
+  if (!item) throw new AppError("Esta línea no está en tu carrito", 404);
+  await claimVersion(cart, expectedVersion(cart, version));
+  await cartRepo.deleteItem(cart._id, itemId);
   return buildCart(user.id);
 };
 
 // DELETE /api/cart/clear
-const clearCart = async (user) => {
+const clearCart = async (user, version) => {
   const cart = await cartRepo.findCartByUser(user.id);
-  if (cart) await cartRepo.clearItems(cart._id);
+  if (cart) {
+    await claimVersion(cart, expectedVersion(cart, version));
+    await cartRepo.clearItems(cart._id);
+  }
   return buildCart(user.id);
 };
 

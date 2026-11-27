@@ -21,6 +21,13 @@ export const updateCartItemSchema = z
   })
   .refine((data) => data.quantity !== undefined || data.sessionId !== undefined, { message: "Indica la cantidad o la fecha" });
 
+// Cabecera If-Match: versión del carrito que tiene el cliente (concurrencia). Opcional: "3" o 3
+export const cartVersionSchema = z.coerce
+  .number({ error: "La cabecera If-Match debe ser la versión del carrito" })
+  .int("La cabecera If-Match debe ser la versión del carrito")
+  .min(0, "La cabecera If-Match debe ser la versión del carrito")
+  .optional();
+
 export const cartItemParamsSchema = z.object({
   id: z.string().regex(/^[a-f\d]{24}$/i, "La línea del carrito no es válida"),
 });

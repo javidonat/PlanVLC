@@ -23,9 +23,10 @@ export interface Cart {
   currency: string;
   hasIssues: boolean; // alguna línea no se puede comprar
   maxQuantity: number; // máximo de entradas por línea
+  version: number; // concurrencia: se manda en If-Match al editar, quitar o vaciar
 }
 
-export const EMPTY_CART: Cart = { _id: null, items: [], totalItems: 0, total: 0, currency: 'EUR', hasIssues: false, maxQuantity: 10 };
+export const EMPTY_CART: Cart = { _id: null, items: [], totalItems: 0, total: 0, currency: 'EUR', hasIssues: false, maxQuantity: 10, version: 0 };
 
 // POST /api/cart/items
 export interface AddCartItemPayload {

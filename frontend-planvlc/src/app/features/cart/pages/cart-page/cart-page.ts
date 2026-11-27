@@ -82,10 +82,11 @@ export class CartPage implements OnInit {
     if (this.busyId()) return;
     try {
       this.busyId.set(item._id);
-      const res = await this.cartService.updateItem(item._id, payload);
+      const res = await this.cartService.updateItem(item._id, payload, this.store.cart().version);
       this.store.setCart(res.data);
     } catch {
-      // El interceptor ya muestra el error (sin plazas...). Se vuelve a pintar lo que dice el backend
+      // El interceptor ya muestra el error (sin plazas, 409 si el carrito ha cambiado en otra pestaña...).
+      // Se vuelve a pintar lo que dice el backend (con la versión nueva)
       await this.load();
     } finally {
       this.busyId.set(null);
@@ -96,7 +97,7 @@ export class CartPage implements OnInit {
     if (this.busyId()) return;
     try {
       this.busyId.set(item._id);
-      const res = await this.cartService.removeItem(item._id);
+      const res = await this.cartService.removeItem(item._id, this.store.cart().version);
       this.store.setCart(res.data);
       this.alerts.success('Quitado del carrito');
     } catch {
@@ -111,10 +112,11 @@ export class CartPage implements OnInit {
     if (!confirmed) return;
     try {
       this.clearing.set(true);
-      const res = await this.cartService.clear();
+      const res = await this.cartService.clear(this.store.cart().version);
       this.store.setCart(res.data);
     } catch {
-      // El interceptor ya muestra el error
+      // El interceptor ya muestra el error (409 si el carrito ha cambiado): se vuelve a cargar
+      await this.load();
     } finally {
       this.clearing.set(false);
     }

@@ -12,10 +12,19 @@ export interface GetOptions {
   signal?: AbortSignal;
 }
 
-// Opciones de un POST: AbortSignal y un tiempo máximo distinto del normal (ej. la IA tarda más)
+// Cabeceras extra de una petición (ej. Idempotency-Key o If-Match en el carrito)
+export type RequestHeaders = Record<string, string>;
+
+// Opciones de un POST: AbortSignal, un tiempo máximo distinto del normal (ej. la IA tarda más) y cabeceras extra
 export interface PostOptions {
   signal?: AbortSignal;
   timeoutMs?: number;
+  headers?: RequestHeaders;
+}
+
+// Opciones de un PUT o un DELETE: cabeceras extra
+export interface WriteOptions {
+  headers?: RequestHeaders;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,7 +38,7 @@ export class ApiService {
   }
 
   post<T>(path: string, body: unknown, options: PostOptions = {}): Promise<T> {
-    const request = this.http.post<T>(this.url(path), body);
+    const request = this.http.post<T>(this.url(path), body, { headers: options.headers });
     return options.signal ? this.sendAbortable(request, options.signal, options.timeoutMs) : this.send(request, options.timeoutMs);
   }
 
@@ -37,12 +46,12 @@ export class ApiService {
     return this.send(this.http.patch<T>(this.url(path), body));
   }
 
-  put<T>(path: string, body: unknown): Promise<T> {
-    return this.send(this.http.put<T>(this.url(path), body));
+  put<T>(path: string, body: unknown, options: WriteOptions = {}): Promise<T> {
+    return this.send(this.http.put<T>(this.url(path), body, { headers: options.headers }));
   }
 
-  delete<T>(path: string): Promise<T> {
-    return this.send(this.http.delete<T>(this.url(path)));
+  delete<T>(path: string, options: WriteOptions = {}): Promise<T> {
+    return this.send(this.http.delete<T>(this.url(path), { headers: options.headers }));
   }
 
   // Construye los query params sin los vacíos (ej. { search: '', page: 2 } → ?page=2)
